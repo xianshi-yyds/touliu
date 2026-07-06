@@ -1,0 +1,22 @@
+[project]
+name = "exhibitflow-lite"
+version = "0.1.0"
+description = "Lightweight exhibition short-video workflow: social search, preview, download, Qwen helpers, and publish wrappers."
+requires-python = ">=3.10"
+dependencies = [
+  "streamlit>=1.35",
+  "requests>=2.31",
+  "openai>=1.0",
+  "python-dotenv>=1.0",
+  "edge-tts>=6.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["exhibitflow_lite"]

@@ -1,0 +1,5 @@
+cookie.txt
+output_date/
+output_video/
+__pycache__/
+*.pyc

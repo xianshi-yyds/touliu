@@ -1,0 +1,1778 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ExhibitFlow Studio</title>
+  <style>
+    :root {
+      --ink:#17191f;
+      --muted:#828a97;
+      --faint:#aeb4be;
+      --line:#dde2eb;
+      --soft:#f6f7f9;
+      --panel:#fff;
+      --primary:#17191f;
+      --blue:#3f46ff;
+      --blue-soft:#eef1ff;
+      --ok:#eaf7df;
+      --warn:#fff5d7;
+      --danger:#ffe8e8;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      background:#f4f5f3;
+      color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      letter-spacing:0;
+    }
+    .topbar {
+      height:48px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 12px;
+      border-bottom:0;
+      background:#f4f5f3;
+      position:sticky;
+      top:0;
+      z-index:20;
+    }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:850; font-size:16px; padding-left:168px; color:#2d2f35; }
+    .logo { width:26px; height:26px; border-radius:8px; display:grid; place-items:center; background:linear-gradient(135deg,#111827,#343cff); color:#fff; font-size:13px; }
+    .badge { padding:3px 8px; border-radius:999px; background:#e8f7dc; color:#3a8a19; font-size:12px; font-weight:850; border:1px solid #cbe8bb; }
+    .top-actions { display:flex; align-items:center; gap:10px; }
+    .top-refresh { width:34px; min-width:34px; height:34px; min-height:34px; padding:0; border-radius:50%; background:#fff; font-size:17px; color:#777d87; }
+    #system-pill { display:none !important; }
+    .layout { display:grid; grid-template-columns:180px minmax(0,1fr); min-height:calc(100vh - 48px); }
+    aside { border-right:1px solid #dedfdd; background:#f4f5f3; padding:0 8px 8px; display:flex; flex-direction:column; }
+    .workspace { padding:0 8px 8px 4px; }
+    .mobile-nav { display:none; gap:8px; overflow-x:auto; padding:10px 16px; border-bottom:1px solid var(--line); background:#f8f9fb; }
+    .nav-title { color:#9aa0aa; font-size:13px; font-weight:850; margin:18px 10px 8px; }
+    .nav-item { height:42px; display:flex; align-items:center; gap:10px; padding:0 12px; border-radius:8px; color:#8d8a86; font-weight:750; cursor:pointer; }
+    .nav-item.active { background:#e9e9e6; color:#17191f; }
+    .nav-icon { width:22px; height:22px; display:inline-grid; place-items:center; color:inherit; }
+    .nav-icon img { width:22px; height:22px; display:block; object-fit:contain; opacity:.9; }
+    .sidebar-brand { height:48px; display:flex; align-items:center; gap:12px; padding:0 8px; font-weight:900; color:#2d2f35; }
+    .sidebar-logo { width:24px; height:24px; border-radius:6px; display:block; object-fit:contain; }
+    .sidebar-spacer { flex:1; }
+    .usage-card { border:1px solid #dedfdd; border-radius:10px; background:#fffdf8; padding:12px; font-size:12px; color:#8c7d64; }
+    .usage-bar { height:4px; background:#e2d9c9; border-radius:99px; margin-top:9px; overflow:hidden; }
+    .usage-bar i { display:block; width:58%; height:100%; background:#a89572; border-radius:99px; }
+    .mobile-nav .nav-item { flex:0 0 auto; }
+    .section { display:none; }
+    .section.active { display:block; }
+    .shell { background:#fff; border:1px solid #d9dad8; border-radius:14px; padding:28px; min-height:calc(100vh - 56px); }
+    .hero { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:24px; }
+    h1 { margin:0; font-size:28px; line-height:1.2; }
+    h2 { margin:0 0 14px; font-size:18px; }
+    h3 { margin:0; font-size:16px; }
+    p { margin:7px 0 0; color:var(--muted); line-height:1.65; }
+    small { color:var(--muted); }
+    .grid { display:grid; gap:16px; }
+    .grid.two { grid-template-columns:1fr 1fr; }
+    .grid.three { grid-template-columns:repeat(3,1fr); }
+    .grid.four { grid-template-columns:repeat(4,1fr); }
+    .card { border:1px solid var(--line); border-radius:10px; background:#fff; padding:18px; }
+    .card.soft { background:#fbfcff; }
+    .work-console { border:1px solid var(--line); border-radius:12px; background:#fbfcff; padding:16px 18px; margin-bottom:20px; }
+    .work-console-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .work-console-title { display:flex; align-items:center; gap:10px; font-weight:900; }
+    .work-console-title i { width:9px; height:9px; border-radius:50%; background:#aeb4be; box-shadow:0 0 0 5px #eef1f5; }
+    .work-console.running .work-console-title i { background:#e5a817; box-shadow:0 0 0 5px #fff2c5; animation:pulse 1.2s infinite; }
+    .work-console.succeeded .work-console-title i { background:#67a83b; box-shadow:0 0 0 5px #e6f4dc; }
+    .work-console.failed .work-console-title i { background:#c74343; box-shadow:0 0 0 5px #ffe3e3; }
+    .work-progress { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px; }
+    .work-progress span { height:5px; border-radius:99px; background:#e4e7ed; }
+    .work-progress span.done { background:#17191f; }
+    .work-summary { color:#606774; line-height:1.55; margin-top:11px; }
+    .activity-list { display:grid; gap:8px; margin-top:14px; padding-top:12px; border-top:1px dashed #d7dce5; }
+    .activity-row { display:grid; grid-template-columns:76px minmax(0,1fr); gap:10px; align-items:start; color:#606774; font-size:12px; line-height:1.5; }
+    .activity-row b { color:#2d333d; font-size:13px; }
+    .activity-row .status { justify-self:start; min-height:22px; }
+    .activity-time { color:#a0a7b2; font-size:11px; margin-top:2px; }
+    .delivery-asset { display:grid; grid-template-columns:140px minmax(0,1fr); gap:16px; align-items:center; border:1px solid var(--line); border-radius:10px; padding:14px; background:#fff; }
+    .delivery-asset video { width:140px; height:96px; object-fit:cover; background:#111; border-radius:8px; }
+    .choice-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .choice { border:1px solid var(--line); border-radius:9px; padding:13px; cursor:pointer; background:#fff; }
+    .choice.active { border-color:#17191f; box-shadow:0 0 0 2px rgba(23,25,31,.08); }
+    .safe-box { border:1px solid #cde8b8; background:#f5fbef; border-radius:10px; padding:14px; margin-top:14px; }
+    .safe-box label { display:flex; align-items:flex-start; gap:9px; color:#456727; cursor:pointer; }
+    .safe-box input { width:auto; margin-top:2px; }
+    @keyframes pulse { 50% { opacity:.45; } }
+    .employee-card {
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+      padding:20px;
+      display:grid;
+      gap:18px;
+      min-height:280px;
+    }
+    .employee-card.active {
+      border-color:#222633;
+      box-shadow:0 0 0 3px rgba(63,70,255,.08);
+      background:#fbfcff;
+    }
+    .employee-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .employee-title { display:flex; align-items:center; gap:10px; }
+    .avatar { width:36px; height:36px; border-radius:10px; display:grid; place-items:center; background:#17191f; color:#fff; font-weight:900; }
+    .employee-meta { display:grid; gap:8px; color:#606774; line-height:1.5; }
+    .staff-toolbar { height:78px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; }
+    .staff-title { font-size:20px; font-weight:900; margin:0; }
+    .staff-content { padding:12px; }
+    .staff-board { min-height:766px; border-radius:0 0 12px 12px; }
+    .staff-grid { width:1180px; max-width:calc(100vw - 260px); margin:0 auto; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; }
+    .staff-card { min-height:248px; border-radius:13px; border:1px solid transparent; background:#f2f1ed; display:grid; grid-template-columns:118px minmax(0,1fr); gap:18px; padding:18px; cursor:pointer; transition:.16s ease; }
+    .staff-card:hover { transform:translateY(-1px); box-shadow:0 10px 26px rgba(27,30,35,.08); border-color:#dadad6; }
+    .staff-card.is-active { border-color:#17191f; box-shadow:0 0 0 3px rgba(23,25,31,.08); }
+    .staff-figure { display:grid; place-items:center; }
+    .staff-avatar { width:96px; height:96px; display:grid; place-items:center; }
+    .staff-avatar img { width:96px; height:96px; object-fit:contain; display:block; filter:drop-shadow(0 12px 16px rgba(0,0,0,.12)); }
+    .staff-info { min-width:0; display:flex; flex-direction:column; justify-content:center; position:relative; }
+    .staff-status { position:absolute; top:0; right:0; height:24px; display:inline-flex; align-items:center; gap:4px; padding:0 9px; border-radius:7px; background:#e9e5db; color:#8a7c64; font-size:12px; font-weight:800; }
+    .staff-status::before { content:''; width:14px; height:14px; display:inline-block; background:url('/assets/figma-digital-employees/meh.svg') center/contain no-repeat; }
+    .staff-name { font-size:18px; font-weight:900; margin:0 0 8px; color:#17191f; }
+    .staff-space { color:#7d7f85; font-size:13px; font-weight:650; margin-bottom:8px; }
+    .staff-tag { width:max-content; max-width:100%; height:24px; display:inline-flex; align-items:center; gap:6px; padding:0 10px; border-radius:999px; background:#fff; color:#333842; font-size:12px; border:1px solid #ecebea; }
+    .staff-tag img, .staff-contact img, .btn-icon { width:16px; height:16px; object-fit:contain; display:inline-block; }
+    .staff-divider { border-top:1px dashed #dfddd7; margin:16px 0 12px; }
+    .staff-contact { height:28px; display:flex; align-items:center; gap:7px; padding:0 10px; border-radius:5px; background:#fff; color:#7d7f85; font-size:12px; }
+    .empty-shell { height:100%; min-height:720px; display:grid; place-items:center; color:#a0a4ac; font-weight:800; }
+    .empty-panel { width:420px; max-width:100%; padding:32px; border:1px dashed #d8dbe2; border-radius:14px; background:#fbfcff; text-align:center; }
+    .pipeline { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:20px 0 26px; }
+    .pipeline-step {
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+      padding:18px;
+      cursor:pointer;
+    }
+    .pipeline-step.active { border-color:#17191f; background:#fbfcff; box-shadow:0 0 0 3px rgba(23,25,31,.08); }
+    .pipeline-step b { display:block; font-size:17px; margin-bottom:6px; }
+    .num { width:28px; height:28px; border-radius:8px; background:#17191f; color:#fff; display:grid; place-items:center; font-weight:900; margin-bottom:12px; }
+    label { display:block; font-weight:800; color:#7f8794; font-size:13px; margin:0 0 7px; }
+    input, select, textarea {
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:11px 12px;
+      font:inherit;
+      color:var(--ink);
+      background:#fff;
+      outline:none;
+    }
+    textarea { min-height:104px; resize:vertical; }
+    input:focus, select:focus, textarea:focus { border-color:var(--blue); }
+    button {
+      min-height:40px;
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:#fff;
+      color:#333842;
+      font:inherit;
+      font-weight:850;
+      padding:0 15px;
+      cursor:pointer;
+    }
+    button.primary { background:#17191f; color:#fff; border-color:#17191f; }
+    button.ghost { background:#fbfcff; }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+    .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .kpi { border:1px solid var(--line); border-radius:10px; padding:14px; background:#fbfcff; }
+    .kpi b { display:block; font-size:20px; margin-top:5px; }
+    .status { display:inline-flex; align-items:center; min-height:24px; padding:0 9px; border-radius:999px; font-size:12px; font-weight:900; background:#eef1f5; }
+    .status.succeeded { background:var(--ok); color:#3a6b17; }
+    .status.failed { background:var(--danger); color:#9d2525; }
+    .status.running, .status.queued { background:var(--warn); color:#6d4d07; }
+    .status.blue { background:var(--blue-soft); color:#2831d5; }
+    .notice { display:none; border:1px solid #f0d58a; background:#fff8df; color:#75570e; border-radius:8px; padding:12px 14px; margin-bottom:16px; line-height:1.55; }
+    .notice.show { display:block; }
+    .guide-panel { border:1px solid var(--line); border-radius:14px; padding:20px; background:linear-gradient(180deg,#fff,#fbfcff); margin-bottom:16px; }
+    .guide-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; }
+    .guide-title { font-size:20px; font-weight:900; margin:0; }
+    .guide-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px; }
+    .guide-step { border:1px solid var(--line); border-radius:10px; padding:13px; background:#fff; }
+    .guide-step.succeeded { background:#f5fbef; border-color:#cde8b8; }
+    .guide-step.failed { background:#fff4f4; border-color:#ffc9c9; }
+    .guide-step.running { background:#fff9e8; border-color:#f0d58a; }
+    .guide-step.queued { background:#f7f8fb; }
+    .guide-step b { display:block; margin-bottom:6px; }
+    .guide-step span { display:inline-flex; font-size:12px; font-weight:900; padding:2px 8px; border-radius:999px; background:#eef1f5; margin-bottom:8px; }
+    .guide-list { margin:12px 0 0; color:#606774; line-height:1.7; }
+    .connect-card {
+      display:grid;
+      grid-template-columns:auto minmax(0,1fr) auto;
+      gap:20px;
+      align-items:center;
+      padding:28px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      margin-bottom:16px;
+    }
+    .connect-mark {
+      width:52px;
+      height:52px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      background:#17191f;
+      color:#fff;
+      font-size:20px;
+      font-weight:900;
+    }
+    .connect-copy h2 { margin:0 0 5px; font-size:21px; }
+    .connect-copy p { margin:0; max-width:720px; }
+    .connect-actions { display:flex; gap:10px; align-items:center; }
+    .connect-actions button { min-width:124px; }
+    .simple-flow { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:16px; }
+    .simple-flow .guide-step { border:0; border-radius:0; min-height:112px; }
+    .privacy-note { color:#9aa0aa; font-size:12px; margin-top:9px; }
+    .gallery-shell { border:1px solid var(--line); border-radius:12px; padding:14px; max-height:720px; overflow:auto; background:#fff; }
+    .gallery { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .sample { border:1px solid var(--line); border-radius:10px; padding:12px; background:#fff; }
+    .sample.selected { border-color:#17191f; box-shadow:0 0 0 3px rgba(23,25,31,.08); }
+    .sample img { width:100%; height:140px; object-fit:cover; border-radius:8px; background:#f1f3f6; }
+    .sample-title { font-weight:850; line-height:1.45; margin-top:10px; min-height:42px; }
+    .sample-meta { color:#9aa0aa; font-size:13px; margin-top:7px; line-height:1.5; }
+    .task { display:grid; grid-template-columns:160px 120px minmax(0,1fr); gap:12px; align-items:start; padding:12px 0; border-top:1px solid var(--line); }
+    .task-center-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; align-items:start; }
+    .task-group-card { border:1px solid var(--line); border-radius:14px; background:#fff; padding:16px; min-height:240px; }
+    .task-group-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:12px; }
+    .task-group-head b { display:block; font-size:16px; margin-bottom:4px; }
+    .task-group-head small { color:#858c98; line-height:1.45; }
+    .task-group-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
+    .task-stat { background:#f7f8fb; border:1px solid var(--line); border-radius:10px; padding:9px; }
+    .task-stat span { display:block; color:#858c98; font-size:12px; }
+    .task-stat b { display:block; margin-top:3px; }
+    .task-mini { border-top:1px solid var(--line); padding:11px 0; }
+    .task-mini:first-of-type { border-top:0; }
+    .task-mini-title { display:flex; justify-content:space-between; gap:8px; align-items:center; font-weight:900; }
+    .task-mini p { margin:7px 0 0; color:#626a76; line-height:1.5; font-size:13px; }
+    .task-mini details { margin-top:8px; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#f8f9fb; border:1px solid var(--line); border-radius:8px; padding:12px; max-height:360px; overflow:auto; }
+    .hidden { display:none !important; }
+    .toast { position:fixed; right:24px; top:88px; z-index:50; min-width:280px; max-width:480px; padding:13px 15px; border-radius:8px; background:#17191f; color:#fff; box-shadow:0 12px 40px rgba(0,0,0,.18); display:none; }
+    .toast.show { display:block; }
+    .toast.error { background:#9d2525; }
+    .task-result { color:#606774; line-height:1.55; margin-top:6px; }
+    .task details { margin-top:8px; }
+    .task summary { color:#6e7581; cursor:pointer; font-weight:750; }
+    .media-preview { margin-top:18px; border-top:1px solid var(--line); padding-top:18px; }
+    .media-preview video, .media-preview audio { width:100%; max-height:580px; background:#111; border-radius:8px; }
+    .checklist { display:grid; gap:10px; }
+    .check-item { display:flex; justify-content:space-between; gap:12px; align-items:center; border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:#fbfcff; }
+    .metric-board { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:12px; }
+    .metric { border:1px solid var(--line); border-radius:10px; padding:14px; background:#fbfcff; }
+    .metric span { color:#7f8794; font-size:13px; font-weight:800; }
+    .metric b { display:block; font-size:22px; margin-top:7px; }
+    .metric small { display:block; color:#a0a7b2; font-size:11px; line-height:1.45; margin-top:7px; }
+    .metric.wide { grid-column:span 3; }
+    .metric.wide b { font-size:15px; line-height:1.65; font-weight:750; }
+    .tabs { display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; background:#fff; }
+    .tab { border:0; border-radius:0; background:#fff; color:#7f8794; }
+    .tab.active { background:#17191f; color:#fff; }
+    .overview-hero {
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:18px;
+      align-items:center;
+      padding:18px 24px 8px;
+    }
+    .overview-eyebrow { color:#8b8f99; font-size:13px; font-weight:850; margin-bottom:6px; }
+    .overview-title { margin:0; font-size:26px; font-weight:950; letter-spacing:-.02em; }
+    .overview-subtitle { margin-top:8px; color:#737985; max-width:780px; }
+    .overview-actions { display:flex; gap:10px; align-items:center; }
+    .staff-card { position:relative; }
+    .staff-card::after { content:'安排任务'; position:absolute; right:16px; bottom:14px; color:#17191f; font-size:12px; font-weight:900; opacity:.42; }
+    .staff-role { color:#5e6572; font-size:13px; line-height:1.55; margin:8px 0 0; }
+    .staff-kpi { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .staff-kpi span { display:inline-flex; height:24px; align-items:center; padding:0 8px; border-radius:999px; background:#fff; border:1px solid #ecebea; color:#6d7480; font-size:12px; font-weight:800; }
+    .mission-center { width:1180px; max-width:calc(100vw - 260px); margin:18px auto 0; border:1px solid var(--line); border-radius:14px; background:#fff; padding:18px; }
+    .mission-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:14px; }
+    .mission-head h2 { margin:0 0 5px; }
+    .mission-head p { margin:0; }
+    .mission-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .mission-item { border:1px solid var(--line); border-radius:12px; background:#fbfcff; padding:14px; min-height:140px; display:flex; flex-direction:column; gap:10px; }
+    .mission-item.running { background:#fffaf0; border-color:#efd491; }
+    .mission-item.succeeded { background:#f5fbef; border-color:#cde8b8; }
+    .mission-item.failed { background:#fff4f4; border-color:#ffc9c9; }
+    .mission-top { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+    .mission-title { font-weight:950; }
+    .mission-desc { color:#626a76; line-height:1.55; font-size:13px; flex:1; }
+    .mission-next { display:flex; gap:8px; flex-wrap:wrap; }
+    .mission-next button { min-height:32px; padding:0 10px; font-size:12px; }
+    .flow-advisor { width:1180px; max-width:calc(100vw - 260px); margin:18px auto 0; border:1px solid #d7e4ff; border-radius:14px; background:linear-gradient(135deg,#fbfdff,#f5f8ff); padding:16px 18px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; align-items:center; }
+    .flow-advisor b { display:block; font-size:16px; margin-bottom:5px; }
+    .flow-advisor span { color:#657083; line-height:1.55; }
+    .flow-advisor .status { width:max-content; margin-bottom:8px; }
+    .flow-advisor-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .approval-queue { width:1180px; max-width:calc(100vw - 260px); margin:14px auto 0; border:1px solid var(--line); border-radius:14px; background:#fff; padding:16px 18px; }
+    .approval-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:12px; }
+    .approval-head b { display:block; font-size:16px; margin-bottom:4px; }
+    .approval-head span { color:#7a8290; font-size:13px; line-height:1.5; }
+    .approval-list { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .approval-item { border:1px solid var(--line); border-radius:12px; background:#fbfcff; padding:14px; min-height:132px; display:flex; flex-direction:column; gap:8px; }
+    .approval-item.urgent { background:#fff8e8; border-color:#efd48b; }
+    .approval-item.done { background:#f4fbef; border-color:#cbe8b5; }
+    .approval-item b { font-size:15px; }
+    .approval-item p { margin:0; color:#687182; font-size:13px; line-height:1.55; flex:1; }
+    .approval-item .actions { margin-top:2px; }
+    .ops-snapshot { width:1180px; max-width:calc(100vw - 260px); margin:14px auto 0; display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .ops-card { border:1px solid var(--line); border-radius:14px; background:#fff; padding:14px; min-height:106px; }
+    .ops-card span { color:#7d8593; font-size:12px; font-weight:850; }
+    .ops-card b { display:block; font-size:24px; margin-top:7px; letter-spacing:-.02em; }
+    .ops-card small { display:block; color:#9da4af; font-size:12px; line-height:1.45; margin-top:7px; }
+    .ops-card.warn { background:#fff9e8; border-color:#f0d58a; }
+    .ops-card.ok { background:#f5fbef; border-color:#cde8b8; }
+    .asset-package { width:1180px; max-width:calc(100vw - 260px); margin:14px auto 0; border:1px solid var(--line); border-radius:14px; background:#fff; padding:16px 18px; }
+    .asset-package-head { display:flex; justify-content:space-between; gap:14px; align-items:flex-start; margin-bottom:12px; }
+    .asset-package-head b { display:block; font-size:16px; margin-bottom:4px; }
+    .asset-package-head span { color:#7a8290; font-size:13px; line-height:1.5; }
+    .asset-chain { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+    .asset-node { border:1px solid var(--line); border-radius:12px; background:#fbfcff; padding:13px; min-height:132px; display:flex; flex-direction:column; gap:7px; }
+    .asset-node.done { background:#f5fbef; border-color:#cde8b8; }
+    .asset-node.active { background:#fff9e8; border-color:#f0d58a; }
+    .asset-node b { font-size:14px; }
+    .asset-node p { margin:0; color:#687182; line-height:1.5; font-size:12px; flex:1; }
+    .asset-node button { min-height:30px; padding:0 10px; font-size:12px; }
+    .quick-start { width:1180px; max-width:calc(100vw - 260px); margin:14px auto 0; border:1px solid var(--line); border-radius:14px; background:#fff; padding:16px 18px; }
+    .quick-start-head { display:flex; justify-content:space-between; gap:14px; align-items:flex-start; margin-bottom:12px; }
+    .quick-start-head b { display:block; font-size:16px; margin-bottom:4px; }
+    .quick-start-head span { color:#7a8290; font-size:13px; line-height:1.5; }
+    .quick-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .quick-card { border:1px solid var(--line); border-radius:12px; background:#fbfcff; padding:14px; cursor:pointer; transition:.16s ease; min-height:130px; }
+    .quick-card:hover { transform:translateY(-1px); border-color:#17191f; box-shadow:0 10px 24px rgba(27,30,35,.08); }
+    .quick-card b { display:block; margin-bottom:7px; }
+    .quick-card p { margin:0; font-size:13px; line-height:1.55; }
+    .quick-card small { display:block; margin-top:10px; color:#5f6674; font-weight:850; }
+    .flow-progress-card { width:1180px; max-width:calc(100vw - 260px); margin:14px auto 0; border:1px solid var(--line); border-radius:14px; background:#fff; padding:16px 18px; }
+    .flow-progress-head { display:flex; justify-content:space-between; gap:14px; align-items:center; margin-bottom:14px; }
+    .flow-progress-head b { font-size:16px; }
+    .flow-progress { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+    .flow-step { position:relative; border:1px solid var(--line); border-radius:10px; background:#fbfcff; padding:12px 10px; min-height:82px; color:#717986; }
+    .flow-step::before { content:attr(data-index); width:24px; height:24px; border-radius:999px; display:grid; place-items:center; background:#eef1f5; color:#7b8491; font-weight:950; font-size:12px; margin-bottom:8px; }
+    .flow-step b { display:block; color:#56606d; font-size:13px; line-height:1.35; }
+    .flow-step small { display:block; margin-top:5px; color:#9aa1ad; line-height:1.35; }
+    .flow-step.done { background:#f5fbef; border-color:#cde8b8; }
+    .flow-step.done::before { content:'✓'; background:#dff1d2; color:#3a6b17; }
+    .flow-step.done b { color:#335c18; }
+    .flow-step.active { background:#fff9e8; border-color:#f0d58a; box-shadow:0 0 0 2px rgba(240,213,138,.22); }
+    .flow-step.active::before { background:#ffe8a3; color:#765400; }
+    .flow-step.active b { color:#6d4d07; }
+    .handoff-card { width:1180px; max-width:calc(100vw - 260px); margin:14px auto 0; border:1px solid var(--line); border-radius:14px; background:#fff; padding:16px 18px; }
+    .handoff-head { display:flex; justify-content:space-between; gap:14px; align-items:flex-start; margin-bottom:12px; }
+    .handoff-head b { display:block; font-size:16px; margin-bottom:4px; }
+    .handoff-head span { color:#7a8290; font-size:13px; line-height:1.5; }
+    .handoff-list { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .handoff-item { border:1px solid var(--line); border-radius:12px; background:#fbfcff; padding:12px; min-height:112px; }
+    .handoff-item.done { background:#f5fbef; border-color:#cde8b8; }
+    .handoff-item.active { background:#fff9e8; border-color:#f0d58a; }
+    .handoff-title { display:flex; justify-content:space-between; gap:8px; align-items:center; font-weight:950; margin-bottom:8px; }
+    .handoff-desc { color:#606a78; font-size:13px; line-height:1.55; }
+    .handoff-foot { margin-top:8px; color:#9aa2ad; font-size:12px; line-height:1.45; }
+    .staff-flow-note { width:1180px; max-width:calc(100vw - 260px); margin:0 auto 16px; color:#8d929c; font-size:13px; }
+    .work-contract { width:1180px; max-width:calc(100vw - 260px); margin:14px auto 0; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .contract-card { border:1px solid var(--line); border-radius:14px; background:#fff; padding:16px; min-height:142px; position:relative; overflow:hidden; }
+    .contract-card::before { content:''; position:absolute; width:72px; height:72px; right:-28px; top:-28px; border-radius:999px; background:#f0f4ff; }
+    .contract-card b { display:block; font-size:16px; margin-bottom:7px; }
+    .contract-card p { margin:0; color:#687182; line-height:1.55; font-size:13px; }
+    .contract-card small { display:block; color:#17191f; margin-top:12px; font-weight:900; }
+    .contract-card button { margin-top:12px; min-height:34px; padding:0 12px; font-size:12px; }
+    .employee-brief { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:0 0 18px; }
+    .brief-card { border:1px solid var(--line); border-radius:12px; background:#fbfcff; padding:14px; min-height:112px; }
+    .brief-card b { display:block; font-size:14px; margin-bottom:8px; }
+    .brief-card span { color:#66707d; font-size:13px; line-height:1.6; display:block; }
+    .workorder-strip { border:1px solid #d7e4ff; border-radius:14px; background:linear-gradient(135deg,#fbfdff,#f6f9ff); padding:16px 18px; margin:-4px 0 18px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px; align-items:center; }
+    .workorder-strip b { display:block; font-size:16px; margin-bottom:5px; }
+    .workorder-strip p { margin:0; color:#687182; line-height:1.55; font-size:13px; }
+    .workorder-strip .actions { justify-content:flex-end; margin:0; }
+    .employee-stage-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:22px 0 12px; }
+    .employee-stage-title h2 { margin:0; }
+    .recap-card { border:1px solid #d7e4ff; background:#f7faff; border-radius:12px; padding:14px; margin-top:12px; color:#394150; }
+    .recap-card b { display:block; margin-bottom:8px; color:#17191f; }
+    .recap-card ul { margin:8px 0 0 18px; padding:0; line-height:1.7; color:#5d6674; }
+    .recap-card .recap-score { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+    .recap-card .recap-score span { border:1px solid #e1e8f7; background:#fff; border-radius:8px; padding:8px; font-size:12px; color:#677083; }
+    .agent-workbench { display:grid; grid-template-columns:260px minmax(360px, .95fr) minmax(360px, 1.2fr); gap:16px; align-items:start; }
+    .agent-profile, .agent-task-column, .agent-result-column { display:grid; gap:16px; align-content:start; }
+    .agent-profile-card { border:1px solid var(--line); border-radius:14px; background:#fbfcff; padding:18px; position:sticky; top:64px; }
+    .agent-profile-card h2 { margin:0 0 10px; }
+    .agent-profile-card p { font-size:13px; }
+    .capability-list { display:grid; gap:9px; margin-top:14px; }
+    .capability-list span { display:flex; align-items:flex-start; gap:8px; color:#5e6572; line-height:1.45; font-size:13px; }
+    .capability-list span::before { content:'✓'; flex:0 0 18px; width:18px; height:18px; border-radius:999px; display:grid; place-items:center; background:#eef1ff; color:#3038da; font-size:12px; font-weight:950; }
+    .section-panel { border:1px solid var(--line); border-radius:14px; background:#fff; padding:18px; }
+    .section-panel h2 { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px; }
+    .result-empty { border:1px dashed #d7dce5; border-radius:12px; padding:18px; background:#fbfcff; color:#7f8794; line-height:1.65; }
+    .agent-step-label { display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:999px; background:#eef1ff; color:#3038da; font-size:12px; font-weight:900; }
+    @media (max-width: 1180px) {
+      .layout { grid-template-columns:1fr; }
+      aside { display:none; }
+      .brand { padding-left:0; }
+      .mobile-nav { display:flex; }
+      .staff-grid, .mission-center, .staff-flow-note, .flow-advisor, .flow-progress-card, .handoff-card, .ops-snapshot, .quick-start { width:100%; max-width:100%; }
+      .staff-grid { grid-template-columns:1fr; }
+      .staff-card { width:100%; }
+      .pipeline, .grid.three, .grid.four, .kpis, .metric-board, .mission-grid, .employee-brief, .agent-workbench, .flow-progress, .handoff-list, .ops-snapshot, .quick-grid { grid-template-columns:1fr 1fr; }
+      .metric.wide { grid-column:span 2; }
+      .gallery { grid-template-columns:1fr 1fr; }
+      .workspace { padding:16px; }
+      .hero { flex-direction:column; }
+      .task { grid-template-columns:120px 100px minmax(0,1fr); }
+      .connect-card { grid-template-columns:auto 1fr; }
+      .connect-actions { grid-column:1 / -1; }
+    }
+    @media (max-width: 720px) {
+      .pipeline, .grid.two, .grid.three, .grid.four, .kpis, .gallery, .metric-board, .mission-grid, .overview-hero, .employee-brief, .agent-workbench, .flow-advisor, .flow-progress, .handoff-list, .ops-snapshot, .quick-grid { grid-template-columns:1fr; }
+      .staff-card { grid-template-columns:1fr; height:auto; text-align:left; }
+      .staff-status { position:static; width:max-content; margin-bottom:8px; }
+      .staff-avatar { width:84px; height:84px; border-radius:22px; font-size:28px; }
+      .metric.wide { grid-column:span 1; }
+      .topbar { padding:0 16px; }
+      .brand .badge { display:none; }
+      .task { grid-template-columns:1fr; }
+      .task-center-grid { grid-template-columns:1fr; }
+      .shell { padding:20px; }
+      .connect-card { grid-template-columns:1fr; padding:20px; }
+      .connect-actions { grid-column:auto; flex-direction:column; align-items:stretch; }
+      .simple-flow { grid-template-columns:1fr; }
+      .work-progress, .choice-row { grid-template-columns:1fr 1fr; }
+      .delivery-asset { grid-template-columns:1fr; }
+      .delivery-asset video { width:100%; height:180px; }
+      .agent-profile-card { position:static; }
+      .workorder-strip { grid-template-columns:1fr; }
+    }
+
+    /* 2026-07 SaaS 精简版：Figma「展会-主页-数字员工」为唯一视觉基准 */
+    .workspace { padding:0 12px 12px 6px; }
+    .shell { padding:22px 26px; }
+    .staff-board { padding:0; overflow:hidden; }
+    .overview-hero { padding:34px 38px 18px; }
+    .overview-title { font-size:28px; }
+    .overview-subtitle { max-width:640px; }
+    .overview-actions button:not(.primary) { display:none; }
+    .staff-content { padding:20px 38px 40px; }
+    .staff-grid { width:100%; max-width:none; gap:18px; }
+    .staff-card { min-height:286px; grid-template-columns:112px minmax(0,1fr); padding:22px; background:#f7f7f4; }
+    .staff-card::after { content:'进入工作台  →'; opacity:.72; }
+    .staff-avatar, .staff-avatar img { width:104px; height:104px; }
+    .staff-role { max-width:260px; }
+    .overview-statusbar { margin:0 38px; padding:14px 18px; border:1px solid #e2e3e0; border-radius:10px; background:#fafaf8; display:flex; align-items:center; justify-content:space-between; gap:18px; color:#757b85; font-size:13px; }
+    .overview-statusbar b { color:#272a31; }
+    .overview-statusbar .status-items { display:flex; flex-wrap:wrap; gap:18px; }
+    .flow-advisor { width:auto; max-width:none; margin:0 38px 0; border-radius:10px; padding:14px 16px; background:#fbfcff; }
+    .flow-advisor b { margin-bottom:2px; }
+    .flow-advisor .status { display:none; }
+    .overview-secondary { display:none !important; }
+
+    .section:not(#overview) .hero { margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid #eceef2; }
+    .section:not(#overview) .hero h1 { font-size:24px; }
+    .employee-brief, .agent-profile { display:none; }
+    .work-console { display:none; }
+    .workorder-strip { margin:0 0 16px; padding:14px 16px; border-radius:10px; }
+    .agent-workbench { grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:18px; }
+    .agent-task-column, .agent-result-column { gap:14px; }
+    .section-panel, .work-console { border-radius:11px; padding:16px; }
+    .work-console { margin-bottom:0; }
+    .activity-list { display:none; }
+    .section-panel h2 { font-size:16px; }
+    .agent-step-label { background:#f0f1f4; color:#747b87; }
+    #creator .agent-task-column .section-panel:nth-of-type(3),
+    #buyer .simple-flow { margin-top:0; }
+    .compact-note { color:#8a909a; font-size:13px; line-height:1.55; }
+    @media (max-width: 1180px) {
+      .overview-statusbar, .flow-advisor { margin-left:20px; margin-right:20px; }
+      .staff-content { padding:18px 20px 28px; }
+      .agent-workbench { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+  <div class="topbar">
+    <div class="brand"><span>ExhibitFlow 展会运营</span><span class="badge">AI Agent</span></div>
+    <div class="top-actions">
+      <span id="system-pill" class="hidden">检查中</span>
+      <button class="top-refresh" onclick="refreshAll()" title="刷新状态" aria-label="刷新状态">↻</button>
+    </div>
+  </div>
+  <nav class="mobile-nav">
+    <div class="nav-item active" data-target="overview">驾驶舱</div>
+    <div class="nav-item" data-target="hunter">找爆款</div>
+    <div class="nav-item" data-target="creator">生视频</div>
+    <div class="nav-item" data-target="buyer">投放</div>
+    <div class="nav-item" data-target="tasks">任务</div>
+  </nav>
+  <div class="layout">
+    <aside>
+      <div class="sidebar-brand"><img class="sidebar-logo" src="/assets/figma-digital-employees/logo.png" alt="logo"><span></span></div>
+      <div class="nav-item active" data-target="overview"><span class="nav-icon"><img src="/assets/figma-digital-employees/bot.svg" alt=""></span>数字员工驾驶舱</div>
+      <div class="nav-item" data-target="hunter"><span class="nav-icon"><img src="/assets/figma-digital-employees/calendar-range.svg" alt=""></span>找爆款员工</div>
+      <div class="nav-item" data-target="creator"><span class="nav-icon"><img src="/assets/figma-digital-employees/space.svg" alt=""></span>生视频员工</div>
+      <div class="nav-item" data-target="buyer"><span class="nav-icon"><img src="/assets/figma-digital-employees/usage.svg" alt=""></span>投放员工</div>
+      <div class="nav-item" data-target="tasks"><span class="nav-icon"><img src="/assets/figma-digital-employees/usage.svg" alt=""></span>任务中心</div>
+      <div class="sidebar-spacer"></div>
+      <div class="usage-card">
+        <div>当前工作模式</div>
+        <div style="margin-top:6px;font-weight:850;color:#89775c">三名数字员工协同</div>
+        <div style="margin-top:8px;color:#9a9388;font-size:12px;line-height:1.45">前台只做确认，后台自动执行。</div>
+      </div>
+    </aside>
+    <main class="workspace">
+      <section id="overview" class="section active">
+        <div class="shell staff-board">
+          <div class="overview-hero">
+            <div>
+              <div class="overview-eyebrow">展会短视频运营空间</div>
+              <h1 class="overview-title">数字员工</h1>
+              <p class="overview-subtitle">选择一名员工并交代任务。执行过程在后台完成，前台只显示状态、待确认事项和最终结果。</p>
+            </div>
+            <div class="overview-actions"><button class="primary" onclick="goTo('hunter','search-keyword')">+ 新建任务</button></div>
+          </div>
+
+          <div class="overview-statusbar">
+            <b>当前团队</b>
+            <div class="status-items"><span>3 名数字员工</span><span id="overview-working-count">0 名工作中</span><span id="overview-action-count">0 项待确认</span></div>
+          </div>
+
+          <div class="flow-advisor" id="flow-advisor">
+            <div><span class="status blue">下一步建议</span><b id="flow-advisor-title">先安排找爆款员工</b><span id="flow-advisor-desc">输入展会主题，让员工先找到可复刻样本。</span></div>
+            <div class="flow-advisor-actions" id="flow-advisor-actions"><button class="primary" onclick="goTo('hunter','search-keyword')">去安排检索</button></div>
+          </div>
+
+          <div class="staff-content">
+            <div class="staff-grid">
+              <div class="staff-card is-active" data-staff-card="hunter" onclick="showSection('hunter')">
+                <div class="staff-figure"><div class="staff-avatar"><img src="/assets/figma-digital-employees/ip-blue.png" alt="找爆款员工"></div></div>
+                <div class="staff-info">
+                  <span class="staff-status" id="hunter-status">空闲中</span>
+                  <h2 class="staff-name">找爆款员工</h2>
+                  <div class="staff-space">发现值得参考的爆款样本</div>
+                  <div class="staff-tag"><img src="/assets/figma-digital-employees/wechat.svg" alt="">热点检索</div>
+                  <p class="staff-role">搜索抖音、小红书候选视频，去重并按互动表现排序。</p>
+                  <div class="staff-kpi" id="hunter-kpi"><span>样本 0 条</span><span>等待任务</span></div>
+                </div>
+              </div>
+              <div class="staff-card" data-staff-card="creator" onclick="showSection('creator')">
+                <div class="staff-figure"><div class="staff-avatar"><img src="/assets/figma-digital-employees/ip-green.png" alt="生视频员工"></div></div>
+                <div class="staff-info">
+                  <span class="staff-status" id="creator-status">空闲中</span>
+                  <h2 class="staff-name">生视频员工</h2>
+                  <div class="staff-space">把样本和卖点变成推广成片</div>
+                  <div class="staff-tag"><img src="/assets/figma-digital-employees/whatsapp-tag.svg" alt="">视频生成</div>
+                  <p class="staff-role">生成口播、配音、字幕和带行动引导的最终视频。</p>
+                  <div class="staff-kpi" id="creator-kpi"><span>成片 0 条</span><span>等待样本</span></div>
+                </div>
+              </div>
+              <div class="staff-card" data-staff-card="buyer" onclick="showSection('buyer')">
+                <div class="staff-figure"><div class="staff-avatar"><img src="/assets/figma-digital-employees/ip-blue.png" alt="投放员工"></div></div>
+                <div class="staff-info">
+                  <span class="staff-status" id="buyer-status">空闲中</span>
+                  <h2 class="staff-name">投放员工</h2>
+                  <div class="staff-space">完成投放并回收效果数据</div>
+                  <div class="staff-tag"><img src="/assets/figma-digital-employees/bot.svg" alt="">巨量投放</div>
+                  <p class="staff-role">绑定巨量账户、选择成片、创建草稿并同步关键指标。</p>
+                  <div class="staff-kpi" id="buyer-kpi"><span>未绑定</span><span>等待成片</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="overview-secondary" aria-hidden="true">
+            <div id="kpis"></div><div id="ops-snapshot"></div><div id="asset-chain"></div><span id="asset-package-status"></span>
+            <div id="approval-list"></div><span id="approval-status"></span><div id="flow-progress"></div><span id="flow-progress-status"></span>
+            <div id="handoff-list"></div><span id="handoff-status"></span><div id="overview-task-center"></div><span id="mission-total"></span>
+          </div>
+        </div>
+      </section>
+
+      <section id="hunter" class="section">
+        <div class="shell">
+          <div class="hero">
+            <div><h1>找爆款员工</h1><p>负责找到值得参考的视频。搜索阶段只展示预览信息，需要进入生成链路时再下载或分析。</p></div>
+            <span class="status blue">输出：参考样本</span>
+          </div>
+          <div class="employee-brief">
+            <div class="brief-card"><b>员工职责</b><span>发现展会行业可复刻的高互动视频样本。</span></div>
+            <div class="brief-card"><b>你只需要</b><span>选择平台，输入主题和目标数量。</span></div>
+            <div class="brief-card"><b>后台动作</b><span>检索、去重、封面补全、按互动分排序。</span></div>
+            <div class="brief-card"><b>最终产出</b><span>参考样本画廊，供生视频员工复刻。</span></div>
+          </div>
+          <div class="workorder-strip" id="hunter-order"></div>
+          <div class="agent-workbench">
+            <div class="agent-profile">
+              <div class="agent-profile-card">
+                <span class="agent-step-label">员工资料</span>
+                <h2 style="margin-top:10px">找爆款员工</h2>
+                <p>像内容选题同事一样，先帮你找到值得参考的同行视频，再把样本交给生视频员工。</p>
+                <div class="capability-list"><span>支持抖音 / 小红书检索</span><span>按互动分自动排序</span><span>每张卡片可设为参考样本</span></div>
+              </div>
+            </div>
+            <div class="agent-task-column">
+              <div class="work-console" id="hunter-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>工作进度</span></div><span class="status">等待开始</span></div><div class="work-progress"><span></span><span></span><span></span><span></span></div><div class="work-summary">填写检索条件后点击“让员工检索”，任务会在后台执行，结果自动回到本页。</div><div class="activity-list" id="hunter-activity"></div></div>
+              <div id="crawler-notice" class="notice"></div>
+              <div class="section-panel">
+                <h2>下任务 <span class="agent-step-label">输入检索条件</span></h2>
+                <div class="grid two">
+                  <div><label>检索平台</label><select id="search-platform"><option value="douyin">抖音</option><option value="xiaohongshu">小红书</option></select></div>
+                  <div><label>需要数量</label><input id="search-limit" type="number" min="1" max="50" value="12"></div>
+                </div>
+                <div style="margin-top:12px"><label>行业/主题</label><input id="search-keyword" value="展会素材"></div>
+                <div style="margin-top:12px"><label>排序标准</label><input value="点赞*1 + 评论*1.5 + 转发*2" disabled></div>
+                <div class="actions"><button id="search-button" class="primary" onclick="createSearch(false)">让员工检索</button><button id="deep-search-button" onclick="createSearch(true)">深度补全到目标数量</button></div>
+                <details style="margin-top:16px"><summary style="cursor:pointer;font-weight:850">没有抓取器时，导入已有视频链接</summary><div class="card soft" style="margin-top:10px"><label>每行一个抖音/小红书链接</label><textarea id="manual-links" placeholder="https://www.douyin.com/video/...&#10;https://www.xiaohongshu.com/explore/..."></textarea><div class="actions"><button onclick="importLinks()">导入给找爆款员工</button></div></div></details>
+              </div>
+            </div>
+            <div class="agent-result-column">
+              <div class="section-panel">
+                <h2>结果 / 建议 <span class="agent-step-label">参考样本画廊</span></h2>
+                <p>选择一个样本后，会自动交给生视频员工作为复刻参考。</p>
+                <div class="gallery-shell" style="margin-top:12px"><div class="gallery" id="gallery"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="creator" class="section">
+        <div class="shell">
+          <div class="hero">
+            <div><h1>生视频员工</h1><p>负责把参考样本、卖点和素材变成可投放的视频。第一步先定最终口播稿，后续配音和成片都使用这份文案。</p></div>
+            <span class="status blue">输出：最终成片</span>
+          </div>
+          <div class="employee-brief">
+            <div class="brief-card"><b>员工职责</b><span>把参考样本、业务卖点和本地素材合成为推广视频。</span></div>
+            <div class="brief-card"><b>你只需要</b><span>确认口播稿、音色、字幕模板和素材目录。</span></div>
+            <div class="brief-card"><b>后台动作</b><span>生成文案、配音、硬字幕、CTA 和最终成片。</span></div>
+            <div class="brief-card"><b>最终产出</b><span>可预览、可投放的 final.mp4。</span></div>
+          </div>
+          <div class="workorder-strip" id="creator-order"></div>
+          <div class="agent-workbench">
+            <div class="agent-profile">
+              <div class="agent-profile-card">
+                <span class="agent-step-label">员工资料</span>
+                <h2 style="margin-top:10px">生视频员工</h2>
+                <p>像短视频剪辑同事一样，把选中的参考样本和你的卖点，转成有口播、有字幕、有 CTA 的成片。</p>
+                <div class="capability-list"><span>AI 生成或手动口播稿</span><span>Edge / Qwen TTS 音色</span><span>四套字幕模板和重点词高亮</span><span>本地素材合成推广视频</span></div>
+              </div>
+            </div>
+            <div class="agent-task-column">
+              <div class="work-console" id="creator-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>工作进度</span></div><span class="status">等待开始</span></div><div class="work-progress"><span></span><span></span><span></span><span></span></div><div class="work-summary">生成文案、配音和成片都在后台执行；完成后文案、音频和视频会自动显示在本页。</div><div class="activity-list" id="creator-activity"></div></div>
+              <div class="section-panel"><h2>下任务 <span class="agent-step-label">文案与声音</span></h2><label>业务主题 / 卖点 / 手动文案</label><textarea id="copy-topic">2026北京国际会展大会招商推广，突出人流量、采购商质量、提前锁定展位</textarea><div class="actions"><button class="primary" onclick="createCopy()">AI 生成口播稿</button><button onclick="useManualCopy()">使用手动文案</button></div><label style="margin-top:16px">TTS 服务</label><select id="tts-service" onchange="syncTtsVoices()"><option value="edge">Microsoft Edge TTS（免密）</option><option value="qwen">阿里云百炼 Qwen TTS</option></select><label style="margin-top:12px">音色</label><select id="tts-voice"></select><div class="actions"><button onclick="createTts()">生成语音</button></div><div id="tts-preview" class="media-preview hidden"></div></div>
+              <div class="section-panel"><h2>成片设置 <span class="agent-step-label">素材和字幕</span></h2><label>素材目录</label><input id="material-dir"><label style="margin-top:12px">参考样本目录</label><input id="competitor-dir" placeholder="可选"><label style="margin-top:16px">视频结尾行动引导</label><input id="video-cta" value="点击下方链接，立即报名吧"><label style="margin-top:16px">字幕视觉模板</label><div class="grid two" id="caption-templates"><div class="choice active" data-template="viral" onclick="chooseCaptionTemplate('viral')"><b>爆款强调</b><p>白字黑描边，黄色重点词</p></div><div class="choice" data-template="business" onclick="chooseCaptionTemplate('business')"><b>专业展会</b><p>稳重白字，蓝色业务重点</p></div><div class="choice" data-template="minimal" onclick="chooseCaptionTemplate('minimal')"><b>极简商务</b><p>半透明底板，清晰克制</p></div><div class="choice" data-template="energetic" onclick="chooseCaptionTemplate('energetic')"><b>活力招展</b><p>橙色大字，强化行动号召</p></div></div><label style="margin-top:16px">重点词（逗号分隔；留空时自动识别）</label><input id="highlight-words" placeholder="例如：专业买家、人流量、提前锁定、限时报名"><div class="card soft" style="margin-top:16px"><label>添加本地素材</label><input id="material-files" type="file" multiple accept="video/*,image/*"><div class="actions"><button onclick="uploadMaterials()">上传到素材库</button><span id="material-count" class="status"></span></div></div><div class="actions"><button class="primary" onclick="createRender()">生成推广视频</button></div></div>
+            </div>
+            <div class="agent-result-column">
+              <div class="section-panel"><h2>结果 / 建议 <span class="agent-step-label">最终口播稿</span></h2><label>最终口播稿</label><textarea id="final-copy" style="min-height:260px" placeholder="AI 生成后会回填到这里，也可以直接手动输入。"></textarea></div>
+              <div class="section-panel"><h2>成片预览 <span class="agent-step-label">交给投放员工</span></h2><p>成片任务完成后会自动出现在这里，并同步到投放员工。</p><div id="render-preview" class="media-preview hidden"></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="buyer" class="section">
+        <div class="shell">
+          <div class="hero">
+            <div><h1>投放员工</h1><p>授权一次，后续账户识别、素材上传、项目配置和数据同步均由投放员工在后台完成。</p></div>
+            <span id="buyer-page-status" class="status">等待绑定</span>
+          </div>
+          <div class="employee-brief">
+            <div class="brief-card"><b>员工职责</b><span>把成片交给巨量链路，完成安全投放测试和效果回收。</span></div>
+            <div class="brief-card"><b>你只需要</b><span>前往巨量授权，选择成片、目标、预算和日期。</span></div>
+            <div class="brief-card"><b>后台动作</b><span>识别广告主、上传素材、创建关闭状态草稿、同步报表。</span></div>
+            <div class="brief-card"><b>最终产出</b><span>投放草稿、9 项效果指标和下一步优化建议。</span></div>
+          </div>
+          <div class="workorder-strip" id="buyer-order"></div>
+          <div class="agent-workbench">
+            <div class="agent-profile">
+              <div class="agent-profile-card"><span class="agent-step-label">员工资料</span><h2 style="margin-top:10px">投放员工</h2><p>像投手同事一样，负责把成片放进巨量链路，并把关键数据同步回来。</p><div class="capability-list"><span>巨量 OAuth 授权绑定</span><span>自动识别广告主和权限</span><span>上传视频素材并创建安全草稿</span><span>同步 9 项投放指标</span></div></div>
+              <div class="connect-card" id="oe-guide" style="grid-template-columns:1fr;padding:18px"><div class="connect-mark">巨</div><div class="connect-copy"><h2 id="oe-connect-title">连接巨量引擎</h2><p id="oe-guide-summary">点击“前往巨量”完成认证绑定。授权完成后，系统会自动识别广告账户并同步投放权限。</p><div id="oe-status" class="privacy-note">正在检查账户状态…</div><div class="privacy-note">认证信息由后台安全保存，页面不会展示技术配置。</div></div><div class="connect-actions"><button class="primary" id="oe-guide-primary" onclick="openOceanAuth()">前往巨量</button><button onclick="runOceanGuide()">刷新状态</button></div></div>
+            </div>
+            <div class="agent-task-column">
+              <div class="work-console" id="buyer-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>工作进度</span></div><span class="status">等待开始</span></div><div class="work-progress"><span></span><span></span><span></span><span></span></div><div class="work-summary">先绑定巨量账户，再选择成片和投放目标；投放员工会在后台完成素材上传、草稿创建和数据同步。</div><div class="activity-list" id="buyer-activity"></div></div>
+              <div class="simple-flow" id="oe-guide-steps"><div class="guide-step queued"><span>1</span><b>认证绑定</b><small>在巨量官方页面确认授权</small></div><div class="guide-step queued"><span>2</span><b>自动配置</b><small>后台识别广告账户与权限</small></div><div class="guide-step queued"><span>3</span><b>开始工作</b><small>自动上传成片并同步数据</small></div></div><ol class="guide-list hidden" id="oe-guide-list"></ol>
+              <div class="section-panel"><h2>下任务 <span class="agent-step-label">选择素材和目标</span></h2><label>投放素材</label><select id="delivery-video-select" onchange="selectDeliveryVideo(this.value)"><option value="">暂无可用成片</option></select><div id="delivery-video-preview" style="margin-top:14px"></div><label style="margin-top:16px">投放目标</label><div class="choice-row" id="delivery-goals"><div class="choice active" data-goal="lead" onclick="chooseDeliveryGoal('lead')"><b>获取线索</b><p>适合展位咨询和报名留资</p></div><div class="choice" data-goal="reserve" onclick="chooseDeliveryGoal('reserve')"><b>展位预约</b><p>引导用户进入招商/预约页</p></div><div class="choice" data-goal="awareness" onclick="chooseDeliveryGoal('awareness')"><b>品牌曝光</b><p>优先积累展示与有效播放</p></div></div><div class="grid three" style="margin-top:16px"><div><label>日预算（元）</label><input id="delivery-budget" type="number" min="300" value="300"></div><div><label>开始日期</label><input id="delivery-start" type="date"></div><div><label>结束日期</label><input id="delivery-end" type="date"></div></div><div style="margin-top:14px"><label>落地页（留空时自动使用账户内已审核通过的橙子页面）</label><input id="delivery-landing" placeholder="由投放员工自动匹配，也可手动覆盖"></div><div class="actions"><button onclick="createDeliveryDraft()">让投放员工检查</button><button class="primary" id="safe-launch-button" onclick="runSafeDeliveryTest()" disabled>安全创建投放草稿</button></div><div class="safe-box"><label><input id="safe-launch-confirm" type="checkbox" onchange="updateSafeLaunchButton()"><span>我确认本次只创建 <b>DISABLE（关闭）</b> 状态的真实素材、项目和推广，用于验证完整接口链路，不会开启消耗。</span></label></div></div>
+            </div>
+            <div class="agent-result-column">
+              <div class="section-panel"><h2>结果 / 建议 <span id="delivery-video-state" class="status">未选择</span></h2><p>这里只展示业务状态，具体参数由后台根据巨量账户资产自动匹配。</p><div id="delivery-checklist" class="checklist"></div><div class="actions"><button onclick="refreshDeliveryReport()">同步最新数据</button></div></div>
+              <div class="section-panel"><h2>投放效果数据 <span class="agent-step-label">9 项指标</span></h2><p>投放后自动同步消耗、展示、点击、转化和有效播放数据。</p><div id="delivery-board" class="metric-board"></div><div id="delivery-recap" class="recap-card"><b>投放复盘</b><span>同步数据后，投放员工会在这里给出优化建议。</span></div></div>
+            </div>
+          </div>
+          <div class="hidden" aria-hidden="true"><input id="oe-auth-code"><input id="ad-advertiser"><input id="ad-token" type="password"><input id="ad-start" type="date"><input id="ad-end" type="date"><input id="ad-filter"><input id="ad-video"><input id="ad-landing"><input id="ad-convert"><input id="ad-budget" value="300"><select id="ad-goal"><option value="lead">线索收集</option></select><input id="publish-video"><input id="publish-title"><textarea id="publish-desc"></textarea><select id="publish-platform"><option value="douyin">抖音</option></select><div id="publisher-notice"></div><button id="publish-button"></button><input id="oe-video-file"><input id="oe-video-id"><textarea id="oe-project-json"></textarea><input id="oe-project-id"><textarea id="oe-promotion-json"></textarea><input id="oe-promotion-id"><div id="publish-panel"></div><div id="ads-panel"></div></div>
+        </div>
+      </section>
+
+      <section id="tasks" class="section">
+        <div class="shell">
+          <div class="hero"><div><h1>任务中心</h1><p>所有员工的后台工作都在这里汇总。默认只看状态和结果；需要排查时再展开技术详情。</p></div></div>
+          <div id="task-list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const api = (path, options = {}) => fetch(path, {
+      headers: { 'Content-Type': 'application/json' },
+      ...options
+    }).then(async r => {
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || r.statusText);
+      return data;
+    });
+
+    let selectedSample = null;
+    let latestSamples = [];
+    let appConfig = {};
+    let lastCompletedSearch = '';
+    let lastCompletedCopy = '';
+    let lastCompletedTts = '';
+    let lastCompletedRender = '';
+    let lastCompletedDelivery = '';
+    let latestAudioPath = '';
+    let latestAudioText = '';
+    let latestRenderAssets = [];
+    let latestTaskItems = [];
+    let selectedDeliveryGoal = 'lead';
+    let selectedCaptionTemplate = 'viral';
+    let hasHydratedTasks = false;
+    let oceanConnected = false;
+
+    window.addEventListener('message', async event => {
+      if (event.origin !== window.location.origin || event.data?.type !== 'ocean-auth-complete') return;
+      if (!event.data.ok) return notify('巨量认证未完成，请重新尝试。', 'error');
+      await loadOceanStatus();
+      await runOceanGuide();
+      notify('巨量账户已完成绑定。');
+    });
+
+    function notify(message, type = 'info') {
+      const box = document.getElementById('toast');
+      box.textContent = message;
+      box.className = `toast show ${type === 'error' ? 'error' : ''}`;
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => box.className = 'toast', 4200);
+    }
+    function valueOf(id) { return document.getElementById(id).value.trim(); }
+    function ensureFields(fields) {
+      for (const [id, label] of fields) {
+        if (!valueOf(id)) {
+          notify(`请填写${label}`, 'error');
+          document.getElementById(id).focus();
+          return false;
+        }
+      }
+      return true;
+    }
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(el => el.classList.toggle('active', el.id === id));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.target === id));
+      document.querySelectorAll('[data-staff-card]').forEach(el => el.classList.toggle('is-active', el.dataset.staffCard === id));
+      document.querySelectorAll('.pipeline-step').forEach(el => el.classList.remove('active'));
+      if (id === 'hunter') document.querySelectorAll('.pipeline-step')[0]?.classList.add('active');
+      if (id === 'creator') document.querySelectorAll('.pipeline-step')[1]?.classList.add('active');
+      if (id === 'buyer') document.querySelectorAll('.pipeline-step')[2]?.classList.add('active');
+      if (id === 'tasks') loadTasks();
+    }
+    function goTo(sectionId, targetId) {
+      showSection(sectionId);
+      window.setTimeout(() => {
+        const target = document.getElementById(targetId);
+        if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
+      }, 80);
+    }
+    document.querySelectorAll('.nav-item').forEach(el => el.addEventListener('click', () => showSection(el.dataset.target)));
+
+    function applyQuickStart(type) {
+      if (type === 'hunter-exhibition') {
+        document.getElementById('search-platform').value = 'douyin';
+        document.getElementById('search-keyword').value = '展会现场 招商 展位 采购商';
+        document.getElementById('search-limit').value = '20';
+        notify('已为找爆款员工预填检索任务。');
+        goTo('hunter','search-keyword');
+        return;
+      }
+      if (type === 'creator招商') {
+        document.getElementById('copy-topic').value = '2026北京国际会展大会招商推广，突出人流量、采购商质量、展位稀缺、提前锁定黄金展位';
+        document.getElementById('video-cta').value = '点击下方链接，立即报名吧';
+        document.getElementById('highlight-words').value = '专业买家,人流量,采购商质量,提前锁定,展位稀缺,立即报名';
+        chooseCaptionTemplate('viral');
+        notify('已为生视频员工预填招商推广任务。');
+        goTo('creator','copy-topic');
+        return;
+      }
+      if (type === 'delivery-safe') {
+        document.getElementById('delivery-budget').value = document.getElementById('delivery-budget').value || '300';
+        notify('已切换到投放员工，请先确认巨量账户和投放素材。');
+        goTo('buyer','oe-guide');
+      }
+    }
+
+    async function createTask(kind, payload, stay = true) {
+      try {
+        const task = await api(`/api/tasks/${kind}`, { method:'POST', body: JSON.stringify(payload) });
+        notify('任务已提交，员工正在后台处理。');
+        await loadTasks();
+        return task;
+      } catch (error) {
+        notify(error.message, 'error');
+        return null;
+      }
+    }
+    function retryTask(index) {
+      const task = latestTaskItems[index];
+      if (!task) return notify('找不到要重试的任务', 'error');
+      notify(`已重新提交：${taskKindLabel(task.kind)}`);
+      return createTask(task.kind, task.payload || {}, false);
+    }
+    function createSearch(deep) {
+      return createTask('search', {
+        platform: valueOf('search-platform'),
+        keyword: valueOf('search-keyword'),
+        limit: Number(valueOf('search-limit') || 10),
+        deep
+      }, true);
+    }
+    function importLinks() {
+      if (!ensureFields([['search-keyword','样本主题'], ['manual-links','至少一个视频链接']])) return;
+      return createTask('import-links', {
+        platform: valueOf('search-platform'),
+        keyword: valueOf('search-keyword'),
+        links: document.getElementById('manual-links').value,
+      }, true);
+    }
+    function createCopy() {
+      if (!valueOf('copy-topic') && !selectedSample) {
+        notify('请填写主题/卖点，或先选择参考样本', 'error');
+        return;
+      }
+      return createTask('copy', { topic: valueOf('copy-topic'), sample: selectedSample || {}, cta_text: valueOf('video-cta') }, true);
+    }
+    function useManualCopy() {
+      if (!ensureFields([['copy-topic','手动文案或主题']])) return;
+      document.getElementById('final-copy').value = document.getElementById('copy-topic').value;
+      notify('已把手动内容设为最终口播稿。');
+    }
+    const voiceCatalog = {
+      edge:[['zh-CN-XiaoxiaoNeural','晓晓-女声'],['zh-CN-XiaoyiNeural','晓伊-女声'],['zh-CN-YunjianNeural','云健-男声'],['zh-CN-YunxiNeural','云希-男声']],
+      qwen:[['Cherry','Cherry 女声'],['Serena','Serena 女声'],['Ethan','Ethan 男声'],['Dylan','Dylan 男声']],
+    };
+    function syncTtsVoices() {
+      const service = valueOf('tts-service') || 'edge';
+      const voice = document.getElementById('tts-voice');
+      voice.innerHTML = (voiceCatalog[service] || []).map(([value,label]) => `<option value="${escapeAttr(value)}">${escapeHtml(label)}</option>`).join('');
+    }
+    function createTts() {
+      if (!ensureFields([['final-copy','口播稿']])) return;
+      return createTask('tts', {
+        text: finalCopyWithCta(),
+        voice: valueOf('tts-voice'),
+        service: valueOf('tts-service'),
+        cta_text: valueOf('video-cta'),
+      }, true);
+    }
+    function finalCopyWithCta() {
+      const copy = valueOf('final-copy');
+      const cta = valueOf('video-cta').replace(/[。！？!?；;，,]+$/g, '');
+      if (!cta) return copy;
+      const compact = copy.replace(/[\s。！？!?；;，,]+/g, '');
+      const compactCta = cta.replace(/[\s。！？!?；;，,]+/g, '');
+      return compact.endsWith(compactCta) ? copy : `${copy.trim()}\n\n${cta}。`;
+    }
+    function chooseCaptionTemplate(name) {
+      selectedCaptionTemplate = name;
+      document.querySelectorAll('#caption-templates .choice').forEach(el => el.classList.toggle('active', el.dataset.template === name));
+    }
+    function createRender() {
+      const script = finalCopyWithCta();
+      if (!valueOf('material-dir')) return notify('请填写素材目录', 'error');
+      if (!script) return notify('请先生成或填写最终口播稿', 'error');
+      document.getElementById('final-copy').value = script;
+      const matchingAudio = latestAudioText && latestAudioText.trim() === script.trim() ? latestAudioPath : '';
+      return createTask('render', {
+        keyword: valueOf('copy-topic') || '展会推广',
+        material_dir: valueOf('material-dir'),
+        competitor_dir: valueOf('competitor-dir'),
+        script,
+        cta_text: valueOf('video-cta'),
+        caption_template: selectedCaptionTemplate,
+        highlight_words: valueOf('highlight-words'),
+        audio_file: matchingAudio,
+        auto_tts: true,
+        tts_service: valueOf('tts-service'),
+        voice: valueOf('tts-voice'),
+      }, true);
+    }
+    async function uploadMaterials() {
+      const input = document.getElementById('material-files');
+      const files = Array.from(input.files || []);
+      if (!files.length) return notify('请先选择视频或图片素材', 'error');
+      try {
+        for (const file of files) {
+          const response = await fetch(`/api/materials/upload?name=${encodeURIComponent(file.name)}`, {
+            method:'POST',
+            headers:{'Content-Type':'application/octet-stream'},
+            body:file,
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || `上传 ${file.name} 失败`);
+        }
+        input.value = '';
+        notify(`已上传 ${files.length} 个素材`);
+        await loadConfig();
+      } catch (error) {
+        notify(error.message, 'error');
+      }
+    }
+    function createPublish() {
+      if (!ensureFields([['publish-video','视频文件'], ['publish-title','发布标题']])) return;
+      return createTask('publish', {
+        platform: valueOf('publish-platform'),
+        video_file: valueOf('publish-video'),
+        title: valueOf('publish-title'),
+        desc: document.getElementById('publish-desc').value,
+      }, true);
+    }
+    async function openOceanAuth() {
+      try {
+        const data = await api('/api/oceanengine/auth-url');
+        const authWindow = window.open(data.url, 'exhibitflow-ocean-auth');
+        notify('请在巨量官方页面完成认证绑定。');
+        let attempts = 0;
+        clearInterval(window.__oceanAuthPoll);
+        window.__oceanAuthPoll = setInterval(async () => {
+          attempts += 1;
+          await loadOceanStatus();
+          if (oceanConnected || attempts >= 120 || authWindow?.closed) {
+            clearInterval(window.__oceanAuthPoll);
+            if (oceanConnected) {
+              await runOceanGuide();
+              notify('巨量账户已完成绑定。');
+            }
+          }
+        }, 2000);
+      } catch (error) {
+        notify(error.message, 'error');
+      }
+    }
+    async function runOceanGuide() {
+      const summary = document.getElementById('oe-guide-summary');
+      const primary = document.getElementById('oe-guide-primary');
+      try {
+        summary.textContent = '正在自动检测：系统应用、用户授权、广告主账户、报表权限...';
+        const data = await api('/api/oceanengine/onboarding', { method:'POST', body: JSON.stringify({ access_token: valueOf('ad-token') }) });
+        renderOceanGuide(data);
+        if (data.status?.advertiser_id) document.getElementById('ad-advertiser').value = data.status.advertiser_id;
+        primary.textContent = data.stage === 'ready' ? '账户已绑定' : '前往巨量';
+        primary.disabled = data.stage === 'ready';
+        primary.onclick = openOceanAuth;
+        if (['wrong_account_role','needs_ad_account','needs_delivery_asset'].includes(data.stage)) {
+          primary.disabled = false;
+          primary.textContent = '前往巨量';
+          primary.onclick = () => window.open('https://business.oceanengine.com/', '_blank');
+        }
+        await loadOceanStatus();
+      } catch (error) {
+        summary.textContent = error.message;
+        notify(error.message, 'error');
+      }
+    }
+    function renderOceanGuide(data) {
+      document.getElementById('oe-connect-title').textContent = data.ready ? '巨量账户已绑定' : '连接巨量引擎';
+      document.getElementById('oe-guide-summary').textContent = data.ready
+        ? '认证和账户识别已经完成，投放员工可以在后台处理素材、投放配置和数据同步。'
+        : (data.summary || '点击“前往巨量”完成认证绑定。');
+      const stateText = {succeeded:'通过', failed:'需处理', running:'进行中', queued:'等待'};
+      const titleMap = {oauth:'认证绑定', account:'自动配置', report:'开始工作'};
+      const detailMap = {
+        oauth:'在巨量官方页面确认授权',
+        account:'后台自动识别可投放账户',
+        report:'同步投放权限和效果数据',
+      };
+      const visibleSteps = (data.steps || []).filter(step => ['oauth','account','report'].includes(step.key));
+      document.getElementById('oe-guide-steps').innerHTML = visibleSteps.map((step, index) => `
+        <div class="guide-step ${escapeAttr(step.state || 'queued')}">
+          <span>${index + 1} · ${escapeHtml(stateText[step.state] || step.state || '等待')}</span>
+          <b>${escapeHtml(titleMap[step.key] || step.title || '')}</b>
+          <small>${escapeHtml(detailMap[step.key] || '')}</small>
+        </div>
+      `).join('');
+      const list = document.getElementById('oe-guide-list');
+      if (data.guide && data.guide.length) {
+        list.innerHTML = data.guide.map(item => `<li>${escapeHtml(item)}</li>`).join('');
+        list.classList.remove('hidden');
+      } else {
+        list.innerHTML = '';
+        list.classList.add('hidden');
+      }
+      if (data.report_probe?.dashboard) renderDeliveryDraft(data.report_probe);
+      if (data.stage === 'wrong_account_role') notify('已授权，但不是投放广告主账户。请按向导去开通/共享广告主。', 'error');
+    }
+    async function loadOceanStatus() {
+      try {
+        const data = await api('/api/oceanengine/status');
+        const el = document.getElementById('oe-status');
+        if (!el) return;
+        const connected = data.has_access_token && data.advertiser_id && data.binding_verified;
+        oceanConnected = Boolean(connected);
+        el.innerHTML = connected
+          ? `已连接：<b>${escapeHtml(data.advertiser_name || '巨量广告账户')}</b>`
+          : '尚未绑定巨量账户';
+        if (data.advertiser_id) document.getElementById('ad-advertiser').value = data.advertiser_id;
+        const pageStatus = document.getElementById('buyer-page-status');
+        if (pageStatus) {
+          pageStatus.textContent = connected ? '已绑定' : '等待绑定';
+          pageStatus.className = `status ${connected ? 'succeeded' : ''}`;
+        }
+        updateEmployeeStatuses();
+        updateSafeLaunchButton();
+      } catch (error) {
+        oceanConnected = false;
+        const el = document.getElementById('oe-status');
+        if (el) el.textContent = error.message;
+      }
+    }
+    async function exchangeOceanAuthCode() {
+      const authCode = valueOf('oe-auth-code');
+      if (!authCode) return notify('请先粘贴授权回调 URL 中的 auth_code/code', 'error');
+      try {
+        await api('/api/oceanengine/token', { method:'POST', body: JSON.stringify({ auth_code: authCode }) });
+        notify('Token 获取成功，正在刷新授权账户。');
+        await fetchAdvertisers();
+      } catch (error) {
+        notify(error.message, 'error');
+      }
+    }
+    async function fetchAdvertisers() {
+      try {
+        const data = await api('/api/oceanengine/advertisers', { method:'POST', body: JSON.stringify({ access_token: valueOf('ad-token') }) });
+        if (!data.count) {
+          await loadOceanStatus();
+          await runOceanGuide();
+          return notify('接口已通，但官方授权账户列表为空；如果系统已识别真实广告主，会继续使用本地已绑定广告主。', 'error');
+        }
+        const advertiserItems = (data.items || []).filter(item => {
+          const role = String(item.account_type || item.account_role || item.advertiser_role || '').toUpperCase();
+          return role === 'ADVERTISER' || role.includes('ADVERTISER');
+        });
+        if (advertiserItems.length) {
+          const first = advertiserItems[0] || {};
+          document.getElementById('ad-advertiser').value = first.advertiser_id || first.account_id || first.id || '';
+          if (first.account_name || first.advertiser_name) notify(`已选择广告账户：${first.account_name || first.advertiser_name}`);
+          notify(`已获取 ${advertiserItems.length} 个可投放广告主账户。`);
+        } else {
+          notify('官方授权账户接口只返回了管理/工作台账号，系统将继续使用已识别的真实广告主。');
+        }
+        await loadOceanStatus();
+        await runOceanGuide();
+      } catch (error) {
+        notify(error.message, 'error');
+      }
+    }
+    async function refreshDeliveryReport() {
+      return createTask('delivery-report', {
+        start_date: valueOf('ad-start'),
+        end_date: valueOf('ad-end'),
+        filters: [],
+      }, false);
+    }
+    function parseOfficialJson(id) {
+      const raw = document.getElementById(id).value.trim();
+      if (!raw) return {};
+      try { return JSON.parse(raw); }
+      catch (error) { throw new Error('官方 JSON 格式不正确：' + error.message); }
+    }
+    async function fetchReportConfig() {
+      try {
+        const data = await api('/api/oceanengine/report-config', { method:'POST', body: JSON.stringify({ advertiser_id: valueOf('ad-advertiser'), access_token: valueOf('ad-token') }) });
+        notify('已获取报表指标配置，详情见任务中心。');
+        console.log('report-config', data);
+      } catch (error) { notify(error.message, 'error'); }
+    }
+    function uploadOceanVideo() {
+      const videoFile = valueOf('oe-video-file') || valueOf('ad-video') || valueOf('publish-video');
+      if (!videoFile) return notify('请先填写本地视频文件路径', 'error');
+      return createTask('ocean-video-upload', {
+        advertiser_id: valueOf('ad-advertiser'),
+        access_token: valueOf('ad-token'),
+        video_file: videoFile,
+        is_aigc: true,
+      }, false);
+    }
+    function createOceanProject() {
+      let official;
+      try { official = parseOfficialJson('oe-project-json'); } catch (error) { return notify(error.message, 'error'); }
+      return createTask('ocean-project-create', {
+        advertiser_id: valueOf('ad-advertiser'),
+        access_token: valueOf('ad-token'),
+        official_json: official,
+      }, false);
+    }
+    function createOceanPromotion() {
+      let official;
+      try { official = parseOfficialJson('oe-promotion-json'); } catch (error) { return notify(error.message, 'error'); }
+      if (valueOf('oe-project-id') && !official.project_id) official.project_id = Number(valueOf('oe-project-id')) || valueOf('oe-project-id');
+      return createTask('ocean-promotion-create', {
+        advertiser_id: valueOf('ad-advertiser'),
+        access_token: valueOf('ad-token'),
+        official_json: official,
+      }, false);
+    }
+    function createDeliveryDraft() {
+      const videoFile = valueOf('delivery-video-select') || valueOf('ad-video') || valueOf('publish-video');
+      if (!videoFile) return notify('请先选择一条待投放成片', 'error');
+      return createTask('delivery-draft', {
+        landing_url: valueOf('delivery-landing'),
+        budget: valueOf('delivery-budget'),
+        subject: valueOf('copy-topic'),
+        selling_points: valueOf('final-copy').slice(0, 120),
+        video_file: videoFile,
+        goal: selectedDeliveryGoal,
+      }, true);
+    }
+    function chooseDeliveryGoal(goal) {
+      selectedDeliveryGoal = goal;
+      document.querySelectorAll('#delivery-goals .choice').forEach(el => el.classList.toggle('active', el.dataset.goal === goal));
+    }
+    function selectDeliveryVideo(videoFile) {
+      document.getElementById('ad-video').value = videoFile || '';
+      document.getElementById('publish-video').value = videoFile || '';
+      const asset = latestRenderAssets.find(item => item.path === videoFile);
+      const box = document.getElementById('delivery-video-preview');
+      const state = document.getElementById('delivery-video-state');
+      if (!asset) {
+        box.innerHTML = '<div class="card soft">请先让生视频员工生成一条成片。</div>';
+        state.textContent = '未选择';
+        state.className = 'status';
+      } else {
+        box.innerHTML = `<div class="delivery-asset"><video controls preload="metadata" src="${escapeAttr(asset.preview)}"></video><div><b>${escapeHtml(asset.name)}</b><p>该视频将交给投放员工做条件检查和安全投放草稿。</p></div></div>`;
+        state.textContent = '已选择';
+        state.className = 'status succeeded';
+      }
+      renderDeliveryDraft(null);
+      updateSafeLaunchButton();
+    }
+    function renderDeliveryAssets(items) {
+      const seen = new Set();
+      latestRenderAssets = items
+        .filter(task => task.kind === 'render' && task.status === 'succeeded' && task.result?.summary?.final_video)
+        .map(task => ({
+          path: task.result.summary.final_video,
+          preview: task.result.summary.preview_url,
+          name: task.payload?.keyword || task.result.summary.keyword || '推广成片',
+        }))
+        .filter(item => item.path && !seen.has(item.path) && seen.add(item.path));
+      const select = document.getElementById('delivery-video-select');
+      const current = select.value || valueOf('ad-video');
+      select.innerHTML = latestRenderAssets.length
+        ? latestRenderAssets.map((item, index) => `<option value="${escapeAttr(item.path)}">${index + 1}. ${escapeHtml(item.name)}</option>`).join('')
+        : '<option value="">暂无可用成片</option>';
+      const next = latestRenderAssets.some(item => item.path === current) ? current : (latestRenderAssets[0]?.path || '');
+      select.value = next;
+      selectDeliveryVideo(next);
+    }
+    function updateSafeLaunchButton() {
+      const confirmed = document.getElementById('safe-launch-confirm')?.checked;
+      const video = valueOf('delivery-video-select');
+      document.getElementById('safe-launch-button').disabled = !(confirmed && video && oceanConnected);
+    }
+    function runSafeDeliveryTest() {
+      const videoFile = valueOf('delivery-video-select');
+      if (!document.getElementById('safe-launch-confirm').checked) return notify('请先确认本次只创建关闭状态的安全投放草稿', 'error');
+      if (!oceanConnected) return notify('请先完成巨量账户绑定', 'error');
+      if (!videoFile) return notify('请先选择待投放成片', 'error');
+      return createTask('ocean-safe-launch', { video_file: videoFile, fresh: true }, true);
+    }
+    function switchDeliveryTab(name, button) {
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      button.classList.add('active');
+      document.getElementById('publish-panel').classList.toggle('hidden', name !== 'publish');
+      document.getElementById('ads-panel').classList.toggle('hidden', name !== 'ads');
+    }
+    async function refreshAll() {
+      renderDeliveryDraft(null);
+      await loadConfig();
+      await loadLatest();
+      await loadTasks();
+    }
+    async function loadConfig() {
+      const cfg = await api('/api/config');
+      appConfig = cfg;
+      document.getElementById('material-dir').value ||= cfg.material_dir;
+      const today = new Date();
+      const afterSevenDays = new Date(today.getTime() + 7 * 86400000);
+      document.getElementById('delivery-start').value ||= today.toISOString().slice(0, 10);
+      document.getElementById('delivery-end').value ||= afterSevenDays.toISOString().slice(0, 10);
+      await loadOceanStatus();
+      runOceanGuide();
+      document.getElementById('kpis').innerHTML = [
+        ['找爆款', cfg.crawler_configured ? '抓取器已配置' : '需导入链接'],
+        ['成片引擎', cfg.render_engine],
+        ['AI/TTS', cfg.dashscope_configured ? 'Qwen 已配置' : '需配置 Key'],
+        ['发布器', cfg.publisher_configured ? '已配置' : '未配置'],
+      ].map(([k,v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('');
+      document.getElementById('system-pill').textContent = cfg.ffmpeg_configured ? '系统可用' : '缺 FFmpeg';
+      document.getElementById('system-pill').className = `status ${cfg.ffmpeg_configured ? 'succeeded' : 'failed'}`;
+      document.getElementById('material-count').textContent = `素材 ${cfg.material_count || 0} 个`;
+      const crawlerNotice = document.getElementById('crawler-notice');
+      crawlerNotice.textContent = cfg.crawler_configured
+        ? ''
+        : '当前未安装真实平台抓取器。检索按钮已停用，你仍可在下方导入已有视频链接。';
+      crawlerNotice.classList.toggle('show', !cfg.crawler_configured);
+      document.getElementById('search-button').disabled = !cfg.crawler_configured;
+      document.getElementById('deep-search-button').disabled = !cfg.crawler_configured;
+      const publisherNotice = document.getElementById('publisher-notice');
+      publisherNotice.textContent = cfg.publisher_configured ? '' : '当前未配置个人账号发布器，不能执行真实发布。';
+      publisherNotice.classList.toggle('show', !cfg.publisher_configured);
+      document.getElementById('publish-button').disabled = !cfg.publisher_configured;
+    }
+    async function loadLatest() {
+      const latest = await api('/api/latest?action=search,manual-import');
+      renderGallery(latest.items || []);
+    }
+    function renderGallery(items) {
+      latestSamples = items;
+      const box = document.getElementById('gallery');
+      if (!items.length) {
+        box.innerHTML = '<div class="card soft">暂无样本。先让员工检索，或导入已有视频链接。</div>';
+        return;
+      }
+      box.innerHTML = items.map((item, i) => {
+        const title = (item.title || item.desc || '未命名视频').slice(0, 64);
+        const cover = item.cover_url || item.origin_cover_url || item.dynamic_cover_url || '';
+        const score = item.interaction_score || 0;
+        const selected = selectedSample && selectedSample.url && item.url === selectedSample.url;
+        return `<div class="sample ${selected ? 'selected' : ''}">
+          ${cover ? `<img src="${escapeAttr(cover)}" alt="视频封面">` : '<div class="card soft" style="height:140px;display:grid;place-items:center;">无封面</div>'}
+          <div class="sample-title">#${item.rank || i + 1} ${escapeHtml(title)}</div>
+          <div class="sample-meta">赞 ${item.digg_count || 0} ｜ 评 ${item.comment_count || 0} ｜ 转 ${item.share_count || 0}<br>互动分 ${score}</div>
+          <div class="actions"><button onclick="selectSample(${i})">${selected ? '当前参考' : '设为参考'}</button></div>
+        </div>`;
+      }).join('');
+      updateEmployeeStatuses();
+    }
+    function selectSample(index) {
+      const item = latestSamples[index] || {};
+      selectedSample = item;
+      document.getElementById('copy-topic').value = item.title || item.desc || document.getElementById('copy-topic').value;
+      renderGallery(latestSamples);
+      updateEmployeeStatuses();
+      showSection('creator');
+    }
+    async function loadTasks() {
+      const data = await api('/api/tasks');
+      renderTaskList(data.items || []);
+      hydrateLatestResults(data.items || []);
+      renderDeliveryAssets(data.items || []);
+      renderAssetPackage(data.items || []);
+      renderWorkOrders(data.items || []);
+      renderEmployeeWork(data.items || []);
+      renderMissionCenter(data.items || []);
+      renderOpsSnapshot(data.items || []);
+      updateFlowAdvisor(data.items || []);
+      renderApprovalQueue(data.items || []);
+      hasHydratedTasks = true;
+      updateEmployeeStatuses(data.items || []);
+    }
+    function employeeLatestTask(items, kinds) {
+      return items.find(item => kinds.includes(item.kind));
+    }
+    function taskStateText(status) {
+      return ({queued:'排队中', running:'工作中', succeeded:'已完成', failed:'需处理'})[status] || status || '等待开始';
+    }
+    function latestSucceeded(items, kinds) {
+      return items.find(item => kinds.includes(item.kind) && item.status === 'succeeded');
+    }
+    function parseTaskTime(task) {
+      const raw = task?.updated_at || task?.created_at || '';
+      const normalized = String(raw).includes('T') ? String(raw) : String(raw).replace(' ', 'T');
+      const ms = Date.parse(normalized);
+      return Number.isFinite(ms) ? ms : 0;
+    }
+    function isRecentTask(task, hours = 24) {
+      const ms = parseTaskTime(task);
+      return Boolean(ms && Date.now() - ms <= hours * 3600000);
+    }
+    function actionableFailures(items = []) {
+      return items.filter(item => item.status === 'failed' && isRecentTask(item, 24));
+    }
+    function taskBusinessMessage(task) {
+      if (!task) return '';
+      if (task.status !== 'failed') return taskSummary(task);
+      const error = String(task.error || '');
+      if (/access_token无效|token.*invalid|invalid.*token/i.test(error)) return '巨量授权已失效，请重新点击“前往巨量”完成绑定后重试。';
+      if (/list'?: \[\]|广告主|advertiser/i.test(error) && /为空|empty|list'?: \[\]/i.test(error)) return '当前授权账号没有可用投放广告主，请先在巨量侧开通或共享广告主。';
+      if (/频率超限|rate|限流|too many/i.test(error)) return '巨量接口当前限流，请稍后在任务中心重试。';
+      if (/视频上传失败|video upload|素材|material/i.test(error)) return '视频素材上传失败，请检查文件大小、格式和巨量素材权限。';
+      if (/DashScope|qwen|百炼|TTS|tts|voice/i.test(error)) return 'AI 或配音服务调用失败，请检查模型 Key、音色和网络后重试。';
+      if (/FFmpeg|ffmpeg|moviepy|render/i.test(error)) return '视频合成失败，请检查素材、FFmpeg 和字幕/配音文件是否可用。';
+      if (error && error.length < 180 && !/Traceback|File "|RuntimeError|Exception/i.test(error)) return error;
+      return '任务执行失败，已收起技术细节；请展开查看原因，修正后重试。';
+    }
+    function deriveFlowState(items = []) {
+      return {
+        hasSamples: latestSamples.length > 0 || Boolean(latestSucceeded(items, ['search','import-links'])),
+        hasSelected: Boolean(selectedSample),
+        hasCopy: Boolean(valueOf('final-copy')) || Boolean(latestSucceeded(items, ['copy'])),
+        hasAudio: Boolean(latestAudioPath) || Boolean(latestSucceeded(items, ['tts'])),
+        hasVideo: Boolean(valueOf('ad-video') || valueOf('publish-video')) || Boolean(latestSucceeded(items, ['render'])),
+        hasOcean: Boolean(oceanConnected),
+        hasDelivery: Boolean(latestSucceeded(items, ['delivery-draft','ocean-safe-launch','delivery-report'])),
+      };
+    }
+    function flowStepModel(state) {
+      return [
+        {key:'hasSamples', label:'检索样本', desc:'找爆款员工'},
+        {key:'hasSelected', label:'选择参考', desc:'确定复刻对象'},
+        {key:'hasCopy', label:'生成口播', desc:'生视频员工'},
+        {key:'hasAudio', label:'生成语音', desc:'配音就绪'},
+        {key:'hasVideo', label:'生成成片', desc:'final.mp4'},
+        {key:'hasOcean', label:'绑定巨量', desc:'账户授权'},
+        {key:'hasDelivery', label:'投放复盘', desc:'数据回流'},
+      ].map((step, index) => ({...step, index:index + 1, done:Boolean(state[step.key])}));
+    }
+    function updateFlowProgress(items = []) {
+      const box = document.getElementById('flow-progress');
+      const status = document.getElementById('flow-progress-status');
+      if (!box) return;
+      const state = deriveFlowState(items);
+      const steps = flowStepModel(state);
+      const doneCount = steps.filter(step => step.done).length;
+      const activeIndex = Math.min(doneCount, steps.length - 1);
+      if (status) status.textContent = `${doneCount} / ${steps.length}`;
+      box.innerHTML = steps.map((step, i) => `<div class="flow-step ${step.done ? 'done' : i === activeIndex ? 'active' : ''}" data-index="${step.index}"><b>${escapeHtml(step.label)}</b><small>${escapeHtml(step.desc)}</small></div>`).join('');
+    }
+    function renderHandoffList(items = []) {
+      const box = document.getElementById('handoff-list');
+      const status = document.getElementById('handoff-status');
+      if (!box) return;
+      const state = deriveFlowState(items);
+      const handoffs = [
+        {from:'找爆款员工', to:'生视频员工', title:'参考样本', done:state.hasSelected, partial:state.hasSamples, desc:state.hasSelected ? '已选定参考样本，生视频员工可以复刻。' : state.hasSamples ? '已有候选样本，等待选择一个参考。' : '等待找爆款员工检索样本。', action:state.hasSelected ? '查看样本' : '选择样本', section:'hunter', target:state.hasSamples ? 'gallery' : 'search-keyword'},
+        {from:'生视频员工', to:'配音/成片', title:'最终口播稿', done:state.hasCopy, partial:false, desc:state.hasCopy ? '口播稿已准备好，可以生成语音和成片。' : '等待生视频员工生成或确认口播稿。', action:state.hasCopy ? '编辑口播' : '生成口播', section:'creator', target:state.hasCopy ? 'final-copy' : 'copy-topic'},
+        {from:'生视频员工', to:'投放员工', title:'推广成片', done:state.hasVideo, partial:state.hasAudio, desc:state.hasVideo ? '成片已生成，可以交给投放员工。' : state.hasAudio ? '语音已生成，等待合成最终视频。' : '等待生成语音和推广成片。', action:state.hasVideo ? '预览成片' : '生成成片', section:'creator', target:state.hasVideo ? 'render-preview' : 'material-dir'},
+        {from:'投放员工', to:'数据复盘', title:'投放数据', done:state.hasDelivery, partial:state.hasOcean, desc:state.hasDelivery ? '投放草稿/报表已有结果，可以查看复盘。' : state.hasOcean ? '巨量已绑定，等待创建安全投放草稿。' : '等待完成巨量账户授权。', action:state.hasDelivery ? '查看数据' : '处理投放', section:'buyer', target:state.hasDelivery ? 'delivery-board' : state.hasOcean ? 'safe-launch-button' : 'oe-guide'},
+      ];
+      const doneCount = handoffs.filter(item => item.done).length;
+      if (status) status.textContent = `${doneCount} / ${handoffs.length} 已交接`;
+      box.innerHTML = handoffs.map(item => `<div class="handoff-item ${item.done ? 'done' : item.partial ? 'active' : ''}">
+        <div class="handoff-title"><span>${escapeHtml(item.title)}</span><span class="status ${item.done ? 'succeeded' : item.partial ? 'queued' : ''}">${item.done ? '已交接' : item.partial ? '待确认' : '等待'}</span></div>
+        <div class="handoff-desc">${escapeHtml(item.desc)}</div>
+        <div class="handoff-foot">${escapeHtml(item.from)} → ${escapeHtml(item.to)}</div>
+        <div class="actions"><button onclick="goTo('${item.section}', '${item.target || ''}')">${escapeHtml(item.action)}</button></div>
+      </div>`).join('');
+    }
+    function renderWorkOrders(items = []) {
+      const state = deriveFlowState(items);
+      const setOrder = (id, model) => {
+        const box = document.getElementById(id);
+        if (!box) return;
+        box.innerHTML = `<div><span class="status ${model.statusClass || 'blue'}">${escapeHtml(model.status || '当前工作单')}</span><b>${escapeHtml(model.title)}</b><p>${escapeHtml(model.desc)}</p></div><div class="actions"><button class="${model.primary ? 'primary' : ''}" onclick="goTo('${model.section}','${model.target}')">${escapeHtml(model.action)}</button></div>`;
+      };
+      let hunter = {status:'等待任务', title:'检索展会爆款样本', desc:'输入行业/主题和数量后，找爆款员工会在后台检索、去重并按互动分排序。', action:'填写检索条件', section:'hunter', target:'search-keyword', primary:true};
+      if (state.hasSamples && !state.hasSelected) hunter = {status:'需要你确认', statusClass:'queued', title:'已找到候选样本，等待选择参考', desc:'选择一个最接近你想复刻风格的视频，系统会把它交给生视频员工。', action:'选择参考样本', section:'hunter', target:'gallery', primary:true};
+      if (state.hasSelected) hunter = {status:'已交付', statusClass:'succeeded', title:'参考样本已交给生视频员工', desc:'找爆款员工的本轮交付已完成，你可以继续生成口播和成片。', action:'去生成视频', section:'creator', target:'copy-topic'};
+      let creator = {status:'等待参考', title:'等待选择参考样本', desc:'先让找爆款员工找到并选择一个样本，再开始生成口播、语音和成片。', action:'去找样本', section:'hunter', target:'search-keyword'};
+      if (state.hasSelected && !state.hasCopy) creator = {status:'需要你确认', statusClass:'queued', title:'确认主题和卖点，生成口播稿', desc:'基于参考样本和你的业务卖点生成可直接配音的最终口播稿。', action:'生成口播稿', section:'creator', target:'copy-topic', primary:true};
+      else if (state.hasCopy && !state.hasAudio) creator = {status:'下一步', statusClass:'queued', title:'口播稿已准备，等待生成配音', desc:'选择 TTS 服务和音色后，生视频员工会生成语音文件。', action:'生成语音', section:'creator', target:'tts-service', primary:true};
+      else if (state.hasAudio && !state.hasVideo) creator = {status:'下一步', statusClass:'queued', title:'配音已准备，等待合成成片', desc:'确认素材目录、字幕模板和结尾 CTA 后，生成最终推广视频。', action:'生成成片', section:'creator', target:'material-dir', primary:true};
+      else if (state.hasVideo) creator = {status:'已交付', statusClass:'succeeded', title:'推广成片已交给投放员工', desc:'成片已生成，可以进入投放员工完成账户绑定、草稿创建和数据回流。', action:'去投放', section:'buyer', target:'delivery-video-select'};
+      let buyer = {status:'等待成片', title:'等待生视频员工交付推广视频', desc:'成片生成后，投放员工会接手巨量授权、素材上传和安全草稿。', action:'去生成成片', section:'creator', target:'material-dir'};
+      if (state.hasVideo && !state.hasOcean) buyer = {status:'需要绑定', statusClass:'queued', title:'成片已就绪，等待巨量账户授权', desc:'点击前往巨量完成绑定，后台会自动识别广告主和投放权限。', action:'前往巨量绑定', section:'buyer', target:'oe-guide', primary:true};
+      else if (state.hasVideo && state.hasOcean && !state.hasDelivery) buyer = {status:'需要确认', statusClass:'queued', title:'账户和成片已就绪，等待安全草稿确认', desc:'确认只创建关闭状态草稿后，投放员工会验证完整接口链路。', action:'确认安全草稿', section:'buyer', target:'safe-launch-button', primary:true};
+      else if (state.hasDelivery) buyer = {status:'已回流', statusClass:'succeeded', title:'投放链路已有结果，等待复盘', desc:'查看消耗、展示、点击、转化和有效播放等指标，并决定下一轮优化。', action:'查看投放数据', section:'buyer', target:'delivery-board'};
+      setOrder('hunter-order', hunter);
+      setOrder('creator-order', creator);
+      setOrder('buyer-order', buyer);
+    }
+    function renderApprovalQueue(items = []) {
+      const box = document.getElementById('approval-list');
+      const status = document.getElementById('approval-status');
+      if (!box) return;
+      const state = deriveFlowState(items);
+      const recentFailures = actionableFailures(items);
+      const approvals = [];
+      if (recentFailures.length) approvals.push({level:'urgent', title:'处理异常任务', desc:`近 24 小时有 ${recentFailures.length} 个任务失败，先处理后再继续自动流程。`, action:'去任务中心', section:'tasks', target:'task-list'});
+      if (!state.hasSamples) approvals.push({title:'安排第一个检索任务', desc:'还没有参考样本。输入主题后，找爆款员工会在后台检索候选视频。', action:'安排检索', section:'hunter', target:'search-keyword'});
+      else if (!state.hasSelected) approvals.push({level:'urgent', title:'选择参考样本', desc:'找爆款员工已经找到候选视频，需要你选择一个最像目标风格的参考样本。', action:'去样本画廊', section:'hunter', target:'gallery'});
+      if (state.hasSelected && !state.hasCopy) approvals.push({title:'确认视频主题和卖点', desc:'把参考样本交给生视频员工前，补充你的招商主题、卖点和 CTA。', action:'生成口播稿', section:'creator', target:'copy-topic'});
+      else if (state.hasCopy && !state.hasAudio) approvals.push({title:'确认最终口播稿', desc:'口播稿已经准备好。你可以修改文字，再选择音色生成配音。', action:'去确认口播', section:'creator', target:'final-copy'});
+      else if (state.hasAudio && !state.hasVideo) approvals.push({title:'确认成片素材', desc:'语音已生成，下一步选择素材来源和字幕模板，生成最终推广视频。', action:'生成成片', section:'creator', target:'material-dir'});
+      if (state.hasVideo && !state.hasOcean) approvals.push({level:'urgent', title:'绑定巨量账户', desc:'已有可投放成片。投放员工需要一次巨量授权，才能上传素材和创建安全草稿。', action:'前往巨量绑定', section:'buyer', target:'oe-guide'});
+      else if (state.hasVideo && state.hasOcean && !state.hasDelivery) approvals.push({title:'确认安全投放草稿', desc:'成片和账户均已就绪。确认只创建关闭状态草稿后，投放员工会跑完整接口链路。', action:'创建安全草稿', section:'buyer', target:'safe-launch-button'});
+      if (state.hasDelivery) approvals.push({level:'done', title:'查看投放复盘', desc:'投放链路已有结果，检查 9 项指标并决定下一版视频优化方向。', action:'查看数据', section:'buyer', target:'delivery-board'});
+      const primary = approvals.slice(0, 3);
+      if (status) status.textContent = primary.length ? `${primary.length} 项待确认` : '暂无待确认';
+      box.innerHTML = primary.length ? primary.map(item => `<div class="approval-item ${escapeAttr(item.level || '')}"><span class="status ${item.level === 'urgent' ? 'queued' : item.level === 'done' ? 'succeeded' : 'blue'}">${item.level === 'urgent' ? '需要你处理' : item.level === 'done' ? '已完成' : '下一步'}</span><b>${escapeHtml(item.title)}</b><p>${escapeHtml(item.desc)}</p><div class="actions"><button class="${item.level === 'urgent' ? 'primary' : ''}" onclick="goTo('${item.section}', '${item.target || ''}')">${escapeHtml(item.action)}</button></div></div>`).join('') : `<div class="approval-item done"><span class="status succeeded">已清空</span><b>暂无需要你确认的节点</b><p>员工会继续在后台处理任务；有新结果或异常时会出现在这里。</p><div class="actions"><button onclick="goTo('tasks','task-list')">查看任务中心</button></div></div>`;
+    }
+    function updateFlowAdvisor(items = []) {
+      const title = document.getElementById('flow-advisor-title');
+      const desc = document.getElementById('flow-advisor-desc');
+      const actions = document.getElementById('flow-advisor-actions');
+      if (!title || !desc || !actions) return;
+      const recentFailures = actionableFailures(items);
+      const failedCount = recentFailures.length;
+      if (failedCount) {
+        updateFlowProgress(items);
+        renderHandoffList(items);
+        title.textContent = `${failedCount} 个员工任务需要处理`;
+        desc.textContent = '有任务执行失败，建议先进入任务中心查看原因，修正后可一键重试。';
+        actions.innerHTML = `<button class="primary" onclick="goTo('tasks','task-list')">去任务中心处理</button>`;
+        return;
+      }
+      const {hasSamples, hasSelected, hasCopy, hasAudio, hasVideo, hasDelivery} = deriveFlowState(items);
+      updateFlowProgress(items);
+      renderHandoffList(items);
+      let model = {title:'先安排找爆款员工', desc:'输入展会主题，让找爆款员工先找到可复刻样本。', actions:[['去安排检索','hunter','primary','search-keyword']]};
+      if (hasSamples && !hasSelected) model = {title:'从样本画廊选择一个参考视频', desc:'找爆款员工已经有候选样本了，先设定一个参考样本，再交给生视频员工复刻。', actions:[['去选择样本','hunter','primary','gallery']]};
+      else if (hasSelected && !hasCopy) model = {title:'把参考样本交给生视频员工', desc:'基于选中的参考视频和你的业务卖点，生成最终口播稿。', actions:[['生成口播稿','creator','primary','copy-topic']]};
+      else if (hasCopy && !hasAudio) model = {title:'给口播稿生成声音', desc:'口播稿已准备好，下一步选择音色并生成配音。', actions:[['去生成语音','creator','primary','tts-service']]};
+      else if (hasCopy && !hasVideo) model = {title:'生成可投放成片', desc:'文案已经就绪，选择素材和字幕模板，让生视频员工生成成片。', actions:[['生成推广视频','creator','primary','material-dir']]};
+      else if (hasVideo && !oceanConnected) model = {title:'成片已就绪，绑定巨量账户', desc:'投放员工需要先完成巨量授权，才能上传素材、创建草稿和同步报表。', actions:[['前往投放员工','buyer','primary','oe-guide']]};
+      else if (hasVideo && oceanConnected && !hasDelivery) model = {title:'让投放员工创建安全投放草稿', desc:'账户和成片都已准备好，下一步做关闭状态的安全链路验证。', actions:[['配置投放草稿','buyer','primary','safe-launch-button']]};
+      else if (hasDelivery) model = {title:'查看投放数据和复盘建议', desc:'投放链路已有结果，查看 9 项指标和投放员工给出的下一版优化建议。', actions:[['查看投放复盘','buyer','primary','delivery-board'], ['查看任务详情','tasks','','task-list']]};
+      title.textContent = model.title;
+      desc.textContent = model.desc;
+      actions.innerHTML = model.actions.map(([label, section, cls, target]) => `<button class="${cls || ''}" onclick="goTo('${section}', '${target || ''}')">${escapeHtml(label)}</button>`).join('');
+    }
+    function renderOpsSnapshot(items = []) {
+      const box = document.getElementById('ops-snapshot');
+      if (!box) return;
+      const renderCount = latestRenderAssets.length || items.filter(t => t.kind === 'render' && t.status === 'succeeded').length;
+      const runningCount = items.filter(t => ['queued','running'].includes(t.status)).length;
+      const failedCount = actionableFailures(items).length;
+      const historicalFailedCount = items.filter(t => t.status === 'failed').length - failedCount;
+      const deliveryDone = items.some(t => ['delivery-report','ocean-safe-launch','delivery-draft'].includes(t.kind) && t.status === 'succeeded');
+      const accountText = oceanConnected ? '已绑定' : '未绑定';
+      const taskText = failedCount ? `${failedCount} 个待处理` : runningCount ? `${runningCount} 个工作中` : '待命';
+      const taskDesc = failedCount ? '近 24 小时异常需要处理' : runningCount ? '员工正在后台执行' : historicalFailedCount > 0 ? '历史异常已归档，不阻塞流程' : '暂无员工在工作';
+      const cards = [
+        {label:'参考样本', value:String(latestSamples.length || 0), desc: latestSamples.length ? '可交给生视频员工复刻' : '等待找爆款员工检索', cls: latestSamples.length ? 'ok' : ''},
+        {label:'推广成片', value:String(renderCount), desc: renderCount ? '可交给投放员工' : '等待生视频员工生成', cls: renderCount ? 'ok' : ''},
+        {label:'巨量账户', value:accountText, desc: oceanConnected ? '投放员工可创建草稿' : '等待投放员工授权', cls: oceanConnected ? 'ok' : 'warn'},
+        {label:'任务状态', value:taskText, desc: deliveryDone ? '已有投放链路结果' : taskDesc, cls: failedCount ? 'warn' : runningCount ? 'warn' : ''},
+      ];
+      box.innerHTML = cards.map(card => `<div class="ops-card ${escapeAttr(card.cls)}"><span>${escapeHtml(card.label)}</span><b>${escapeHtml(card.value)}</b><small>${escapeHtml(card.desc)}</small></div>`).join('');
+    }
+    function renderAssetPackage(items = []) {
+      const box = document.getElementById('asset-chain');
+      const status = document.getElementById('asset-package-status');
+      if (!box) return;
+      const state = deriveFlowState(items);
+      const selectedTitle = selectedSample?.title || selectedSample?.desc || '';
+      const copyText = valueOf('final-copy');
+      const latestRender = latestRenderAssets[0];
+      const deliveryDone = Boolean(latestSucceeded(items, ['delivery-draft','ocean-safe-launch','delivery-report']));
+      const nodes = [
+        {title:'参考样本', done:state.hasSelected, active:state.hasSamples && !state.hasSelected, desc:state.hasSelected ? selectedTitle || '已选择一个参考样本' : state.hasSamples ? '已有候选样本，等待你选择参考。' : '等待找爆款员工检索。', action:state.hasSelected ? '查看样本' : '选择样本', section:'hunter', target:'gallery'},
+        {title:'最终口播稿', done:state.hasCopy, active:state.hasSelected && !state.hasCopy, desc:state.hasCopy ? copyText.slice(0, 46) || '口播稿已生成。' : '等待确认主题、卖点并生成口播。', action:state.hasCopy ? '编辑口播' : '生成口播', section:'creator', target:state.hasCopy ? 'final-copy' : 'copy-topic'},
+        {title:'配音文件', done:state.hasAudio, active:state.hasCopy && !state.hasAudio, desc:state.hasAudio ? '语音已生成，可用于合成成片。' : '等待选择 TTS 服务和音色。', action:state.hasAudio ? '听语音' : '生成语音', section:'creator', target:state.hasAudio ? 'tts-preview' : 'tts-service'},
+        {title:'推广成片', done:state.hasVideo, active:state.hasAudio && !state.hasVideo, desc:state.hasVideo ? (latestRender?.name || '成片已生成，可交给投放员工。') : '等待选择素材和字幕模板生成视频。', action:state.hasVideo ? '预览成片' : '生成成片', section:'creator', target:state.hasVideo ? 'render-preview' : 'material-dir'},
+        {title:'投放状态', done:deliveryDone, active:state.hasVideo && !deliveryDone, desc:deliveryDone ? '投放草稿或报表已有结果。' : state.hasOcean ? '巨量已绑定，等待确认安全草稿。' : '等待绑定巨量账户并选择成片。', action:deliveryDone ? '查看数据' : '处理投放', section:'buyer', target:deliveryDone ? 'delivery-board' : 'oe-guide'},
+      ];
+      const doneCount = nodes.filter(n => n.done).length;
+      if (status) status.textContent = `${doneCount} / ${nodes.length} 已就绪`;
+      box.innerHTML = nodes.map(node => `<div class="asset-node ${node.done ? 'done' : node.active ? 'active' : ''}"><span class="status ${node.done ? 'succeeded' : node.active ? 'queued' : ''}">${node.done ? '已就绪' : node.active ? '待确认' : '等待'}</span><b>${escapeHtml(node.title)}</b><p>${escapeHtml(node.desc || '')}</p><div class="actions"><button class="${node.active ? 'primary' : ''}" onclick="goTo('${node.section}','${node.target}')">${escapeHtml(node.action)}</button></div></div>`).join('');
+    }
+    function renderMissionCenter(items) {
+      const box = document.getElementById('overview-task-center');
+      const total = document.getElementById('mission-total');
+      if (!box) return;
+      const employees = [
+        {key:'hunter', name:'找爆款员工', kinds:['search','import-links','download'], idle:'等待检索任务：输入主题后会自动抓取、去重并排序候选样本。', action:'安排检索', section:'hunter'},
+        {key:'creator', name:'生视频员工', kinds:['copy','tts','render'], idle:'等待生成任务：选中样本后生成口播、配音、字幕和最终成片。', action:'生成视频', section:'creator'},
+        {key:'buyer', name:'投放员工', kinds:['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch','publish'], idle:'等待投放任务：绑定巨量账户后选择成片并创建安全投放草稿。', action:'配置投放', section:'buyer'},
+      ];
+      const taskCount = items.length;
+      if (total) total.textContent = `${taskCount} 个任务`;
+      box.innerHTML = employees.map(employee => {
+        const task = employeeLatestTask(items, employee.kinds);
+        const status = task?.status || 'idle';
+        const cls = status === 'queued' ? 'running' : (status === 'idle' ? '' : status);
+        const state = task ? taskStateText(task.status) : '等待开始';
+        const desc = task ? (taskBusinessMessage(task) || '员工正在后台执行，完成后会把结果同步到对应面板。') : employee.idle;
+        const keyword = task?.payload?.keyword || task?.payload?.topic || task?.payload?.subject || '';
+        return `<div class="mission-item ${escapeAttr(cls)}">
+          <div class="mission-top"><span class="mission-title">${escapeHtml(employee.name)}</span><span class="status ${escapeAttr(task?.status || '')}">${escapeHtml(state)}</span></div>
+          <div class="mission-desc">${keyword ? `<b>${escapeHtml(keyword)}</b><br>` : ''}${escapeHtml(desc)}</div>
+          <div class="mission-next"><button onclick="showSection('${employee.section}')">${employee.action}</button>${task ? `<button onclick="showSection('tasks')">查看详情</button>` : ''}</div>
+        </div>`;
+      }).join('');
+    }
+    function taskKindLabel(kind) {
+      return ({search:'检索样本', 'import-links':'导入样本', download:'下载样本', copy:'生成口播', tts:'生成语音', render:'生成成片', publish:'账号发布', 'delivery-draft':'投放检查', 'delivery-report':'同步报表', 'ocean-video-upload':'上传视频', 'ocean-project-create':'创建项目', 'ocean-promotion-create':'创建推广', 'ocean-safe-launch':'安全投放草稿'})[kind] || kind;
+    }
+    function renderEmployeeActivity(employee, kinds, items) {
+      const box = document.getElementById(`${employee}-activity`);
+      if (!box) return;
+      const recent = items.filter(item => kinds.includes(item.kind)).slice(0, 4);
+      if (!recent.length) {
+        box.innerHTML = '<div class="activity-row"><span class="status">待命</span><div><b>暂无任务动态</b><br>给员工下任务后，这里会展示它正在做什么。</div></div>';
+        return;
+      }
+      const stateMap = {queued:'排队中', running:'工作中', succeeded:'已完成', failed:'需处理'};
+      box.innerHTML = recent.map(task => {
+        const summary = taskBusinessMessage(task) || '任务已进入队列。';
+        return `<div class="activity-row">
+          <span class="status ${escapeAttr(task.status || '')}">${escapeHtml(stateMap[task.status] || task.status || '')}</span>
+          <div><b>${escapeHtml(taskKindLabel(task.kind))}</b><br>${escapeHtml(summary)}<div class="activity-time">${escapeHtml(task.created_at || '')}</div></div>
+        </div>`;
+      }).join('');
+    }
+    function renderEmployeeWork(items) {
+      const groups = {
+        hunter:['search','import-links','download'],
+        creator:['copy','tts','render'],
+        buyer:['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch','publish'],
+      };
+      Object.entries(groups).forEach(([employee, kinds]) => {
+        const box = document.getElementById(`${employee}-work`);
+        if (!box) return;
+        renderEmployeeActivity(employee, kinds, items);
+        const task = items.find(item => kinds.includes(item.kind));
+        const chip = box.querySelector('.status');
+        const summary = box.querySelector('.work-summary');
+        const bars = Array.from(box.querySelectorAll('.work-progress span'));
+        box.className = 'work-console';
+        if (!task) {
+          chip.textContent = '等待开始';
+          chip.className = 'status';
+          bars.forEach(bar => bar.classList.remove('done'));
+          return;
+        }
+        const state = ({queued:'排队中', running:'工作中', succeeded:'已完成', failed:'需要处理'})[task.status] || task.status;
+        chip.textContent = state;
+        chip.className = `status ${task.status}`;
+        box.classList.add(task.status === 'queued' ? 'running' : task.status);
+        const completed = task.status === 'succeeded' || task.status === 'failed' ? 4 : task.status === 'running' ? 2 : 1;
+        bars.forEach((bar, index) => bar.classList.toggle('done', index < completed));
+        summary.textContent = taskBusinessMessage(task) || (task.status === 'running' ? '员工正在后台执行，完成后结果会自动显示在本页。' : '任务已进入队列。');
+      });
+    }
+    function renderTaskList(items) {
+      latestTaskItems = items;
+      const box = document.getElementById('task-list');
+      if (!items.length) {
+        box.innerHTML = '<div class="card soft">暂无任务。</div>';
+        return;
+      }
+      const groups = [
+        {name:'找爆款员工', desc:'负责检索、导入和沉淀参考样本。', kinds:['search','import-links','download'], section:'hunter'},
+        {name:'生视频员工', desc:'负责口播、配音和最终成片。', kinds:['copy','tts','render'], section:'creator'},
+        {name:'投放员工', desc:'负责绑定巨量、创建草稿和同步数据。', kinds:['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch','publish'], section:'buyer'},
+      ];
+      const stateLabel = {queued:'排队中', running:'执行中', succeeded:'已完成', failed:'需处理'};
+      const groupHtml = groups.map(group => {
+        const groupTasks = items.filter(task => group.kinds.includes(task.kind));
+        const running = groupTasks.filter(task => ['queued','running'].includes(task.status)).length;
+        const failed = groupTasks.filter(task => task.status === 'failed' && isRecentTask(task, 24)).length;
+        const succeeded = groupTasks.filter(task => task.status === 'succeeded').length;
+        const latest = groupTasks.slice(0, 5);
+        const latestHtml = latest.length ? latest.map(task => {
+          const originalIndex = latestTaskItems.indexOf(task);
+          const result = task.result ? JSON.stringify(task.result, null, 2) : '';
+          const technical = task.error ? task.error : result;
+          const summary = taskBusinessMessage(task) || '任务已进入队列。';
+          const keyword = task.payload?.keyword || task.payload?.topic || task.payload?.subject || '';
+          return `<div class="task-mini">
+            <div class="task-mini-title"><span>${escapeHtml(taskKindLabel(task.kind))}</span><span class="status ${escapeAttr(task.status || '')}">${escapeHtml(stateLabel[task.status] || task.status || '')}</span></div>
+            <p>${keyword ? `<b>${escapeHtml(keyword)}</b><br>` : ''}${escapeHtml(summary)}</p>
+            <small>${escapeHtml(task.created_at || '')}</small>
+            ${task.status === 'failed' ? `<div class="actions"><button class="primary" onclick="retryTask(${originalIndex})">修正后重试</button></div>` : ''}
+            ${technical ? `<details><summary>查看技术详情</summary><pre>${escapeHtml(technical)}</pre></details>` : ''}
+          </div>`;
+        }).join('') : '<div class="card soft">暂无任务。进入员工页面即可下达任务。</div>';
+        return `<div class="task-group-card">
+          <div class="task-group-head"><div><b>${escapeHtml(group.name)}</b><small>${escapeHtml(group.desc)}</small></div><button onclick="showSection('${group.section}')">去下任务</button></div>
+          <div class="task-group-stats"><div class="task-stat"><span>工作中</span><b>${running}</b></div><div class="task-stat"><span>近 24h 异常</span><b>${failed}</b></div><div class="task-stat"><span>已完成</span><b>${succeeded}</b></div></div>
+          ${latestHtml}
+        </div>`;
+      }).join('');
+      box.innerHTML = `<div class="task-center-grid">${groupHtml}</div>`;
+    }
+    function hydrateLatestResults(items) {
+      const latestCopy = items.find(t => t.kind === 'copy' && t.status === 'succeeded' && t.result?.copy);
+      if (latestCopy && latestCopy.id !== lastCompletedCopy) {
+        lastCompletedCopy = latestCopy.id;
+        document.getElementById('final-copy').value = latestCopy.result.copy;
+        if (hasHydratedTasks) notify('生视频员工已生成口播稿。');
+      }
+      const latestSearch = items.find(t => ['search','import-links'].includes(t.kind) && t.status === 'succeeded');
+      if (latestSearch && latestSearch.id !== lastCompletedSearch) {
+        lastCompletedSearch = latestSearch.id;
+        if (latestSearch.result?.items) renderGallery(latestSearch.result.items);
+        else loadLatest();
+      }
+      const latestTts = items.find(t => t.kind === 'tts' && t.status === 'succeeded' && t.result?.preview_url);
+      if (latestTts) {
+        latestAudioPath = latestTts.result.audio_path || '';
+        latestAudioText = latestTts.result.text || '';
+      }
+      if (latestTts && latestTts.id !== lastCompletedTts) {
+        lastCompletedTts = latestTts.id;
+        const preview = document.getElementById('tts-preview');
+        preview.innerHTML = `<label>语音预览</label><audio controls src="${escapeAttr(latestTts.result.preview_url)}"></audio>`;
+        preview.classList.remove('hidden');
+      }
+      const latestRender = items.find(t => t.kind === 'render' && t.status === 'succeeded' && t.result?.summary?.preview_url);
+      if (latestRender && latestRender.id !== lastCompletedRender) {
+        lastCompletedRender = latestRender.id;
+        const preview = document.getElementById('render-preview');
+        const finalVideo = latestRender.result.summary.final_video || '';
+        const subtitle = latestRender.result.summary.subtitle_preview_url || '';
+        const track = subtitle && !latestRender.result.summary.captions_hard_burned ? `<track kind="subtitles" srclang="zh" label="中文" src="${escapeAttr(subtitle)}" default>` : '';
+        preview.innerHTML = `<label>成片预览</label><video controls preload="metadata" src="${escapeAttr(latestRender.result.summary.preview_url)}">${track}</video>`;
+        preview.classList.remove('hidden');
+        document.getElementById('publish-video').value ||= finalVideo;
+        document.getElementById('ad-video').value ||= finalVideo;
+        if (hasHydratedTasks) notify('生视频员工已生成成片。');
+      }
+      const latestOceanVideo = items.find(t => t.kind === 'ocean-video-upload' && t.status === 'succeeded' && t.result?.video_id);
+      if (latestOceanVideo) document.getElementById('oe-video-id').value ||= latestOceanVideo.result.video_id;
+      const latestOceanProject = items.find(t => t.kind === 'ocean-project-create' && t.status === 'succeeded' && t.result?.project_id);
+      if (latestOceanProject) document.getElementById('oe-project-id').value ||= latestOceanProject.result.project_id;
+      const latestOceanPromotion = items.find(t => t.kind === 'ocean-promotion-create' && t.status === 'succeeded' && t.result?.promotion_id);
+      if (latestOceanPromotion) document.getElementById('oe-promotion-id').value ||= latestOceanPromotion.result.promotion_id;
+      const latestDelivery = items.find(t => t.kind === 'delivery-report' && t.status === 'succeeded' && t.result)
+        || items.find(t => t.kind === 'ocean-safe-launch' && t.status === 'succeeded' && t.result)
+        || items.find(t => t.kind === 'delivery-draft' && t.status === 'succeeded' && t.result);
+      if (latestDelivery && latestDelivery.id !== lastCompletedDelivery) {
+        lastCompletedDelivery = latestDelivery.id;
+        renderDeliveryDraft(latestDelivery.result);
+        if (hasHydratedTasks) notify('投放员工已生成投放草稿。');
+      }
+    }
+    function renderDeliveryDraft(draft) {
+      const checks = draft?.checks || defaultDeliveryChecks();
+      document.getElementById('delivery-checklist').innerHTML = checks.map(item => `
+        <div class="check-item"><span>${escapeHtml(item.label)}</span><span class="status ${item.ok ? 'succeeded' : 'failed'}">${item.ok ? '已就绪' : '待补充'}</span></div>
+      `).join('');
+      const metrics = draft?.dashboard || {};
+      const money = value => Number(value || 0).toFixed(2);
+      const integer = value => Number(value || 0).toLocaleString('zh-CN', {maximumFractionDigits:0});
+      const percent = value => `${Number(value || 0).toFixed(2)}%`;
+      document.getElementById('delivery-board').innerHTML = [
+        ['消耗', `¥${money(metrics.stat_cost)}`, '账户实际广告消耗'],
+        ['展示', integer(metrics.show_cnt), '广告展示次数'],
+        ['平均千次展现费用', `¥${money(metrics.cpm)}`, '消耗 ÷ 展示 × 1000'],
+        ['点击数', integer(metrics.click_cnt), '广告点击次数'],
+        ['点击率', percent(metrics.ctr), '点击数 ÷ 展示 × 100%'],
+        ['平均转化成本', `¥${money(metrics.avg_convert_cost)}`, '消耗 ÷ 转化数'],
+        ['转化率', percent(metrics.convert_rate), '转化数 ÷ 点击数 × 100%'],
+        ['转化数', integer(metrics.convert_cnt), '归因口径下的转化次数'],
+        ['有效播放量率', percent(metrics.valid_play_rate), '有效播放数 ÷ 播放量 × 100%'],
+      ].map(([k,v,formula]) => `<div class="metric"><span>${escapeHtml(k)}</span><b>${escapeHtml(v)}</b><small>${escapeHtml(formula)}</small></div>`).join('');
+      const recap = document.getElementById('delivery-recap');
+      if (recap) recap.innerHTML = buildDeliveryRecap(metrics, draft);
+    }
+    function buildDeliveryRecap(metrics, draft) {
+      const showCnt = Number(metrics.show_cnt || 0);
+      const clickCnt = Number(metrics.click_cnt || 0);
+      const convertCnt = Number(metrics.convert_cnt || 0);
+      const ctr = Number(metrics.ctr || 0);
+      const convertRate = Number(metrics.convert_rate || 0);
+      const validPlayRate = Number(metrics.valid_play_rate || 0);
+      const tips = [];
+      if (!showCnt) {
+        tips.push('当前样本量不足，先完成账户绑定、选择成片并创建安全投放草稿。');
+        tips.push('草稿确认无误后再进入真实启用，避免还没验证链路就产生消耗。');
+      } else {
+        if (ctr < 1) tips.push('点击率偏低，优先优化前 3 秒钩子和封面字幕，让用户一眼看到展会利益点。');
+        else tips.push('点击率已有基础，可以保留当前开头结构，继续测试不同 CTA。');
+        if (clickCnt && convertRate < 3) tips.push('转化率偏低，建议把落地页首屏改成“展位预约/立即报名”，减少跳转和表单字段。');
+        if (convertCnt > 0) tips.push('已有转化样本，下一版视频应围绕当前转化人群继续放大采购商质量和展位稀缺。');
+        if (validPlayRate && validPlayRate < 20) tips.push('有效播放率偏低，建议压缩前半段铺垫，尽早出现人流、展位和成交场景。');
+      }
+      const recommendation = draft?.recommendation;
+      if (recommendation) tips.unshift(recommendation);
+      return `<b>投放员工复盘</b>
+        <div class="recap-score">
+          <span>曝光基础：${showCnt ? '已有数据' : '待启动'}</span>
+          <span>点击表现：${ctr ? `${ctr.toFixed(2)}%` : '待观察'}</span>
+          <span>转化表现：${convertRate ? `${convertRate.toFixed(2)}%` : '待观察'}</span>
+        </div>
+        <ul>${tips.slice(0, 4).map(tip => `<li>${escapeHtml(tip)}</li>`).join('')}</ul>`;
+    }
+    function defaultDeliveryChecks() {
+      return [
+        {label:'巨量账户认证', ok: Boolean(oceanConnected)},
+        {label:'推广视频已生成', ok: Boolean(valueOf('ad-video') || valueOf('publish-video'))},
+        {label:'投放参数自动配置', ok: Boolean(oceanConnected)},
+        {label:'数据报表已连接', ok: Boolean(oceanConnected)},
+      ];
+    }
+    function updateEmployeeStatuses(items = []) {
+      const hasSamples = latestSamples.length > 0 || selectedSample;
+      const hasCopy = Boolean(valueOf('final-copy'));
+      const hasVideo = Boolean(valueOf('ad-video') || valueOf('publish-video'));
+      const runningHunter = items.some(t => ['search','import-links'].includes(t.kind) && ['queued','running'].includes(t.status));
+      const runningCreator = items.some(t => ['copy','tts','render'].includes(t.kind) && ['queued','running'].includes(t.status));
+      const runningBuyer = items.some(t => ['publish','delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch'].includes(t.kind) && ['queued','running'].includes(t.status));
+      setStatus('hunter-status', runningHunter ? '工作中' : hasSamples ? '已产出样本' : '空闲中', runningHunter ? 'running' : hasSamples ? 'succeeded' : '');
+      setStatus('creator-status', runningCreator ? '工作中' : hasVideo ? '已产出成片' : hasCopy ? '已有文案' : hasSamples ? '可开始' : '空闲中', runningCreator ? 'running' : hasVideo ? 'succeeded' : hasCopy ? 'blue' : '');
+      const buyerReady = oceanConnected || Boolean(valueOf('ad-advertiser') && valueOf('ad-token'));
+      setStatus('buyer-status', runningBuyer ? '工作中' : buyerReady ? '已配置账号' : '空闲中', runningBuyer ? 'running' : buyerReady ? 'blue' : '');
+      const hunterKpi = document.getElementById('hunter-kpi');
+      if (hunterKpi) hunterKpi.innerHTML = `<span>样本 ${latestSamples.length || 0} 条</span><span>${selectedSample ? '已选参考' : hasSamples ? '可选择样本' : '等待任务'}</span>`;
+      const creatorKpi = document.getElementById('creator-kpi');
+      if (creatorKpi) creatorKpi.innerHTML = `<span>成片 ${latestRenderAssets.length || 0} 条</span><span>${hasVideo ? '可投放' : hasCopy ? '已有口播' : hasSamples ? '可生成' : '等待样本'}</span>`;
+      const buyerKpi = document.getElementById('buyer-kpi');
+      if (buyerKpi) buyerKpi.innerHTML = `<span>${buyerReady ? '已绑定' : '未绑定'}</span><span>${hasVideo ? '已有成片' : '等待成片'}</span>`;
+      const workingCount = [runningHunter, runningCreator, runningBuyer].filter(Boolean).length;
+      const flowState = deriveFlowState(items);
+      const pendingCount = actionableFailures(items).length || (flowState.hasDelivery ? 0 : 1);
+      const workingEl = document.getElementById('overview-working-count');
+      const actionEl = document.getElementById('overview-action-count');
+      if (workingEl) workingEl.textContent = `${workingCount} 名工作中`;
+      if (actionEl) actionEl.textContent = `${pendingCount} 项待确认`;
+      renderOpsSnapshot(items);
+      renderAssetPackage(items);
+      renderWorkOrders(items);
+      updateFlowAdvisor(items);
+      renderApprovalQueue(items);
+    }
+    function setStatus(id, text, cls) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+      const isStaffChip = ['hunter-status','creator-status','buyer-status'].includes(id);
+      el.className = `${isStaffChip ? 'staff-status ' : ''}status ${cls || ''}`;
+    }
+    function taskSummary(task) {
+      if (!task.result) return '';
+      if (task.kind === 'search' || task.kind === 'import-links') return `找到了 ${task.result.count || 0} 条参考样本`;
+      if (task.kind === 'copy') return '口播稿已回填到生视频员工面板';
+      if (task.kind === 'tts') return `语音已生成，音色：${task.result.voice || ''}`;
+      if (task.kind === 'render') return task.result.summary?.final_video ? '成片已生成，可在生视频员工面板预览' : '成片任务已完成';
+      if (task.kind === 'delivery-draft') return '投放草稿已生成，可在投放员工面板查看配置检查';
+      if (task.kind === 'delivery-report') return '投放报表已刷新，可在投放员工面板查看 9 项指标';
+      if (task.kind === 'ocean-video-upload') return task.result.video_id ? `视频已上传，video_id：${task.result.video_id}` : '视频上传任务完成';
+      if (task.kind === 'ocean-project-create') return task.result.project_id ? `项目已创建，project_id：${task.result.project_id}` : '项目创建任务完成';
+      if (task.kind === 'ocean-promotion-create') return task.result.promotion_id ? `单元已创建，promotion_id：${task.result.promotion_id}` : '单元创建任务完成';
+      if (task.kind === 'ocean-safe-launch') return task.result.ok ? '真实接口链路已跑通，项目和推广均保持关闭，不会产生消耗' : '安全投放测试完成';
+      if (task.kind === 'publish') return '发布任务已完成';
+      return '任务已完成';
+    }
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    }
+    function escapeAttr(s) {
+      return escapeHtml(s).replace(/`/g, '&#096;');
+    }
+    ['ad-advertiser','ad-token','ad-landing','ad-convert','ad-video','publish-video','ad-start','ad-end','oe-video-file','oe-video-id','oe-project-id','oe-promotion-id'].forEach(id => {
+      document.addEventListener('input', event => {
+        if (event.target && event.target.id === id) {
+          renderDeliveryDraft(null);
+          updateEmployeeStatuses();
+        }
+      });
+    });
+    refreshAll();
+    syncTtsVoices();
+    setInterval(loadTasks, 5000);
+  </script>
+</body>
+</html>
