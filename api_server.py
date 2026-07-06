@@ -23,7 +23,7 @@ from uuid import uuid4
 
 import requests
 
-from exhibitflow_lite import pipeline, publisher, qwen, render, social, tts
+from exhibitflow_lite import pipeline, publisher, qwen, render, social, stock, tts
 from exhibitflow_lite.config import settings
 from exhibitflow_lite.storage import ensure_storage, latest_manifest, safe_stem, write_json
 
@@ -194,6 +194,7 @@ def public_config() -> dict[str, Any]:
         "dashscope_configured": bool(ai_health.get("valid")),
         "dashscope_status": ai_health.get("status"),
         "material_count": len(materials),
+        "moneyprint_stock_configured": bool(settings.pexels_api_key),
         "ffmpeg_configured": bool(shutil.which("ffmpeg") and shutil.which("ffprobe")),
         "oceanengine": ocean_config_public(),
     }
@@ -1221,6 +1222,70 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
         urls = payload.get("urls") or []
         limit = int(payload.get("limit") or len(urls) or 1)
         return enqueue(kind, payload, lambda: social.download_selected(platform, keyword, urls, limit=limit))
+    if kind == "creator-pipeline":
+        topic = require_text(payload, "topic", "视频需求")
+        sample = payload.get("sample") or {}
+        source = str(payload.get("material_source") or "local").strip().lower()
+        if source not in {"local", "pexels"}:
+            raise ValueError("素材来源必须是 local 或 pexels")
+        cta_text = str(payload.get("cta_text") or DEFAULT_VIDEO_CTA)
+        voice = str(payload.get("voice") or "zh-CN-XiaoxiaoNeural")
+        tts_service = str(payload.get("tts_service") or "edge")
+        caption_template = str(payload.get("caption_template") or "viral").strip().lower()
+        if caption_template not in render.CAPTION_TEMPLATES:
+            raise ValueError(f"未知字幕模板：{caption_template}")
+
+        def creator_pipeline_job() -> dict[str, Any]:
+            manual_script = str(payload.get("script") or "").strip()
+            script = final_script_with_cta(manual_script or qwen.generate_copy(topic, sample), cta_text)
+            audio = tts.synthesize(
+                script,
+                service=tts_service,
+                voice=voice,
+                output_name=f"pipeline-{tts_service}-{uuid4().hex[:10]}.mp3",
+            )
+            material_info: dict[str, Any] = {"source": source}
+            if source == "pexels":
+                terms = qwen.generate_search_terms(topic, script, amount=5)
+                target_duration = max(20.0, render.duration(Path(audio)) + 6.0)
+                online_dir = settings.storage_dir / "online_materials" / f"moneyprint-{uuid4().hex[:10]}"
+                material_info.update(stock.download_moneyprinter_materials(terms, online_dir, target_duration))
+                material_dir = material_info["material_dir"]
+            else:
+                material_dir = require_text(payload, "material_dir", "本地素材目录")
+                if not Path(material_dir).expanduser().exists():
+                    raise FileNotFoundError(f"素材目录不存在：{material_dir}")
+                material_info["material_dir"] = material_dir
+
+            raw_highlights = payload.get("highlight_words") or []
+            if isinstance(raw_highlights, str):
+                raw_highlights = re.split(r"[，,、\n]+", raw_highlights)
+            highlights = [str(word).strip() for word in raw_highlights if str(word).strip()]
+            parsed = parse_render_result(
+                pipeline.render_video(
+                    keyword=topic,
+                    competitor_dir=str(payload.get("competitor_dir") or ""),
+                    material_dir=material_dir,
+                    name=str(payload.get("name") or f"creator-pipeline-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{uuid4().hex[:6]}"),
+                    tts_mode=tts_service,
+                    script_mode="manual",
+                    script=script,
+                    audio_file=str(audio),
+                    caption_template=caption_template,
+                    highlight_words=highlights,
+                    cta_text=cta_text,
+                )
+            )
+            return {
+                "copy": script,
+                "audio_path": str(audio),
+                "audio_preview_url": media_url(audio),
+                "summary": parsed.get("summary") or parsed,
+                "material": material_info,
+                "cta_text": cta_text,
+            }
+
+        return enqueue(kind, payload, creator_pipeline_job)
     if kind == "copy":
         topic = str(payload.get("topic") or payload.get("keyword") or "").strip()
         sample = payload.get("sample") or {}

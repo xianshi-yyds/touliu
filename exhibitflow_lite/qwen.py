@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import base64
+import json
 import mimetypes
+import re
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +43,35 @@ def generate_copy(topic: str, sample: dict[str, Any] | None = None) -> str:
         messages=[{"role": "user", "content": prompt}],
     )
     return completion.choices[0].message.content or ""
+
+
+def generate_search_terms(topic: str, script: str, amount: int = 5) -> list[str]:
+    """Generate the same short English stock-video queries used by MoneyPrinter."""
+    prompt = f"""
+Generate {amount} English stock-video search terms for one coherent short video.
+Return only a JSON array of strings. Each term must contain 1-3 English words.
+
+Subject: {topic}
+Script: {script}
+""".strip()
+    try:
+        completion = openai_client().chat.completions.create(
+            model=settings.qwen_text_model,
+            messages=[{"role": "user", "content": prompt}],
+            timeout=12,
+        )
+        raw = completion.choices[0].message.content or ""
+        match = re.search(r"\[[\s\S]*?\]", raw)
+        if match:
+            terms = json.loads(match.group(0))
+            clean = [str(term).strip() for term in terms if str(term).strip()][:amount]
+            if clean:
+                return clean
+    except Exception:
+        # Keep the MoneyPrinter material chain usable during transient LLM/network failures.
+        pass
+    fallback = ["business exhibition", "trade show crowd", "exhibition booth", "business networking", "conference venue"]
+    return fallback[:amount]
 
 
 def data_url(path: Path) -> str:
@@ -127,4 +158,3 @@ def synthesize_speech(text: str, voice: str = "Cherry", output_name: str = "qwen
     else:
         raise RuntimeError(f"Qwen TTS response missing audio: {data}")
     return out
-

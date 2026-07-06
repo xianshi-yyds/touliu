@@ -37,6 +37,19 @@ EXHIBITFLOW_MATERIAL_DIR=./materials
 EXHIBITFLOW_COMPETITOR_DIR=./storage/downloads
 ```
 
+MoneyPrinter 在线素材链路使用 Pexels，需要额外配置：
+
+```env
+PEXELS_API_KEY=your_pexels_api_key
+```
+
+生视频员工支持两种素材来源：
+
+- **本地素材库**：使用 `materials/` 中上传的品牌和展会素材。
+- **MoneyPrinter 在线搜索**：根据整篇口播生成英文检索词，从 Pexels 搜索、去重并下载足够时长的素材。
+
+每次完整生成都会保留为历史版本，可恢复当时的文案、音色、字幕模板和素材来源后再次生成。
+
 ## 迁移方式
 
 复制整个文件夹即可：
