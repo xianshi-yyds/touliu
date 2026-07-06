@@ -484,8 +484,8 @@
     #creator .agent-task-column .section-panel:nth-of-type(3),
     #buyer .simple-flow { margin-top:0; }
     .compact-note { color:#8a909a; font-size:13px; line-height:1.55; }
-    .creator-flow { display:grid; grid-template-columns:210px minmax(0,1fr); gap:24px; align-items:start; }
-    .creator-steps { position:sticky; top:66px; display:grid; gap:4px; padding:8px; border:1px solid var(--line); border-radius:12px; background:#fafaf8; }
+    .creator-flow { display:grid; grid-template-columns:1fr; gap:18px; align-items:start; max-width:1080px; margin:0 auto; }
+    .creator-steps { position:static; display:grid; grid-template-columns:repeat(4,1fr); gap:4px; padding:8px; border:1px solid var(--line); border-radius:12px; background:#fafaf8; }
     .creator-step { min-height:68px; display:grid; grid-template-columns:30px minmax(0,1fr); grid-template-rows:auto auto; column-gap:10px; align-items:center; text-align:left; border:0; background:transparent; padding:10px; }
     .creator-step > span { grid-row:1 / 3; width:28px; height:28px; display:grid; place-items:center; border-radius:50%; background:#e9eaed; color:#777e89; font-size:12px; }
     .creator-step b { font-size:14px; }
@@ -494,21 +494,13 @@
     .creator-step.active > span, .creator-step.done > span { background:#17191f; color:#fff; }
     .creator-step.done b::after { content:'  ✓'; color:#4f8e2d; }
     .creator-stage-stack { min-width:0; display:grid; gap:16px; }
-    .flow-stage { border:1px solid var(--line); border-radius:12px; background:#fff; padding:22px; opacity:.72; }
-    .flow-stage.active { opacity:1; border-color:#bfc4cf; box-shadow:0 6px 24px rgba(24,28,35,.05); }
+    .flow-stage { display:none; border:1px solid var(--line); border-radius:12px; background:#fff; padding:28px; }
+    .flow-stage.active { display:block; border-color:#bfc4cf; box-shadow:0 6px 24px rgba(24,28,35,.05); }
     .flow-stage-head { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; margin-bottom:18px; }
     .flow-stage-head > div:first-child { min-width:0; }
     .flow-stage-head h2 { display:inline; font-size:19px; margin-left:10px; }
     .flow-stage-head p { margin:7px 0 0 38px; font-size:13px; }
     .stage-index { display:inline-grid; place-items:center; width:28px; height:28px; border-radius:50%; background:#17191f; color:#fff; font-size:11px; font-weight:900; }
-    .creator-chat { min-height:190px; max-height:360px; overflow:auto; padding:8px 4px 16px; display:flex; flex-direction:column; gap:12px; }
-    .chat-bubble { max-width:78%; padding:12px 14px; border-radius:14px; line-height:1.55; font-size:14px; }
-    .chat-bubble.agent { align-self:flex-start; background:#f1f2f4; border-bottom-left-radius:4px; }
-    .chat-bubble.user { align-self:flex-end; background:#17191f; color:#fff; border-bottom-right-radius:4px; }
-    .chat-compose { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; border-top:1px solid #eceef2; padding-top:14px; }
-    .chat-compose textarea { min-height:72px; }
-    .chat-quick { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
-    .chat-quick button { min-height:32px; padding:0 12px; border-radius:999px; font-size:12px; font-weight:750; }
     .source-choices { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .source-choice { border:1px solid var(--line); border-radius:10px; padding:16px; cursor:pointer; }
     .source-choice.active { border-color:#17191f; box-shadow:0 0 0 2px rgba(23,25,31,.07); background:#fbfcff; }
@@ -526,15 +518,19 @@
     .history-item b { display:block; margin-bottom:4px; }
     .history-item p { margin:0; font-size:12px; }
     .history-item .actions { margin:0; flex-wrap:nowrap; }
+    .brief-form { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .brief-form textarea { min-height:118px; }
+    .workflow-footer { margin-top:22px; padding-top:16px; border-top:1px solid #eceef2; display:flex; align-items:center; justify-content:flex-end; gap:10px; }
+    .workflow-footer > span { margin-right:auto; color:#858c98; font-size:13px; }
     @media (max-width: 1180px) {
       .overview-statusbar, .flow-advisor { margin-left:20px; margin-right:20px; }
       .staff-content { padding:18px 20px 28px; }
       .agent-workbench { grid-template-columns:1fr; }
       .creator-flow { grid-template-columns:1fr; }
-      .creator-steps { position:static; grid-template-columns:repeat(4,1fr); }
     }
     @media (max-width: 720px) {
-      .creator-steps, .source-choices { grid-template-columns:1fr; }
+      .creator-steps { grid-template-columns:1fr 1fr; }
+      .source-choices, .brief-form { grid-template-columns:1fr; }
       .chat-compose, .upload-row, .history-item { grid-template-columns:1fr; }
       .pipeline-submit { align-items:stretch; flex-direction:column; }
     }
@@ -690,14 +686,12 @@
       <section id="creator" class="section">
         <div class="shell">
           <div class="hero">
-            <div><h1>生视频员工</h1><p>像和一名剪辑同事对话一样说明需求，员工会沿着同一条流水线完成文案、配音、素材和成片。</p></div>
+            <div><h1>生视频员工</h1><p>按步骤确认需求、口播、素材和成片；每次只处理一个页面，完成后进入下一步。</p></div>
             <span class="status blue">输出：最终成片</span>
           </div>
-          <div class="workorder-strip" id="creator-order"></div>
-
           <div class="creator-flow">
             <aside class="creator-steps" aria-label="生成步骤">
-              <button class="creator-step active" data-flow-step="brief" onclick="focusCreatorStep('brief')"><span>1</span><b>说清需求</b><small>对话式问答</small></button>
+              <button class="creator-step active" data-flow-step="brief" onclick="focusCreatorStep('brief')"><span>1</span><b>填写需求</b><small>结构化表单</small></button>
               <button class="creator-step" data-flow-step="copy" onclick="focusCreatorStep('copy')"><span>2</span><b>确认口播</b><small>生成后可编辑</small></button>
               <button class="creator-step" data-flow-step="material" onclick="focusCreatorStep('material')"><span>3</span><b>选择素材</b><small>本地 / 在线搜索</small></button>
               <button class="creator-step" data-flow-step="output" onclick="focusCreatorStep('output')"><span>4</span><b>查看成片</b><small>预览与再生成</small></button>
@@ -705,13 +699,14 @@
 
             <div class="creator-stage-stack">
               <section class="flow-stage active" id="creator-stage-brief" data-stage="brief">
-                <div class="flow-stage-head"><div><span class="stage-index">01</span><h2>先聊聊你要做什么</h2></div><span class="status blue" id="creator-brief-status">进行中</span></div>
-                <div class="creator-chat" id="creator-chat"></div>
-                <div class="chat-compose">
-                  <textarea id="creator-answer" placeholder="在这里回答，按 Enter 继续；Shift + Enter 换行"></textarea>
-                  <button class="primary" id="creator-answer-button" onclick="submitCreatorAnswer()">回答并继续</button>
+                <div class="flow-stage-head"><div><span class="stage-index">01</span><h2>填写视频需求</h2><p>用结构化选项说明任务，确认后进入口播稿步骤。</p></div><span class="status blue" id="creator-brief-status">进行中</span></div>
+                <div class="brief-form">
+                  <div><label>推广主题</label><input id="brief-subject" value="2026北京国际会展大会招商推广" placeholder="例如：北京国际会展大会招商"></div>
+                  <div><label>目标观众</label><select id="brief-audience"><option>参展企业负责人</option><option>专业采购商</option><option>普通观众</option><option>行业合作伙伴</option></select></div>
+                  <div><label>核心卖点</label><textarea id="brief-selling" placeholder="例如：高质量采购商、现场人流量、优质展位稀缺">专业采购商质量高、现场人流量大、优质展位稀缺</textarea></div>
+                  <div><label>表达风格</label><select id="brief-tone"><option>专业可信</option><option>现场热烈</option><option>强招商转化</option><option>简洁商务</option></select></div>
                 </div>
-                <div class="chat-quick" id="creator-quick-answers"></div>
+                <div class="workflow-footer"><span>下一步将根据这些信息生成口播稿。</span><button class="primary" onclick="saveCreatorBrief()">确认需求，下一步</button></div>
               </section>
 
               <section class="flow-stage" id="creator-stage-copy" data-stage="copy">
@@ -723,6 +718,7 @@
                 <textarea id="final-copy" style="min-height:220px" placeholder="生成完成后会自动回填到这里。"></textarea>
                 <div class="actions"><button onclick="createTts()">只生成语音预览</button></div>
                 <div id="tts-preview" class="media-preview hidden"></div>
+                <div class="workflow-footer"><button onclick="focusCreatorStep('brief')">上一步</button><button class="primary" onclick="confirmCreatorCopy()">确认口播，下一步</button></div>
               </section>
 
               <section class="flow-stage" id="creator-stage-material" data-stage="material">
@@ -784,7 +780,7 @@
             </div>
             <div class="agent-result-column">
               <div class="section-panel"><h2>结果 / 建议 <span id="delivery-video-state" class="status">未选择</span></h2><p>这里只展示业务状态，具体参数由后台根据巨量账户资产自动匹配。</p><div id="delivery-checklist" class="checklist"></div><div class="actions"><button onclick="refreshDeliveryReport()">同步最新数据</button></div></div>
-              <div class="section-panel"><h2>投放效果数据 <span class="agent-step-label">9 项指标</span></h2><p>投放后自动同步消耗、展示、点击、转化和有效播放数据。</p><div id="delivery-board" class="metric-board"></div><div id="delivery-recap" class="recap-card"><b>投放复盘</b><span>同步数据后，投放员工会在这里给出优化建议。</span></div></div>
+              <div class="section-panel"><h2>投放效果数据 <span class="agent-step-label">9 项指标</span></h2><p>投放后自动同步消耗、展示、点击、转化和有效播放数据。</p><div id="delivery-board" class="metric-board"></div><div id="delivery-recap" class="recap-card"><b>账户整体投放复盘</b><span>当前按广告主和所选时间范围汇总；后续选定项目/推广后可切换为单条视频复盘。</span></div></div>
             </div>
           </div>
           <div class="hidden" aria-hidden="true"><input id="oe-auth-code"><input id="ad-advertiser"><input id="ad-token" type="password"><input id="ad-start" type="date"><input id="ad-end" type="date"><input id="ad-filter"><input id="ad-video"><input id="ad-landing"><input id="ad-convert"><input id="ad-budget" value="300"><select id="ad-goal"><option value="lead">线索收集</option></select><input id="publish-video"><input id="publish-title"><textarea id="publish-desc"></textarea><select id="publish-platform"><option value="douyin">抖音</option></select><div id="publisher-notice"></div><button id="publish-button"></button><input id="oe-video-file"><input id="oe-video-id"><textarea id="oe-project-json"></textarea><input id="oe-project-id"><textarea id="oe-promotion-json"></textarea><input id="oe-promotion-id"><div id="publish-panel"></div><div id="ads-panel"></div></div>
@@ -826,15 +822,6 @@
     let selectedDeliveryGoal = 'lead';
     let selectedCaptionTemplate = 'viral';
     let selectedMaterialSource = 'local';
-    let creatorQuestionIndex = 0;
-    const creatorAnswers = {};
-    const creatorQuestions = [
-      {key:'subject', prompt:'这条视频主要要推广什么？', placeholder:'例如：2026 北京国际会展大会招商', quick:['展会招商推广','展会观众招募','品牌展台宣传']},
-      {key:'audience', prompt:'你最希望谁看完并采取行动？', placeholder:'例如：计划参展的企业负责人和市场总监', quick:['参展企业负责人','专业采购商','普通观众']},
-      {key:'selling', prompt:'必须让观众记住的核心卖点是什么？', placeholder:'例如：高质量采购商、人流集中、优质展位稀缺', quick:['专业买家质量高','现场人流量大','优质展位稀缺']},
-      {key:'tone', prompt:'希望这条视频是什么表达风格？', placeholder:'例如：专业可信、节奏紧凑、30 秒左右', quick:['专业可信','现场热烈','强招商转化']},
-      {key:'source', prompt:'最后，素材从哪里来？', placeholder:'输入“本地素材”或“在线搜索”', quick:['本地素材库','MoneyPrinter 在线搜索']},
-    ];
     let hasHydratedTasks = false;
     let oceanConnected = false;
 
@@ -873,64 +860,31 @@
     function markCreatorStepDone(name) {
       document.querySelector(`.creator-step[data-flow-step="${name}"]`)?.classList.add('done');
     }
-    function addCreatorBubble(text, role) {
-      const chat = document.getElementById('creator-chat');
-      if (!chat) return;
-      chat.insertAdjacentHTML('beforeend', `<div class="chat-bubble ${role}">${escapeHtml(text)}</div>`);
-      chat.scrollTop = chat.scrollHeight;
-    }
-    function renderCreatorQuestion() {
-      const question = creatorQuestions[creatorQuestionIndex];
-      const input = document.getElementById('creator-answer');
-      const quick = document.getElementById('creator-quick-answers');
-      if (!question || !input || !quick) return;
-      addCreatorBubble(question.prompt, 'agent');
-      input.placeholder = question.placeholder;
-      input.value = '';
-      quick.innerHTML = question.quick.map(answer => `<button onclick="submitCreatorAnswer('${escapeAttr(answer)}')">${escapeHtml(answer)}</button>`).join('');
-      input.focus();
-    }
-    function initCreatorConversation() {
-      const chat = document.getElementById('creator-chat');
-      if (!chat || chat.dataset.ready) return;
-      chat.dataset.ready = '1';
-      addCreatorBubble('你好，我是生视频员工。我会先问 5 个问题，再把需求整理成口播稿和成片任务。', 'agent');
-      renderCreatorQuestion();
-      document.getElementById('creator-answer')?.addEventListener('keydown', event => {
-        if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); submitCreatorAnswer(); }
-      });
-    }
-    function submitCreatorAnswer(preset = '') {
-      const question = creatorQuestions[creatorQuestionIndex];
-      if (!question) return;
-      const answer = String(preset || valueOf('creator-answer')).trim();
-      if (!answer) return notify('请先回答当前问题', 'error');
-      if (creatorQuestionIndex === 0) {
-        document.getElementById('final-copy').value = '';
-        document.getElementById('creator-copy-status').textContent = '等待需求';
-        document.getElementById('creator-copy-status').className = 'status';
-      }
-      creatorAnswers[question.key] = answer;
-      addCreatorBubble(answer, 'user');
-      creatorQuestionIndex += 1;
-      if (creatorQuestionIndex < creatorQuestions.length) return renderCreatorQuestion();
+    function saveCreatorBrief() {
+      if (!ensureFields([['brief-subject','推广主题'], ['brief-selling','核心卖点']])) return;
       const summary = [
-        `推广主题：${creatorAnswers.subject}`,
-        `目标观众：${creatorAnswers.audience}`,
-        `核心卖点：${creatorAnswers.selling}`,
-        `表达风格：${creatorAnswers.tone}`,
+        `推广主题：${valueOf('brief-subject')}`,
+        `目标观众：${valueOf('brief-audience')}`,
+        `核心卖点：${valueOf('brief-selling')}`,
+        `表达风格：${valueOf('brief-tone')}`,
       ].join('\n');
       document.getElementById('copy-topic').value = summary;
-      chooseMaterialSource(/在线|MoneyPrinter/i.test(creatorAnswers.source) ? 'pexels' : 'local');
-      document.getElementById('creator-answer').disabled = true;
-      document.getElementById('creator-answer-button').disabled = true;
-      document.getElementById('creator-quick-answers').innerHTML = '';
+      document.getElementById('final-copy').value = '';
       document.getElementById('creator-brief-status').textContent = '已完成';
       document.getElementById('creator-brief-status').className = 'status succeeded';
+      document.getElementById('creator-copy-status').textContent = '可生成';
+      document.getElementById('creator-copy-status').className = 'status blue';
       markCreatorStepDone('brief');
-      addCreatorBubble('需求已整理完成。我现在开始生成第一版口播稿，结果会直接显示在下一步。', 'agent');
       focusCreatorStep('copy');
-      createCopy();
+    }
+    function confirmCreatorCopy() {
+      if (!ensureFields([['final-copy','最终口播稿']])) return;
+      markCreatorStepDone('copy');
+      document.getElementById('creator-copy-status').textContent = '已确认';
+      document.getElementById('creator-copy-status').className = 'status succeeded';
+      document.getElementById('creator-material-status').textContent = '可配置';
+      document.getElementById('creator-material-status').className = 'status blue';
+      focusCreatorStep('material');
     }
     function chooseMaterialSource(source) {
       selectedMaterialSource = source === 'pexels' ? 'pexels' : 'local';
@@ -941,6 +895,9 @@
       const script = finalCopyWithCta();
       if (!script) return notify('请先生成或填写最终口播稿', 'error');
       if (selectedMaterialSource === 'local' && !valueOf('material-dir')) return notify('请选择本地素材目录', 'error');
+      markCreatorStepDone('material');
+      document.getElementById('creator-material-status').textContent = '已确认';
+      document.getElementById('creator-material-status').className = 'status succeeded';
       focusCreatorStep('output');
       document.getElementById('creator-output-status').textContent = '生成中';
       document.getElementById('creator-output-status').className = 'status running';
@@ -1452,9 +1409,11 @@
       const item = latestSamples[index] || {};
       selectedSample = item;
       document.getElementById('copy-topic').value = item.title || item.desc || document.getElementById('copy-topic').value;
+      document.getElementById('brief-subject').value = item.title || item.desc || document.getElementById('brief-subject').value;
       renderGallery(latestSamples);
       updateEmployeeStatuses();
       showSection('creator');
+      focusCreatorStep('brief');
     }
     async function loadTasks() {
       const data = await api('/api/tasks');
@@ -1962,7 +1921,7 @@
       }
       const recommendation = draft?.recommendation;
       if (recommendation) tips.unshift(recommendation);
-      return `<b>投放员工复盘</b>
+      return `<b>账户整体投放复盘</b><p>当前口径：广告主账户 + 报表时间范围，并非单条视频归因。</p>
         <div class="recap-score">
           <span>曝光基础：${showCnt ? '已有数据' : '待启动'}</span>
           <span>点击表现：${ctr ? `${ctr.toFixed(2)}%` : '待观察'}</span>
@@ -2048,7 +2007,6 @@
     refreshAll();
     syncTtsVoices();
     chooseMaterialSource('local');
-    initCreatorConversation();
     setInterval(loadTasks, 5000);
   </script>
 </body>
