@@ -690,28 +690,7 @@
       <button class="top-refresh" onclick="refreshAll()" title="刷新状态" aria-label="刷新状态">↻</button>
     </div>
   </div>
-  <nav class="mobile-nav">
-    <div class="nav-item active" data-target="overview">驾驶舱</div>
-    <div class="nav-item" data-target="hunter">找爆款</div>
-    <div class="nav-item" data-target="creator">生视频</div>
-    <div class="nav-item" data-target="buyer">投放</div>
-    <div class="nav-item" data-target="tasks">任务</div>
-  </nav>
   <div class="layout">
-    <aside class="hidden-legacy">
-      <div class="sidebar-brand"><img class="sidebar-logo" src="/assets/figma-digital-employees/logo.png" alt="logo"><span></span></div>
-      <div class="nav-item active" data-target="overview"><span class="nav-icon"><img src="/assets/figma-digital-employees/bot.svg" alt=""></span>数字员工驾驶舱</div>
-      <div class="nav-item" data-target="hunter"><span class="nav-icon"><img src="/assets/figma-digital-employees/calendar-range.svg" alt=""></span>找爆款员工</div>
-      <div class="nav-item" data-target="creator"><span class="nav-icon"><img src="/assets/figma-digital-employees/space.svg" alt=""></span>生视频员工</div>
-      <div class="nav-item" data-target="buyer"><span class="nav-icon"><img src="/assets/figma-digital-employees/usage.svg" alt=""></span>投放员工</div>
-      <div class="nav-item" data-target="tasks"><span class="nav-icon"><img src="/assets/figma-digital-employees/usage.svg" alt=""></span>任务中心</div>
-      <div class="sidebar-spacer"></div>
-      <div class="usage-card">
-        <div>当前工作模式</div>
-        <div style="margin-top:6px;font-weight:850;color:#89775c">三名数字员工协同</div>
-        <div style="margin-top:8px;color:#9a9388;font-size:12px;line-height:1.45">前台只做确认，后台自动执行。</div>
-      </div>
-    </aside>
     <main class="workspace">
       <section id="overview" class="section active">
   <div class="shell">
@@ -1013,12 +992,9 @@
     }
     function showSection(id) {
       document.querySelectorAll('.section').forEach(el => el.classList.toggle('active', el.id === id));
-      document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.target === id));
       document.querySelectorAll('[data-staff-card]').forEach(el => el.classList.toggle('is-active', el.dataset.staffCard === id));
-      document.querySelectorAll('.pipeline-step').forEach(el => el.classList.remove('active'));
-      if (id === 'hunter') { document.querySelectorAll('.pipeline-step')[0]?.classList.add('active'); setHunterStage(currentHunterStage || 'config'); }
-      if (id === 'creator') { document.querySelectorAll('.pipeline-step')[1]?.classList.add('active'); }
-      if (id === 'buyer') { document.querySelectorAll('.pipeline-step')[2]?.classList.add('active'); setBuyerStage(currentBuyerStage || (oceanConnected ? 'asset' : 'bind')); }
+      if (id === 'hunter') setHunterStage(currentHunterStage || 'config');
+      if (id === 'buyer') setBuyerStage(currentBuyerStage || (oceanConnected ? 'asset' : 'bind'));
       if (id === 'tasks') loadTasks();
     }
     function goTo(sectionId, targetId) {
@@ -1028,8 +1004,6 @@
         if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
       }, 80);
     }
-    document.querySelectorAll('.nav-item').forEach(el => el.addEventListener('click', () => showSection(el.dataset.target)));
-
     function applyQuickStart(type) {
       if (type === 'hunter-exhibition') {
         document.getElementById('search-platform').value = 'douyin';
@@ -2087,8 +2061,7 @@
       const el = document.getElementById(id);
       if (!el) return;
       el.textContent = text;
-      const isStaffChip = ['hunter-status','creator-status','buyer-status'].includes(id);
-      el.className = `${isStaffChip ? 'staff-status ' : ''}status ${cls || ''}`;
+      el.className = `status ${cls || ''}`;
     }
     function taskSummary(task) {
       if (!task.result) return '';
