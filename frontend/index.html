@@ -599,6 +599,78 @@
     #hunter .sample.selected { background:#fbfcff; }
     @media (max-width: 980px) { #hunter .agent-workbench, #buyer .metric-board { grid-template-columns:1fr; } }
 
+
+
+    /* SaaS hierarchy refactor: 展会列表 -> 展会详情 -> 数字员工详情 */
+    .workspace { max-width: none; padding:0 14px 18px; }
+    .shell { min-height:calc(100vh - 62px); border-radius:16px; padding:24px 28px; }
+    .view-hidden { display:none !important; }
+    .page-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; }
+    .page-title-row { display:flex; align-items:center; gap:10px; }
+    .page-title-row img { width:26px; height:26px; object-fit:contain; }
+    .breadcrumb-btn, .back-link { min-height:36px; background:#f8fafc; border-color:#dbe3ee; color:#303641; }
+    .expo-list { display:grid; grid-template-columns:repeat(3,minmax(260px,1fr)); gap:18px; margin-top:20px; }
+    .expo-card { border:1px solid #dfe3ea; border-radius:16px; background:#fff; padding:22px; min-height:190px; cursor:pointer; transition:.16s ease; display:flex; flex-direction:column; justify-content:space-between; }
+    .expo-card:hover { transform:translateY(-2px); box-shadow:0 16px 36px rgba(24,28,38,.08); border-color:#cdd5e2; }
+    .expo-card h2 { margin:0 0 8px; font-size:20px; }
+    .expo-meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+    .expo-meta span { padding:5px 9px; border-radius:999px; background:#f0f3f8; color:#6d7582; font-weight:800; font-size:12px; }
+    .expo-detail-head { border:1px solid #dfe3ea; border-radius:16px; background:#fbfcff; padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:22px; }
+    .employee-board { display:grid; grid-template-columns:repeat(3,minmax(260px,1fr)); gap:18px; }
+    .employee-tile { border:1px solid #dfe3ea; border-radius:18px; background:#fff; padding:20px; min-height:300px; cursor:pointer; transition:.16s ease; display:flex; flex-direction:column; justify-content:space-between; }
+    .employee-tile:hover { transform:translateY(-2px); box-shadow:0 16px 36px rgba(24,28,38,.08); border-color:#17191f; }
+    .employee-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .employee-visual { width:92px; height:92px; border-radius:18px; background:#f3f2ee; display:grid; place-items:center; margin:18px 0; }
+    .employee-visual img { width:74px; height:74px; object-fit:contain; }
+    .employee-role-list { display:grid; gap:8px; margin-top:14px; color:#6f7784; font-size:13px; line-height:1.55; }
+    .employee-role-list span::before { content:'• '; color:#17191f; font-weight:900; }
+    .employee-bind-row { display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px dashed #e0e4eb; padding-top:14px; margin-top:16px; }
+    .stage-shell { max-width:1120px; margin:0 auto; }
+    .stage-panel { display:none; border:1px solid #dfe3ea; border-radius:16px; background:#fff; padding:24px; margin-top:18px; }
+    .stage-panel.active { display:block; }
+    .stage-head { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; padding-bottom:18px; border-bottom:1px solid #edf0f5; margin-bottom:20px; }
+    .stage-title { display:flex; align-items:center; gap:12px; font-weight:900; font-size:20px; }
+    .stage-num { width:34px; height:34px; border-radius:50%; background:#17191f; color:#fff; display:grid; place-items:center; font-weight:900; font-size:13px; }
+    .stage-help { color:#858e9c; line-height:1.7; max-width:760px; }
+    .stage-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    .stage-footer { margin-top:20px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .flow-steps { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0 10px; }
+    .flow-pill { border:1px solid #e0e5ed; border-radius:12px; background:#f8fafc; padding:12px; color:#8a93a1; font-weight:850; }
+    .flow-pill.active { background:#17191f; color:#fff; border-color:#17191f; }
+    .flow-pill.done { background:#eff9e8; color:#3a6b17; border-color:#cce8bb; }
+    .single-column-form { max-width:760px; display:grid; gap:14px; }
+    .account-bind-card { border:1px dashed #d7dde8; border-radius:14px; background:#fbfcff; padding:16px; display:flex; justify-content:space-between; align-items:center; gap:14px; margin-bottom:16px; }
+    .working-panel { text-align:center; padding:60px 20px; }
+    .working-dot { width:52px; height:52px; border-radius:50%; background:#17191f; margin:0 auto 18px; position:relative; animation:pulse 1.2s infinite; }
+    .result-gallery-wrap { max-height:calc(100vh - 280px); overflow:auto; border:1px solid #e0e5ed; border-radius:14px; padding:16px; }
+    .creator-flow { max-width:1100px; margin:0 auto; }
+    .creator-stepper { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:20px 0; }
+    .creator-step { border:1px solid #e0e5ed; border-radius:12px; padding:12px; background:#f8fafc; color:#8a93a1; font-weight:850; }
+    .creator-step.active { background:#17191f; color:#fff; border-color:#17191f; }
+    .creator-step.done { background:#eff9e8; color:#3a6b17; border-color:#cce8bb; }
+    .flow-stage { display:none; border:1px solid #dfe3ea; border-radius:16px; background:#fff; padding:24px; margin-top:14px; }
+    .flow-stage.active { display:block; }
+    .source-choice { border:1px solid #dfe3ea; border-radius:14px; padding:16px; cursor:pointer; background:#fff; }
+    .source-choice.active { border-color:#17191f; box-shadow:0 0 0 3px rgba(23,25,31,.08); }
+    .media-preview video { width:100%; max-height:620px; background:#111; border-radius:12px; }
+    .result-empty { border:1px dashed #d8dfe9; border-radius:12px; padding:22px; color:#858e9c; background:#fbfcff; }
+    .buyer-stage-grid { display:grid; grid-template-columns:1fr; gap:16px; }
+    .metric-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .metric { border:1px solid #e0e5ed; border-radius:13px; padding:15px; background:#fbfcff; }
+    .metric span { color:#7d8795; font-weight:800; font-size:13px; }
+    .metric b { display:block; font-size:24px; margin:8px 0 4px; }
+    .metric small { color:#9aa3b1; }
+    .checklist { display:grid; gap:10px; margin-top:12px; }
+    .check-item { border:1px solid #e0e5ed; border-radius:10px; padding:12px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .recap-card { margin-top:16px; border:1px solid #dfe3ea; border-radius:14px; padding:16px; background:#fbfcff; color:#667080; line-height:1.7; }
+    .recap-score { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0; }
+    .recap-score span { border:1px solid #e0e5ed; border-radius:10px; padding:10px; background:#fff; }
+    .compat-hidden { display:none !important; }
+    @media (max-width: 900px) {
+      .expo-list,.employee-board,.grid.two,.grid.three,.grid.four,.metric-board,.flow-steps,.creator-stepper { grid-template-columns:1fr; }
+      .shell { padding:18px; }
+    }
+
   </style>
 </head>
 <body>
@@ -634,231 +706,121 @@
     </aside>
     <main class="workspace">
       <section id="overview" class="section active">
-        <div class="shell staff-board">
-          <div class="workspace-header">
-            <div class="workspace-select">展会短视频空间 <span>⌄</span></div>
-            <div class="exhibition-tabs">
-              <button class="active">华南国际新能源产业展（5）</button>
-              <button>杭州国际数字人展会（3）</button>
-              <button onclick="notify('后续会进入新建展会流程')">+ 添加展会</button>
-            </div>
-          </div>
-          <div class="overview-hero">
-            <div>
-              <div class="overview-eyebrow">展会短视频运营空间</div>
-              <h1 class="overview-title">数字员工</h1>
-              <p class="overview-subtitle">选择一名员工并交代任务。执行过程在后台完成，前台只显示状态、待确认事项和最终结果。</p>
-            </div>
-            <div class="overview-actions"><button class="primary" onclick="goTo('hunter','search-keyword')">+ 新建任务</button></div>
-          </div>
-
-          <div class="overview-statusbar">
-            <b>当前团队</b>
-            <div class="status-items"><span>3 名数字员工</span><span id="overview-working-count">0 名工作中</span><span id="overview-action-count">0 项待确认</span></div>
-          </div>
-
-          <div class="flow-advisor" id="flow-advisor">
-            <div><span class="status blue">下一步建议</span><b id="flow-advisor-title">先安排找爆款员工</b><span id="flow-advisor-desc">输入展会主题，让员工先找到可复刻样本。</span></div>
-            <div class="flow-advisor-actions" id="flow-advisor-actions"><button class="primary" onclick="goTo('hunter','search-keyword')">去安排检索</button></div>
-          </div>
-
-          <div class="staff-content">
-            <div class="staff-grid">
-              <div class="staff-card is-active" data-staff-card="hunter" onclick="showSection('hunter')">
-                <div class="staff-figure"><div class="staff-avatar"><img src="/assets/figma-digital-employees/ip-blue.png" alt="找爆款员工"></div></div>
-                <div class="staff-info">
-                  <span class="staff-status" id="hunter-status">空闲中</span>
-                  <h2 class="staff-name">找爆款员工</h2>
-                  <div class="staff-space">发现值得参考的爆款样本</div>
-                  <div class="staff-tag"><img src="/assets/figma-digital-employees/wechat.svg" alt="">热点检索</div>
-                  <p class="staff-role">搜索抖音、小红书候选视频，去重并按互动表现排序。</p>
-                  <div class="staff-kpi" id="hunter-kpi"><span>样本 0 条</span><span>等待任务</span></div>
-                </div>
-              </div>
-              <div class="staff-card" data-staff-card="creator" onclick="showSection('creator')">
-                <div class="staff-figure"><div class="staff-avatar"><img src="/assets/figma-digital-employees/ip-green.png" alt="生视频员工"></div></div>
-                <div class="staff-info">
-                  <span class="staff-status" id="creator-status">空闲中</span>
-                  <h2 class="staff-name">生视频员工</h2>
-                  <div class="staff-space">把样本和卖点变成推广成片</div>
-                  <div class="staff-tag"><img src="/assets/figma-digital-employees/whatsapp-tag.svg" alt="">视频生成</div>
-                  <p class="staff-role">生成口播、配音、字幕和带行动引导的最终视频。</p>
-                  <div class="staff-kpi" id="creator-kpi"><span>成片 0 条</span><span>等待样本</span></div>
-                </div>
-              </div>
-              <div class="staff-card" data-staff-card="buyer" onclick="showSection('buyer')">
-                <div class="staff-figure"><div class="staff-avatar"><img src="/assets/figma-digital-employees/ip-blue.png" alt="投放员工"></div></div>
-                <div class="staff-info">
-                  <span class="staff-status" id="buyer-status">空闲中</span>
-                  <h2 class="staff-name">投放员工</h2>
-                  <div class="staff-space">完成投放并回收效果数据</div>
-                  <div class="staff-tag"><img src="/assets/figma-digital-employees/bot.svg" alt="">巨量投放</div>
-                  <p class="staff-role">绑定巨量账户、选择成片、创建草稿并同步关键指标。</p>
-                  <div class="staff-kpi" id="buyer-kpi"><span>未绑定</span><span>等待成片</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="overview-secondary" aria-hidden="true">
-            <div id="kpis"></div><div id="ops-snapshot"></div><div id="asset-chain"></div><span id="asset-package-status"></span>
-            <div id="approval-list"></div><span id="approval-status"></span><div id="flow-progress"></div><span id="flow-progress-status"></span>
-            <div id="handoff-list"></div><span id="handoff-status"></span><div id="overview-task-center"></div><span id="mission-total"></span>
-          </div>
+  <div class="shell">
+    <div id="expo-list-view">
+      <div class="page-toolbar">
+        <div>
+          <div class="page-title-row"><img src="/assets/figma-digital-employees/logo.png" alt=""><h1>展会运营</h1><span class="badge">AI Agent</span></div>
+          <p>以展会为维度管理数字员工。先选择展会，再为这个展会分配找爆款、生视频和投放员工。</p>
         </div>
-      </section>
+        <button onclick="notify('后续接入新建展会流程')">+ 添加展会</button>
+      </div>
+      <div class="expo-list">
+        <div class="expo-card" onclick="openExhibition('新能源')">
+          <div><span class="status succeeded">进行中</span><h2>华南国际新能源产业展</h2><p>围绕招商、参展企业、观众线索和投放复盘组织素材与任务。</p></div>
+          <div class="expo-meta"><span>3 名员工</span><span>5 个任务</span><span>投放待绑定</span></div>
+        </div>
+        <div class="expo-card" onclick="openExhibition('数字人')">
+          <div><span class="status blue">待分配</span><h2>杭州国际数字人展会</h2><p>保留为下一组展会空间，员工和素材将独立配置。</p></div>
+          <div class="expo-meta"><span>0 名员工</span><span>3 个素材</span><span>未开始</span></div>
+        </div>
+        <div class="expo-card" onclick="notify('后续会进入创建展会流程')">
+          <div><span class="status">新建</span><h2>添加一个展会</h2><p>创建后会生成独立的员工、账号绑定、素材库和投放数据空间。</p></div>
+          <div class="expo-meta"><span>+ 创建空间</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="expo-detail-view" class="view-hidden">
+      <div class="page-toolbar">
+        <div><button class="breadcrumb-btn" onclick="backToExhibitionList()">← 返回展会列表</button><h1 style="margin-top:14px" id="current-expo-name">华南国际新能源产业展</h1><p>选择数字员工并配置该员工自己的账号、任务参数和产出结果。</p></div>
+        <span class="status blue">展会维度 · 员工独立配置</span>
+      </div>
+      <div class="expo-detail-head">
+        <div><b>当前展会空间</b><p>员工详情里分别绑定平台账号：找爆款绑定抖音/小红书，生视频配置素材与 TTS，投放绑定巨量。</p></div>
+        <button class="primary" onclick="notify('选择下方员工即可进入详情')">分配数字员工</button>
+      </div>
+      <div class="employee-board">
+        <div class="employee-tile" data-staff-card="hunter" onclick="openEmployee('hunter')">
+          <div><div class="employee-top"><span class="status" id="hunter-status">空闲中</span><span class="status blue">参考样本</span></div><div class="employee-visual"><img src="/assets/figma-digital-employees/ip-blue.png" alt="找爆款员工"></div><h2>找爆款员工</h2><p>负责找全网热点/同行爆款，产出可参考的视频样本。</p><div class="employee-role-list"><span>绑定抖音或小红书账号</span><span>按互动分排序</span><span>选择样本后交给生视频员工</span></div></div>
+          <div class="employee-bind-row"><small id="hunter-kpi">样本 0 条</small><button>进入员工详情</button></div>
+        </div>
+        <div class="employee-tile" data-staff-card="creator" onclick="openEmployee('creator')">
+          <div><div class="employee-top"><span class="status" id="creator-status">空闲中</span><span class="status blue">最终成片</span></div><div class="employee-visual"><img src="/assets/figma-digital-employees/ip-green.png" alt="生视频员工"></div><h2>生视频员工</h2><p>负责把参考样本、卖点和素材变成可投放的视频。</p><div class="employee-role-list"><span>确认口播和卖点</span><span>选择本地素材库或 MoneyPrinter 搜索链路</span><span>生成配音、字幕和成片</span></div></div>
+          <div class="employee-bind-row"><small id="creator-kpi">成片 0 条</small><button>进入员工详情</button></div>
+        </div>
+        <div class="employee-tile" data-staff-card="buyer" onclick="openEmployee('buyer')">
+          <div><div class="employee-top"><span class="status" id="buyer-status">空闲中</span><span class="status blue">投放数据</span></div><div class="employee-visual"><img src="/assets/figma-digital-employees/bot.svg" alt="投放员工"></div><h2>投放员工</h2><p>负责绑定巨量账号、创建安全投放草稿并回收 9 项指标。</p><div class="employee-role-list"><span>绑定巨量账户</span><span>选择视频、目标、预算</span><span>同步消耗、展示、点击、转化和有效播放</span></div></div>
+          <div class="employee-bind-row"><small id="buyer-kpi">未绑定</small><button>进入员工详情</button></div>
+        </div>
+      </div>
+      <div class="compat-hidden" aria-hidden="true">
+        <div id="kpis"></div><div id="ops-snapshot"></div><div id="asset-chain"></div><span id="asset-package-status"></span>
+        <div id="approval-list"></div><span id="approval-status"></span><div id="flow-progress"></div><span id="flow-progress-status"></span>
+        <div id="handoff-list"></div><span id="handoff-status"></span><div id="overview-task-center"></div><span id="mission-total"></span>
+        <div id="flow-advisor"><span id="flow-advisor-title"></span><span id="flow-advisor-desc"></span><div id="flow-advisor-actions"></div></div>
+        <span id="overview-working-count"></span><span id="overview-action-count"></span>
+      </div>
+    </div>
+  </div>
+</section>
 
       <section id="hunter" class="section">
-        <div class="shell">
-          <div class="employee-page-head">
-            <div><button class="back-link" onclick="showSection('overview')">← 返回展会</button><h1>找爆款员工</h1><p>负责找到值得参考的视频。搜索阶段只展示预览信息，需要进入生成链路时再下载或分析。</p></div>
-            <span class="status blue">输出：参考样本</span>
-          </div>
-          <div class="employee-brief">
-            <div class="brief-card"><b>员工职责</b><span>发现展会行业可复刻的高互动视频样本。</span></div>
-            <div class="brief-card"><b>你只需要</b><span>选择平台，输入主题和目标数量。</span></div>
-            <div class="brief-card"><b>后台动作</b><span>检索、去重、封面补全、按互动分排序。</span></div>
-            <div class="brief-card"><b>最终产出</b><span>参考样本画廊，供生视频员工复刻。</span></div>
-          </div>
-          <div class="workorder-strip" id="hunter-order"></div>
-          <div class="agent-workbench">
-            <div class="agent-profile">
-              <div class="agent-profile-card">
-                <span class="agent-step-label">员工资料</span>
-                <h2 style="margin-top:10px">找爆款员工</h2>
-                <p>像内容选题同事一样，先帮你找到值得参考的同行视频，再把样本交给生视频员工。</p>
-                <div class="capability-list"><span>支持抖音 / 小红书检索</span><span>按互动分自动排序</span><span>每张卡片可设为参考样本</span></div>
-              </div>
-            </div>
-            <div class="agent-task-column">
-              <div class="work-console" id="hunter-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>工作进度</span></div><span class="status">等待开始</span></div><div class="work-progress"><span></span><span></span><span></span><span></span></div><div class="work-summary">填写检索条件后点击“让员工检索”，任务会在后台执行，结果自动回到本页。</div><div class="activity-list" id="hunter-activity"></div></div>
-              <div id="crawler-notice" class="notice"></div>
-              <div class="section-panel">
-                <h2>下任务 <span class="agent-step-label">输入检索条件</span></h2>
-                <div class="grid two">
-                  <div><label>检索平台</label><select id="search-platform"><option value="douyin">抖音</option><option value="xiaohongshu">小红书</option></select></div>
-                  <div><label>需要数量</label><input id="search-limit" type="number" min="1" max="50" value="12"></div>
-                </div>
-                <div style="margin-top:12px"><label>行业/主题</label><input id="search-keyword" value="展会素材"></div>
-                <div style="margin-top:12px"><label>排序标准</label><input value="点赞*1 + 评论*1.5 + 转发*2" disabled></div>
-                <div class="actions"><button id="search-button" class="primary" onclick="createSearch(false)">让员工检索</button><button id="deep-search-button" onclick="createSearch(true)">深度补全到目标数量</button></div>
-                <details style="margin-top:16px"><summary style="cursor:pointer;font-weight:850">没有抓取器时，导入已有视频链接</summary><div class="card soft" style="margin-top:10px"><label>每行一个抖音/小红书链接</label><textarea id="manual-links" placeholder="https://www.douyin.com/video/...&#10;https://www.xiaohongshu.com/explore/..."></textarea><div class="actions"><button onclick="importLinks()">导入给找爆款员工</button></div></div></details>
-              </div>
-            </div>
-            <div class="agent-result-column">
-              <div class="section-panel">
-                <h2>结果 / 建议 <span class="agent-step-label">参考样本画廊</span></h2>
-                <p>选择一个样本后，会自动交给生视频员工作为复刻参考。</p>
-                <div class="gallery-shell" style="margin-top:12px"><div class="gallery" id="gallery"></div></div>
-              </div>
-            </div>
-          </div>
+  <div class="shell">
+    <div class="employee-page-head">
+      <div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><h1>找爆款员工</h1><p>员工详情页内完成账号绑定、检索任务和样本确认；检索完成后再展示样本画廊。</p></div>
+      <span class="status blue">输出：参考样本</span>
+    </div>
+    <div class="stage-shell">
+      <div class="flow-steps"><div class="flow-pill active" data-hunter-pill="config">1 绑定与检索</div><div class="flow-pill" data-hunter-pill="working">2 员工执行中</div><div class="flow-pill" data-hunter-pill="results">3 选择参考样本</div><div class="flow-pill" data-hunter-pill="handoff">4 交给生视频员工</div></div>
+      <div id="hunter-order" class="workorder-strip"></div>
+      <section class="stage-panel active" data-hunter-stage="config">
+        <div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>先配置找爆款员工</div><p class="stage-help">账号绑定写在员工详情里。真实抓取时需要绑定抖音或小红书账号；没有抓取器时可导入已有视频链接。</p></div><span class="status">待开始</span></div>
+        <div class="account-bind-card"><div><b>平台账号绑定</b><p>抖音/小红书账号用于获取封面、标题和互动数据。</p></div><div class="actions"><button onclick="notify('这里后续接入抖音账号绑定')">绑定抖音</button><button onclick="notify('这里后续接入小红书账号绑定')">绑定小红书</button></div></div>
+        <div id="crawler-notice" class="notice"></div>
+        <div class="single-column-form">
+          <div class="grid two"><div><label>检索平台</label><select id="search-platform"><option value="douyin">抖音</option><option value="xiaohongshu">小红书</option></select></div><div><label>需要数量</label><input id="search-limit" type="number" min="1" max="50" value="12"></div></div>
+          <div><label>行业/主题</label><input id="search-keyword" value="展会素材"></div>
+          <div><label>排序标准</label><input value="点赞*1 + 评论*1.5 + 转发*2" disabled></div>
+          <div class="stage-actions"><button id="search-button" class="primary" onclick="createSearch(false)">让员工检索</button><button id="deep-search-button" onclick="createSearch(true)">深度补全到目标数量</button></div>
+          <details><summary style="cursor:pointer;font-weight:850">没有抓取器时，导入已有视频链接</summary><div class="card soft" style="margin-top:10px"><label>每行一个抖音/小红书链接</label><textarea id="manual-links" placeholder="https://www.douyin.com/video/...&#10;https://www.xiaohongshu.com/explore/..."></textarea><div class="actions"><button onclick="importLinks()">导入给找爆款员工</button></div></div></details>
         </div>
       </section>
+      <section class="stage-panel" data-hunter-stage="working"><div class="working-panel"><div class="working-dot"></div><h2>找爆款员工正在检索</h2><p>前端不再堆叠表单和结果。员工在后台检索、去重和补全封面，完成后自动进入样本画廊。</p><div class="work-console" id="hunter-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>后台执行日志</span></div><span class="status running">工作中</span></div><div class="work-progress"><span class="done"></span><span class="done"></span><span></span><span></span></div><div class="work-summary">任务已提交。你可以留在本页等待，也可以返回展会。</div><div class="activity-list" id="hunter-activity"></div></div></div></section>
+      <section class="stage-panel" data-hunter-stage="results"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择一个参考样本</div><p class="stage-help">点击样本卡片的“设为参考并生视频”，系统会自动跳到生视频员工页面。</p></div><button onclick="setHunterStage('config')">重新检索</button></div><div class="result-gallery-wrap"><div class="gallery" id="gallery"></div></div></section>
+      <section class="stage-panel" data-hunter-stage="handoff"><div class="working-panel"><h2>样本已交给生视频员工</h2><p>下一步由生视频员工基于参考样本生成口播、配音、素材和成片。</p><button class="primary" onclick="openEmployee('creator')">进入生视频员工</button></div></section>
+    </div>
+  </div>
+</section>
 
       <section id="creator" class="section">
-        <div class="shell">
-          <div class="employee-page-head">
-            <div><button class="back-link" onclick="showSection('overview')">← 返回展会</button><h1>生视频员工</h1><p>像和同事交代任务一样，先确认最终口播，再选择素材来源，员工会在后台完成配音、字幕和成片。</p></div>
-            <span class="status blue">输出：最终成片</span>
-          </div>
-          <div class="creator-flow">
-            <aside class="creator-steps" aria-label="生成步骤">
-              <button class="creator-step active" data-flow-step="brief" onclick="focusCreatorStep('brief')"><span>1</span><b>填写需求</b><small>结构化表单</small></button>
-              <button class="creator-step" data-flow-step="copy" onclick="focusCreatorStep('copy')"><span>2</span><b>确认口播</b><small>生成后可编辑</small></button>
-              <button class="creator-step" data-flow-step="material" onclick="focusCreatorStep('material')"><span>3</span><b>选择素材</b><small>本地 / 在线搜索</small></button>
-              <button class="creator-step" data-flow-step="output" onclick="focusCreatorStep('output')"><span>4</span><b>查看成片</b><small>预览与再生成</small></button>
-            </aside>
-
-            <div class="creator-stage-stack">
-              <section class="flow-stage active" id="creator-stage-brief" data-stage="brief">
-                <div class="flow-stage-head"><div><span class="stage-index">01</span><h2>填写视频需求</h2><p>用结构化选项说明任务，确认后进入口播稿步骤。</p></div><span class="status blue" id="creator-brief-status">进行中</span></div>
-                <div class="brief-form">
-                  <div><label>推广主题</label><input id="brief-subject" value="2026北京国际会展大会招商推广" placeholder="例如：北京国际会展大会招商"></div>
-                  <div><label>目标观众</label><select id="brief-audience"><option>参展企业负责人</option><option>专业采购商</option><option>普通观众</option><option>行业合作伙伴</option></select></div>
-                  <div><label>核心卖点</label><textarea id="brief-selling" placeholder="例如：高质量采购商、现场人流量、优质展位稀缺">专业采购商质量高、现场人流量大、优质展位稀缺</textarea></div>
-                  <div><label>表达风格</label><select id="brief-tone"><option>专业可信</option><option>现场热烈</option><option>强招商转化</option><option>简洁商务</option></select></div>
-                </div>
-                <div class="workflow-footer"><span>下一步将根据这些信息生成口播稿。</span><button class="primary" onclick="saveCreatorBrief()">确认需求，下一步</button></div>
-              </section>
-
-              <section class="flow-stage" id="creator-stage-copy" data-stage="copy">
-                <div class="flow-stage-head"><div><span class="stage-index">02</span><h2>确认最终口播稿</h2><p>AI 生成结果会直接出现在这里，不再跳到另一列。</p></div><span class="status" id="creator-copy-status">等待需求</span></div>
-                <label>完整需求摘要</label>
-                <textarea id="copy-topic" style="min-height:120px" placeholder="完成上方问答后自动整理，也可以直接修改。"></textarea>
-                <div class="actions"><button class="primary" onclick="createCopy()">AI 生成口播稿</button><button onclick="useManualCopy()">直接使用需求文本</button></div>
-                <label style="margin-top:18px">最终口播稿（可编辑）</label>
-                <textarea id="final-copy" style="min-height:220px" placeholder="生成完成后会自动回填到这里。"></textarea>
-                <div class="actions"><button onclick="createTts()">只生成语音预览</button></div>
-                <div id="tts-preview" class="media-preview hidden"></div>
-                <div class="workflow-footer"><button onclick="focusCreatorStep('brief')">上一步</button><button class="primary" onclick="confirmCreatorCopy()">确认口播，下一步</button></div>
-              </section>
-
-              <section class="flow-stage" id="creator-stage-material" data-stage="material">
-                <div class="flow-stage-head"><div><span class="stage-index">03</span><h2>选择素材来源和成片风格</h2><p>本地素材适合品牌一致性；MoneyPrinter 在线搜索适合快速补充通用镜头。</p></div><span class="status" id="creator-material-status">等待口播</span></div>
-                <label>素材来源</label>
-                <div class="source-choices" id="material-source-choices">
-                  <div class="source-choice active" data-source="local" onclick="chooseMaterialSource('local')"><b>本地素材库</b><p>使用已上传的展会、展台和品牌素材，画面更统一。</p><span id="local-source-count">素材 0 个</span></div>
-                  <div class="source-choice" data-source="pexels" onclick="chooseMaterialSource('pexels')"><b>MoneyPrinter 在线搜索</b><p>根据整篇口播生成英文检索词，从 Pexels 搜索并下载足够时长。</p><span id="moneyprint-source-status">检查配置中</span></div>
-                </div>
-                <div id="local-material-settings" class="source-settings">
-                  <label>本地素材目录</label><input id="material-dir">
-                  <div class="upload-row"><input id="material-files" type="file" multiple accept="video/*,image/*"><button onclick="uploadMaterials()">上传到素材库</button><span id="material-count" class="status"></span></div>
-                </div>
-                <input id="competitor-dir" class="hidden" placeholder="可选">
-                <div class="grid two" style="margin-top:16px">
-                  <div><label>TTS 服务</label><select id="tts-service" onchange="syncTtsVoices()"><option value="edge">Microsoft Edge TTS（免密）</option><option value="qwen">阿里云百炼 Qwen TTS</option></select></div>
-                  <div><label>音色</label><select id="tts-voice"></select></div>
-                </div>
-                <label style="margin-top:16px">视频结尾行动引导</label><input id="video-cta" value="点击下方链接，立即报名吧">
-                <label style="margin-top:16px">字幕视觉模板</label>
-                <div class="grid two" id="caption-templates"><div class="choice active" data-template="viral" onclick="chooseCaptionTemplate('viral')"><b>爆款强调</b><p>白字黑描边，黄色重点词</p></div><div class="choice" data-template="business" onclick="chooseCaptionTemplate('business')"><b>专业展会</b><p>稳重白字，蓝色业务重点</p></div><div class="choice" data-template="minimal" onclick="chooseCaptionTemplate('minimal')"><b>极简商务</b><p>半透明底板，清晰克制</p></div><div class="choice" data-template="energetic" onclick="chooseCaptionTemplate('energetic')"><b>活力招展</b><p>橙色大字，强化行动号召</p></div></div>
-                <label style="margin-top:16px">重点词（可留空自动识别）</label><input id="highlight-words" placeholder="专业买家、人流量、提前锁定、限时报名">
-                <div class="pipeline-submit"><div><b>所有步骤将由员工在后台连续完成</b><p>生成口播 → 配音 → 准备素材 → 合成字幕和 CTA → 输出成片</p></div><button class="primary" onclick="runCreatorPipeline()">开始生成视频</button></div>
-              </section>
-
-              <section class="flow-stage" id="creator-stage-output" data-stage="output">
-                <div class="flow-stage-head"><div><span class="stage-index">04</span><h2>成片与历史版本</h2><p>不满意时从历史版本恢复参数，只修改需要调整的环节后再次生成。</p></div><span class="status" id="creator-output-status">等待生成</span></div>
-                <div id="render-preview" class="result-empty">成片任务完成后会自动出现在这里，并同步给投放员工。</div>
-                <div class="history-head"><h3>历史版本</h3><span>点击版本可恢复当时的文案、音色、素材来源和字幕设置</span></div>
-                <div id="creator-history" class="creator-history"></div>
-              </section>
-            </div>
-          </div>
-        </div>
-      </section>
+  <div class="shell">
+    <div class="employee-page-head"><div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><h1>生视频员工</h1><p>像给同事交代任务一样，先确认口播，再选择素材来源，员工在后台完成配音、字幕和成片。</p></div><span class="status blue">输出：最终成片</span></div>
+    <div class="creator-flow">
+      <div class="creator-stepper"><div class="creator-step active" data-flow-step="brief">1 确认口播</div><div class="creator-step" data-flow-step="copy">2 文案与声音</div><div class="creator-step" data-flow-step="material">3 素材和字幕</div><div class="creator-step" data-flow-step="output">4 成片与历史</div></div>
+      <div id="creator-order" class="workorder-strip"></div>
+      <section id="creator-stage-brief" class="flow-stage active" data-stage="brief"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>确认最终口播方向</div><p class="stage-help">这里输入业务主题、卖点或完整文案。AI 生成后会直接出现在最终口播稿里，不再左右割裂。</p></div><span id="creator-brief-status" class="status">待确认</span></div><div class="single-column-form"><label>业务主题 / 手动文案</label><textarea id="copy-topic" placeholder="例如：2026北京国际会展大会招商推广，突出人流量、采购商质量、提前锁定展位"></textarea><div class="grid two"><div><label>推广主题</label><input id="brief-subject" value="2026北京国际会展大会招商推广"></div><div><label>目标观众</label><input id="brief-audience" placeholder="参展企业负责人 / 采购商"></div></div><div><label>核心卖点</label><textarea id="brief-selling" placeholder="突出人流量、采购商质量、提前锁定展位"></textarea></div><div><label>表达风格</label><input id="brief-tone" placeholder="专业、紧迫、招商转化"></div><div class="stage-actions"><button class="primary" onclick="createCopy()">AI 生成口播稿</button><button onclick="useManualCopy(); markCreatorStepDone('brief'); focusCreatorStep('copy')">使用手动文案</button></div></div></section>
+      <section id="creator-stage-copy" class="flow-stage" data-stage="copy"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>确认文案和声音</div><p class="stage-help">最终口播稿会用于配音和字幕。视频结尾会自动追加行动引导。</p></div><span id="creator-copy-status" class="status">等待文案</span></div><label>最终口播稿（用于配音和字幕）</label><textarea id="final-copy" placeholder="AI 生成或手动填写的最终口播稿会出现在这里"></textarea><div style="margin-top:14px"><label>视频结尾行动引导</label><input id="video-cta" value="点击下方链接，立即报名吧"></div><div class="grid two" style="margin-top:14px"><div><label>TTS 服务</label><select id="tts-service" onchange="syncTtsVoices()"><option value="edge">Microsoft Edge TTS（免密）</option><option value="qwen">阿里云百炼 Qwen TTS</option></select></div><div><label>音色</label><select id="tts-voice"></select></div></div><div class="stage-actions"><button class="primary" onclick="createTts(); markCreatorStepDone('copy')">生成语音</button><button onclick="focusCreatorStep('material')">跳过，直接配置素材</button></div><div id="tts-preview" class="media-preview hidden" style="margin-top:14px"></div></section>
+      <section id="creator-stage-material" class="flow-stage" data-stage="material"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择素材来源和字幕</div><p class="stage-help">素材来源只有两个选项：本地素材库，或 MoneyPrinter 原始 Pexels/Pixabay 搜索链路。</p></div><span id="creator-material-status" class="status">待配置</span></div><div class="grid two" id="material-source-choices"><div class="source-choice active" data-source="local" onclick="chooseMaterialSource('local')"><b>本地素材库</b><p>使用你上传或放入 materials 的素材。</p></div><div class="source-choice" data-source="pexels" onclick="chooseMaterialSource('pexels')"><b>MoneyPrinter 搜索链路</b><p>走原始 Pexels/Pixabay 全局搜索下载逻辑。</p></div></div><div id="local-material-settings" style="margin-top:16px"><label>素材目录</label><input id="material-dir" placeholder="/path/to/materials"><div style="margin-top:12px"><label>参考样本目录（可选）</label><input id="competitor-dir" placeholder="可选"></div><div style="margin-top:12px"><label>添加本地素材</label><input id="material-files" type="file" multiple><div class="actions"><button onclick="notify('素材上传接口保留，后续接入')">上传到素材库</button><span class="status" id="material-count">素材 0 个</span><span class="status" id="local-source-count">素材 0 个</span></div></div></div><div class="grid two" style="margin-top:16px"><div><label>字幕视觉模板</label><div id="caption-templates" class="grid two"><div class="choice active" data-template="viral" onclick="chooseCaptionTemplate('viral')"><b>爆款强调</b><p>白字黑描边，黄色重点词</p></div><div class="choice" data-template="business" onclick="chooseCaptionTemplate('business')"><b>专业展会</b><p>稳重白字，蓝色业务重点</p></div><div class="choice" data-template="minimal" onclick="chooseCaptionTemplate('minimal')"><b>极简商务</b><p>半透明底板，清晰克制</p></div><div class="choice" data-template="active" onclick="chooseCaptionTemplate('active')"><b>活力招展</b><p>橙色大字，强化行动号召</p></div></div></div><div><label>重点词（逗号分隔）</label><textarea id="highlight-words" placeholder="专业买家, 人流量, 提前锁定, 限时报名"></textarea><p id="moneyprint-source-status">MoneyPrinter 在线链路状态待检查</p></div></div><div class="stage-actions"><button class="primary" onclick="runCreatorPipeline()">开始生成推广视频</button></div></section>
+      <section id="creator-stage-output" class="flow-stage" data-stage="output"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">04</span>成片与历史版本</div><p class="stage-help">不满意时从历史版本恢复参数，只改需要调整的环节后再次生成。</p></div><span id="creator-output-status" class="status">等待生成</span></div><div id="render-preview" class="result-empty">成片任务完成后会出现在这里，并自动同步给投放员工。</div><h2 style="margin-top:24px">历史版本</h2><div id="creator-history"></div></section>
+    </div>
+  </div>
+</section>
 
       <section id="buyer" class="section">
-        <div class="shell">
-          <div class="employee-page-head">
-            <div><button class="back-link" onclick="showSection('overview')">← 返回展会</button><h1>投放员工</h1><p>授权一次，后续账户识别、素材上传、项目配置和数据同步均由投放员工在后台完成。</p></div>
-            <span id="buyer-page-status" class="status">等待绑定</span>
-          </div>
-          <div class="employee-brief">
-            <div class="brief-card"><b>员工职责</b><span>把成片交给巨量链路，完成安全投放测试和效果回收。</span></div>
-            <div class="brief-card"><b>你只需要</b><span>前往巨量授权，选择成片、目标、预算和日期。</span></div>
-            <div class="brief-card"><b>后台动作</b><span>识别广告主、上传素材、创建关闭状态草稿、同步报表。</span></div>
-            <div class="brief-card"><b>最终产出</b><span>投放草稿、9 项效果指标和下一步优化建议。</span></div>
-          </div>
-          <div class="workorder-strip" id="buyer-order"></div>
-          <div class="agent-workbench">
-            <div class="agent-profile">
-              <div class="agent-profile-card"><span class="agent-step-label">员工资料</span><h2 style="margin-top:10px">投放员工</h2><p>像投手同事一样，负责把成片放进巨量链路，并把关键数据同步回来。</p><div class="capability-list"><span>巨量 OAuth 授权绑定</span><span>自动识别广告主和权限</span><span>上传视频素材并创建安全草稿</span><span>同步 9 项投放指标</span></div></div>
-              <div class="connect-card" id="oe-guide" style="grid-template-columns:1fr;padding:18px"><div class="connect-mark">巨</div><div class="connect-copy"><h2 id="oe-connect-title">连接巨量引擎</h2><p id="oe-guide-summary">点击“前往巨量”完成认证绑定。授权完成后，系统会自动识别广告账户并同步投放权限。</p><div id="oe-status" class="privacy-note">正在检查账户状态…</div><div class="privacy-note">认证信息由后台安全保存，页面不会展示技术配置。</div></div><div class="connect-actions"><button class="primary" id="oe-guide-primary" onclick="openOceanAuth()">前往巨量</button><button onclick="runOceanGuide()">刷新状态</button></div></div>
-            </div>
-            <div class="agent-task-column">
-              <div class="work-console" id="buyer-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>工作进度</span></div><span class="status">等待开始</span></div><div class="work-progress"><span></span><span></span><span></span><span></span></div><div class="work-summary">先绑定巨量账户，再选择成片和投放目标；投放员工会在后台完成素材上传、草稿创建和数据同步。</div><div class="activity-list" id="buyer-activity"></div></div>
-              <div class="simple-flow" id="oe-guide-steps"><div class="guide-step queued"><span>1</span><b>认证绑定</b><small>在巨量官方页面确认授权</small></div><div class="guide-step queued"><span>2</span><b>自动配置</b><small>后台识别广告账户与权限</small></div><div class="guide-step queued"><span>3</span><b>开始工作</b><small>自动上传成片并同步数据</small></div></div><ol class="guide-list hidden" id="oe-guide-list"></ol>
-              <div class="section-panel"><h2>下任务 <span class="agent-step-label">选择素材和目标</span></h2><label>投放素材</label><select id="delivery-video-select" onchange="selectDeliveryVideo(this.value)"><option value="">暂无可用成片</option></select><div id="delivery-video-preview" style="margin-top:14px"></div><label style="margin-top:16px">投放目标</label><div class="choice-row" id="delivery-goals"><div class="choice active" data-goal="lead" onclick="chooseDeliveryGoal('lead')"><b>获取线索</b><p>适合展位咨询和报名留资</p></div><div class="choice" data-goal="reserve" onclick="chooseDeliveryGoal('reserve')"><b>展位预约</b><p>引导用户进入招商/预约页</p></div><div class="choice" data-goal="awareness" onclick="chooseDeliveryGoal('awareness')"><b>品牌曝光</b><p>优先积累展示与有效播放</p></div></div><div class="grid three" style="margin-top:16px"><div><label>日预算（元）</label><input id="delivery-budget" type="number" min="300" value="300"></div><div><label>开始日期</label><input id="delivery-start" type="date"></div><div><label>结束日期</label><input id="delivery-end" type="date"></div></div><div style="margin-top:14px"><label>落地页（留空时自动使用账户内已审核通过的橙子页面）</label><input id="delivery-landing" placeholder="由投放员工自动匹配，也可手动覆盖"></div><div class="actions"><button onclick="createDeliveryDraft()">让投放员工检查</button><button class="primary" id="safe-launch-button" onclick="runSafeDeliveryTest()" disabled>安全创建投放草稿</button></div><div class="safe-box"><label><input id="safe-launch-confirm" type="checkbox" onchange="updateSafeLaunchButton()"><span>我确认本次只创建 <b>DISABLE（关闭）</b> 状态的真实素材、项目和推广，用于验证完整接口链路，不会开启消耗。</span></label></div></div>
-            </div>
-            <div class="agent-result-column">
-              <div class="section-panel"><h2>结果 / 建议 <span id="delivery-video-state" class="status">未选择</span></h2><p>这里只展示业务状态，具体参数由后台根据巨量账户资产自动匹配。</p><div id="delivery-checklist" class="checklist"></div><div class="actions"><button onclick="refreshDeliveryReport()">同步最新数据</button></div></div>
-              <div class="section-panel"><h2>投放效果数据 <span class="agent-step-label">9 项指标</span></h2><p>投放后自动同步消耗、展示、点击、转化和有效播放数据。</p><div id="delivery-board" class="metric-board"></div><div id="delivery-recap" class="recap-card"><b>账户整体投放复盘</b><span>当前按广告主和所选时间范围汇总；后续选定项目/推广后可切换为单条视频复盘。</span></div></div>
-            </div>
-          </div>
-          <div class="hidden" aria-hidden="true"><input id="oe-auth-code"><input id="ad-advertiser"><input id="ad-token" type="password"><input id="ad-start" type="date"><input id="ad-end" type="date"><input id="ad-filter"><input id="ad-video"><input id="ad-landing"><input id="ad-convert"><input id="ad-budget" value="300"><select id="ad-goal"><option value="lead">线索收集</option></select><input id="publish-video"><input id="publish-title"><textarea id="publish-desc"></textarea><select id="publish-platform"><option value="douyin">抖音</option></select><div id="publisher-notice"></div><button id="publish-button"></button><input id="oe-video-file"><input id="oe-video-id"><textarea id="oe-project-json"></textarea><input id="oe-project-id"><textarea id="oe-promotion-json"></textarea><input id="oe-promotion-id"><div id="publish-panel"></div><div id="ads-panel"></div></div>
-        </div>
-      </section>
+  <div class="shell">
+    <div class="employee-page-head"><div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><h1>投放员工</h1><p>投放员工自己的详情页内完成巨量绑定、素材选择、草稿创建和数据回流。</p></div><span id="buyer-page-status" class="status">等待绑定</span></div>
+    <div class="stage-shell">
+      <div class="flow-steps"><div class="flow-pill active" data-buyer-pill="bind">1 绑定巨量</div><div class="flow-pill" data-buyer-pill="asset">2 选择成片</div><div class="flow-pill" data-buyer-pill="launch">3 创建安全草稿</div><div class="flow-pill" data-buyer-pill="report">4 查看数据</div></div>
+      <div id="buyer-order" class="workorder-strip"></div>
+      <section class="stage-panel active" data-buyer-stage="bind"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>绑定巨量账户</div><p class="stage-help">前端只保留“前往巨量”入口。授权完成后，后台自动识别广告主、权限和可用资产。</p></div><span id="oe-status" class="status">检查中</span></div><div class="account-bind-card" id="oe-guide"><div><b id="oe-connect-title">连接巨量引擎</b><p id="oe-guide-summary">点击前往巨量完成认证绑定。授权完成后系统会自动回填投放所需信息。</p><p class="privacy-note">绑定逻辑属于投放员工详情，不再放到全局设置里。</p></div><div class="actions"><button class="primary" id="oe-guide-primary" onclick="openOceanAuth()">前往巨量</button><button onclick="runOceanGuide(); loadOceanStatus()">刷新状态</button></div></div><div class="simple-flow" id="oe-guide-steps"><div class="guide-step queued"><span>1</span><b>认证绑定</b><small>在巨量官方页面确认授权</small></div><div class="guide-step queued"><span>2</span><b>自动配置</b><small>后台识别广告账户</small></div><div class="guide-step queued"><span>3</span><b>开始工作</b><small>同步投放权限和效果数据</small></div></div><ol class="guide-list hidden" id="oe-guide-list"></ol><div class="stage-actions"><button onclick="setBuyerStage('asset')">我已完成绑定，下一步</button></div></section>
+      <section class="stage-panel" data-buyer-stage="asset"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>选择投放成片和目标</div><p class="stage-help">这里以单条待投放视频为入口；报表复盘默认先按当前广告主账户汇总，后续可收敛到项目/推广维度。</p></div><span id="delivery-video-state" class="status">未选择</span></div><label>投放素材</label><select id="delivery-video-select" onchange="selectDeliveryVideo(this.value)"><option value="">暂无可用成片</option></select><div id="delivery-video-preview" style="margin-top:14px"></div><label style="margin-top:16px">投放目标</label><div class="choice-row" id="delivery-goals"><div class="choice active" data-goal="lead" onclick="chooseDeliveryGoal('lead')"><b>获取线索</b><p>适合展位咨询和报名留资</p></div><div class="choice" data-goal="reserve" onclick="chooseDeliveryGoal('reserve')"><b>展位预约</b><p>引导用户进入招商/预约页</p></div><div class="choice" data-goal="awareness" onclick="chooseDeliveryGoal('awareness')"><b>品牌曝光</b><p>优先积累展示与有效播放</p></div></div><div class="grid three" style="margin-top:16px"><div><label>日预算（元）</label><input id="delivery-budget" type="number" min="300" value="300"></div><div><label>开始日期</label><input id="delivery-start" type="date"></div><div><label>结束日期</label><input id="delivery-end" type="date"></div></div><div style="margin-top:14px"><label>落地页（可选）</label><input id="delivery-landing" placeholder="由投放员工自动匹配，也可手动覆盖"></div><div class="stage-actions"><button class="primary" onclick="createDeliveryDraft(); setBuyerStage('launch')">让投放员工检查</button></div></section>
+      <section class="stage-panel" data-buyer-stage="launch"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>安全创建投放草稿</div><p class="stage-help">先创建 DISABLE 关闭状态草稿验证接口链路，不会直接产生消耗。</p></div><span class="status queued">待确认</span></div><div class="work-console" id="buyer-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>投放员工工作进度</span></div><span class="status">等待开始</span></div><div class="work-progress"><span></span><span></span><span></span><span></span></div><div class="work-summary">投放员工会检查账户、成片、目标和报表连接。</div><div class="activity-list" id="buyer-activity"></div></div><div id="delivery-checklist" class="checklist"></div><div class="safe-box"><label><input id="safe-launch-confirm" type="checkbox" onchange="updateSafeLaunchButton()"><span>我确认本次只创建 <b>DISABLE（关闭）</b> 状态的真实素材、项目和推广，用于验证完整接口链路，不会开启消耗。</span></label></div><div class="stage-actions"><button class="primary" id="safe-launch-button" onclick="runSafeDeliveryTest()" disabled>安全创建投放草稿</button><button onclick="setBuyerStage('report')">查看数据面板</button></div></section>
+      <section class="stage-panel" data-buyer-stage="report"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">04</span>投放数据与复盘</div><p class="stage-help">默认展示账户/时间范围的整体复盘；当有 project_id / promotion_id 后可进一步收敛到单条视频。</p></div><button onclick="refreshDeliveryReport()">同步最新数据</button></div><div id="delivery-board" class="metric-board"></div><div id="delivery-recap" class="recap-card"><b>账户整体投放复盘</b><span>当前按广告主和所选时间范围汇总。</span></div></section>
+    </div>
+    <div class="compat-hidden" aria-hidden="true"><input id="oe-auth-code"><input id="ad-advertiser"><input id="ad-token" type="password"><input id="ad-start" type="date"><input id="ad-end" type="date"><input id="ad-filter"><input id="ad-video"><input id="ad-landing"><input id="ad-convert"><input id="ad-budget" value="300"><select id="ad-goal"><option value="lead">线索收集</option></select><input id="publish-video"><input id="publish-title"><textarea id="publish-desc"></textarea><select id="publish-platform"><option value="douyin">抖音</option></select><div id="publisher-notice"></div><button id="publish-button"></button><input id="oe-video-file"><input id="oe-video-id"><textarea id="oe-project-json"></textarea><input id="oe-project-id"><textarea id="oe-promotion-json"></textarea><input id="oe-promotion-id"><div id="publish-panel"></div><div id="ads-panel"></div></div>
+  </div>
+</section>
 
       <section id="tasks" class="section">
         <div class="shell">
@@ -897,6 +859,59 @@
     let selectedMaterialSource = 'local';
     let hasHydratedTasks = false;
     let oceanConnected = false;
+
+    let currentExhibitionId = '新能源';
+    let currentHunterStage = 'config';
+    let currentBuyerStage = 'bind';
+    let hunterRequested = false;
+
+    function openExhibition(id = '新能源') {
+      currentExhibitionId = id;
+      const nameMap = {新能源:'华南国际新能源产业展', 数字人:'杭州国际数字人展会'};
+      const nameEl = document.getElementById('current-expo-name');
+      if (nameEl) nameEl.textContent = nameMap[id] || id;
+      document.getElementById('expo-list-view')?.classList.add('view-hidden');
+      document.getElementById('expo-detail-view')?.classList.remove('view-hidden');
+      showSection('overview');
+    }
+    function backToExhibitionList() {
+      document.getElementById('expo-detail-view')?.classList.add('view-hidden');
+      document.getElementById('expo-list-view')?.classList.remove('view-hidden');
+      showSection('overview');
+    }
+    function backToExhibitionDetail() {
+      openExhibition(currentExhibitionId);
+    }
+    function openEmployee(id) {
+      showSection(id);
+      if (id === 'hunter') setHunterStage(currentHunterStage || 'config');
+      if (id === 'creator') focusCreatorStep('brief');
+      if (id === 'buyer') setBuyerStage(oceanConnected ? 'asset' : 'bind');
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+    function setHunterStage(stage) {
+      currentHunterStage = stage || 'config';
+      document.querySelectorAll('[data-hunter-stage]').forEach(el => el.classList.toggle('active', el.dataset.hunterStage === currentHunterStage));
+      document.querySelectorAll('[data-hunter-pill]').forEach(el => {
+        const order = ['config','working','results','handoff'];
+        const done = order.indexOf(el.dataset.hunterPill) < order.indexOf(currentHunterStage);
+        el.classList.toggle('active', el.dataset.hunterPill === currentHunterStage);
+        el.classList.toggle('done', done);
+      });
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+    function setBuyerStage(stage) {
+      currentBuyerStage = stage || 'bind';
+      document.querySelectorAll('[data-buyer-stage]').forEach(el => el.classList.toggle('active', el.dataset.buyerStage === currentBuyerStage));
+      document.querySelectorAll('[data-buyer-pill]').forEach(el => {
+        const order = ['bind','asset','launch','report'];
+        const done = order.indexOf(el.dataset.buyerPill) < order.indexOf(currentBuyerStage);
+        el.classList.toggle('active', el.dataset.buyerPill === currentBuyerStage);
+        el.classList.toggle('done', done);
+      });
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
 
     window.addEventListener('message', async event => {
       if (event.origin !== window.location.origin || event.data?.type !== 'ocean-auth-complete') return;
@@ -993,9 +1008,9 @@
       document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.target === id));
       document.querySelectorAll('[data-staff-card]').forEach(el => el.classList.toggle('is-active', el.dataset.staffCard === id));
       document.querySelectorAll('.pipeline-step').forEach(el => el.classList.remove('active'));
-      if (id === 'hunter') document.querySelectorAll('.pipeline-step')[0]?.classList.add('active');
-      if (id === 'creator') document.querySelectorAll('.pipeline-step')[1]?.classList.add('active');
-      if (id === 'buyer') document.querySelectorAll('.pipeline-step')[2]?.classList.add('active');
+      if (id === 'hunter') { document.querySelectorAll('.pipeline-step')[0]?.classList.add('active'); setHunterStage(currentHunterStage || 'config'); }
+      if (id === 'creator') { document.querySelectorAll('.pipeline-step')[1]?.classList.add('active'); }
+      if (id === 'buyer') { document.querySelectorAll('.pipeline-step')[2]?.classList.add('active'); setBuyerStage(currentBuyerStage || (oceanConnected ? 'asset' : 'bind')); }
       if (id === 'tasks') loadTasks();
     }
     function goTo(sectionId, targetId) {
@@ -1050,6 +1065,8 @@
       return createTask(task.kind, task.payload || {}, false);
     }
     function createSearch(deep) {
+      hunterRequested = true;
+      setHunterStage('working');
       return createTask('search', {
         platform: valueOf('search-platform'),
         keyword: valueOf('search-keyword'),
@@ -1059,6 +1076,8 @@
     }
     function importLinks() {
       if (!ensureFields([['search-keyword','样本主题'], ['manual-links','至少一个视频链接']])) return;
+      hunterRequested = true;
+      setHunterStage('working');
       return createTask('import-links', {
         platform: valueOf('search-platform'),
         keyword: valueOf('search-keyword'),
@@ -1375,6 +1394,7 @@
       }
       renderDeliveryDraft(null);
       updateSafeLaunchButton();
+      if (videoFile) setBuyerStage('launch');
     }
     function renderDeliveryAssets(items) {
       const seen = new Set();
@@ -1405,6 +1425,7 @@
       if (!document.getElementById('safe-launch-confirm').checked) return notify('请先确认本次只创建关闭状态的安全投放草稿', 'error');
       if (!oceanConnected) return notify('请先完成巨量账户绑定', 'error');
       if (!videoFile) return notify('请先选择待投放成片', 'error');
+      setBuyerStage('report');
       return createTask('ocean-safe-launch', { video_file: videoFile, fresh: true }, true);
     }
     function switchDeliveryTab(name, button) {
@@ -1486,8 +1507,8 @@
       renderGallery(latestSamples);
       updateEmployeeStatuses();
       notify('已选为参考样本，已自动交给生视频员工。');
-      showSection('creator');
-      focusCreatorStep('brief');
+      setHunterStage('handoff');
+      window.setTimeout(() => openEmployee('creator'), 450);
     }
     async function loadTasks() {
       const data = await api('/api/tasks');
@@ -1843,7 +1864,8 @@
         document.getElementById('final-copy').value = latestCopy.result.copy;
         document.getElementById('creator-copy-status').textContent = '已生成';
         document.getElementById('creator-copy-status').className = 'status succeeded';
-        markCreatorStepDone('copy');
+        markCreatorStepDone('brief');
+        focusCreatorStep('copy');
         if (hasHydratedTasks) notify('生视频员工已生成口播稿。');
       }
       const latestSearch = items.find(t => ['search','import-links'].includes(t.kind) && t.status === 'succeeded');
@@ -1851,6 +1873,7 @@
         lastCompletedSearch = latestSearch.id;
         if (latestSearch.result?.items) renderGallery(latestSearch.result.items);
         else loadLatest();
+        if (hunterRequested) setHunterStage('results');
       }
       const latestTts = items.find(t => t.kind === 'tts' && t.status === 'succeeded' && t.result?.preview_url);
       if (latestTts) {
@@ -1862,6 +1885,8 @@
         const preview = document.getElementById('tts-preview');
         preview.innerHTML = `<label>语音预览</label><audio controls src="${escapeAttr(latestTts.result.preview_url)}"></audio>`;
         preview.classList.remove('hidden');
+        markCreatorStepDone('copy');
+        focusCreatorStep('material');
       }
       const latestRender = items.find(t => t.kind === 'render' && t.status === 'succeeded' && t.result?.summary?.preview_url);
       if (latestRender && latestRender.id !== lastCompletedRender) {
