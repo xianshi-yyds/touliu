@@ -671,6 +671,14 @@
       .shell { padding:18px; }
     }
 
+
+    /* final stage fixes */
+    .creator-stepper .creator-step { display:flex !important; align-items:center; min-height:54px; grid-template-columns:none !important; grid-template-rows:none !important; white-space:nowrap; }
+    .creator-stepper .creator-step::before { content:''; width:8px; height:8px; border-radius:50%; background:#c7cfda; margin-right:10px; flex:0 0 auto; }
+    .creator-stepper .creator-step.active::before { background:#fff; }
+    .creator-stepper .creator-step.done::before { background:#4f8e2d; }
+    .stage-panel, .flow-stage { box-shadow:0 14px 40px rgba(24,28,38,.04); }
+
   </style>
 </head>
 <body>
@@ -1089,11 +1097,20 @@
         notify('请填写主题/卖点，或先选择参考样本', 'error');
         return;
       }
+      markCreatorStepDone('brief');
+      document.getElementById('creator-copy-status').textContent = '生成中';
+      document.getElementById('creator-copy-status').className = 'status running';
+      document.getElementById('final-copy').value = '生视频员工正在根据当前需求生成口播稿，完成后会自动替换这里的内容…';
+      focusCreatorStep('copy');
       return createTask('copy', { topic: valueOf('copy-topic'), sample: selectedSample || {}, cta_text: valueOf('video-cta') }, true);
     }
     function useManualCopy() {
       if (!ensureFields([['copy-topic','手动文案或主题']])) return;
       document.getElementById('final-copy').value = document.getElementById('copy-topic').value;
+      document.getElementById('creator-copy-status').textContent = '已确认';
+      document.getElementById('creator-copy-status').className = 'status succeeded';
+      markCreatorStepDone('brief');
+      focusCreatorStep('copy');
       notify('已把手动内容设为最终口播稿。');
     }
     const voiceCatalog = {
