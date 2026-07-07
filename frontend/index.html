@@ -620,8 +620,11 @@
     .employee-tile { border:1px solid #dfe3ea; border-radius:18px; background:#fff; padding:20px; min-height:300px; cursor:pointer; transition:.16s ease; display:flex; flex-direction:column; justify-content:space-between; }
     .employee-tile:hover { transform:translateY(-2px); box-shadow:0 16px 36px rgba(24,28,38,.08); border-color:#17191f; }
     .employee-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
-    .employee-visual { width:92px; height:92px; border-radius:18px; background:#f3f2ee; display:grid; place-items:center; margin:18px 0; }
-    .employee-visual img { width:74px; height:74px; object-fit:contain; }
+    .employee-visual { width:92px; height:92px; border-radius:22px; background:linear-gradient(135deg,#f5f7fb,#eef3ff); display:grid; place-items:center; margin:18px 0; border:1px solid #e2e7f0; }
+    .employee-visual img { width:42px; height:42px; object-fit:contain; }
+    .employee-visual.hunter-icon { background:linear-gradient(135deg,#fff7e8,#f4f8ff); }
+    .employee-visual.creator-icon { background:linear-gradient(135deg,#eff7ff,#f4f0ff); }
+    .employee-visual.buyer-icon { background:linear-gradient(135deg,#eef9f0,#f6f8ff); }
     .employee-role-list { display:grid; gap:8px; margin-top:14px; color:#6f7784; font-size:13px; line-height:1.55; }
     .employee-role-list span::before { content:'• '; color:#17191f; font-weight:900; }
     .employee-bind-row { display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px dashed #e0e4eb; padding-top:14px; margin-top:16px; }
@@ -729,15 +732,15 @@
       </div>
       <div class="employee-board">
         <div class="employee-tile" data-staff-card="hunter" onclick="openEmployee('hunter')">
-          <div><div class="employee-top"><span class="status" id="hunter-status">空闲中</span><span class="status blue">参考样本</span></div><div class="employee-visual"><img src="/assets/figma-digital-employees/ip-blue.png" alt="找爆款员工"></div><h2>找爆款员工</h2><p>负责找全网热点/同行爆款，产出可参考的视频样本。</p><div class="employee-role-list"><span>绑定抖音或小红书账号</span><span>按互动分排序</span><span>选择样本后交给生视频员工</span></div></div>
+          <div><div class="employee-top"><span class="status" id="hunter-status">空闲中</span><span class="status blue">参考样本</span></div><div class="employee-visual hunter-icon"><img src="/assets/figma-digital-employees/calendar-range.svg" alt="找爆款员工"></div><h2>找爆款员工</h2><p>负责找全网热点/同行爆款，产出可参考的视频样本。</p><div class="employee-role-list"><span>绑定抖音或小红书账号</span><span>按互动分排序</span><span>选择样本后交给生视频员工</span></div></div>
           <div class="employee-bind-row"><small id="hunter-kpi">样本 0 条</small><button>进入员工详情</button></div>
         </div>
         <div class="employee-tile" data-staff-card="creator" onclick="openEmployee('creator')">
-          <div><div class="employee-top"><span class="status" id="creator-status">空闲中</span><span class="status blue">最终成片</span></div><div class="employee-visual"><img src="/assets/figma-digital-employees/ip-green.png" alt="生视频员工"></div><h2>生视频员工</h2><p>负责把参考样本、卖点和素材变成可投放的视频。</p><div class="employee-role-list"><span>确认口播和卖点</span><span>选择本地素材库或 MoneyPrinter 搜索链路</span><span>生成配音、字幕和成片</span></div></div>
+          <div><div class="employee-top"><span class="status" id="creator-status">空闲中</span><span class="status blue">最终成片</span></div><div class="employee-visual creator-icon"><img src="/assets/figma-digital-employees/space.svg" alt="生视频员工"></div><h2>生视频员工</h2><p>负责把参考样本、卖点和素材变成可投放的视频。</p><div class="employee-role-list"><span>确认口播和卖点</span><span>选择本地素材库或 MoneyPrinter 搜索链路</span><span>生成配音、字幕和成片</span></div></div>
           <div class="employee-bind-row"><small id="creator-kpi">成片 0 条</small><button>进入员工详情</button></div>
         </div>
         <div class="employee-tile" data-staff-card="buyer" onclick="openEmployee('buyer')">
-          <div><div class="employee-top"><span class="status" id="buyer-status">空闲中</span><span class="status blue">投放数据</span></div><div class="employee-visual"><img src="/assets/figma-digital-employees/bot.svg" alt="投放员工"></div><h2>投放员工</h2><p>负责绑定巨量账号、创建安全投放草稿并回收 9 项指标。</p><div class="employee-role-list"><span>绑定巨量账户</span><span>选择视频、目标、预算</span><span>同步消耗、展示、点击、转化和有效播放</span></div></div>
+          <div><div class="employee-top"><span class="status" id="buyer-status">空闲中</span><span class="status blue">投放数据</span></div><div class="employee-visual buyer-icon"><img src="/assets/figma-digital-employees/usage.svg" alt="投放员工"></div><h2>投放员工</h2><p>负责绑定巨量账号、创建安全投放草稿并回收 9 项指标。</p><div class="employee-role-list"><span>绑定巨量账户</span><span>选择视频、目标、预算</span><span>同步消耗、展示、点击、转化和有效播放</span></div></div>
           <div class="employee-bind-row"><small id="buyer-kpi">未绑定</small><button>进入员工详情</button></div>
         </div>
       </div>
