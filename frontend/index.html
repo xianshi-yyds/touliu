@@ -803,8 +803,8 @@
     <div class="stage-shell">
       <div class="flow-steps"><div class="flow-pill active" data-buyer-pill="bind">1 绑定巨量</div><div class="flow-pill" data-buyer-pill="asset">2 选择成片</div><div class="flow-pill" data-buyer-pill="launch">3 创建安全草稿</div><div class="flow-pill" data-buyer-pill="report">4 查看数据</div></div>
       <div id="buyer-order" class="workorder-strip"></div>
-      <section class="stage-panel active" data-buyer-stage="bind"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>绑定巨量账户</div><p class="stage-help">前端只保留“前往巨量”入口。授权完成后，后台自动识别广告主、权限和可用资产。</p></div><span id="oe-status" class="status">检查中</span></div><div class="account-bind-card" id="oe-guide"><div><b id="oe-connect-title">连接巨量引擎</b><p id="oe-guide-summary">点击前往巨量完成认证绑定。授权完成后系统会自动回填投放所需信息。</p><p class="privacy-note">绑定逻辑属于投放员工详情，不再放到全局设置里。</p></div><div class="actions"><button class="primary" id="oe-guide-primary" onclick="openOceanAuth()">前往巨量</button><button onclick="runOceanGuide(); loadOceanStatus()">刷新状态</button></div></div><div class="simple-flow" id="oe-guide-steps"><div class="guide-step queued"><span>1</span><b>认证绑定</b><small>在巨量官方页面确认授权</small></div><div class="guide-step queued"><span>2</span><b>自动配置</b><small>后台识别广告账户</small></div><div class="guide-step queued"><span>3</span><b>开始工作</b><small>同步投放权限和效果数据</small></div></div><ol class="guide-list hidden" id="oe-guide-list"></ol><div class="stage-actions"><button onclick="setBuyerStage('asset')">我已完成绑定，下一步</button></div></section>
-      <section class="stage-panel" data-buyer-stage="asset"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>选择投放成片和目标</div><p class="stage-help">这里以单条待投放视频为入口；报表复盘默认先按当前广告主账户汇总，后续可收敛到项目/推广维度。</p></div><span id="delivery-video-state" class="status">未选择</span></div><label>投放素材</label><select id="delivery-video-select" onchange="selectDeliveryVideo(this.value)"><option value="">暂无可用成片</option></select><div id="delivery-video-preview" style="margin-top:14px"></div><label style="margin-top:16px">投放目标</label><div class="choice-row" id="delivery-goals"><div class="choice active" data-goal="lead" onclick="chooseDeliveryGoal('lead')"><b>获取线索</b><p>适合展位咨询和报名留资</p></div><div class="choice" data-goal="reserve" onclick="chooseDeliveryGoal('reserve')"><b>展位预约</b><p>引导用户进入招商/预约页</p></div><div class="choice" data-goal="awareness" onclick="chooseDeliveryGoal('awareness')"><b>品牌曝光</b><p>优先积累展示与有效播放</p></div></div><div class="grid three" style="margin-top:16px"><div><label>日预算（元）</label><input id="delivery-budget" type="number" min="300" value="300"></div><div><label>开始日期</label><input id="delivery-start" type="date"></div><div><label>结束日期</label><input id="delivery-end" type="date"></div></div><div style="margin-top:14px"><label>落地页（可选）</label><input id="delivery-landing" placeholder="由投放员工自动匹配，也可手动覆盖"></div><div class="stage-actions"><button class="primary" onclick="createDeliveryDraft(); setBuyerStage('launch')">让投放员工检查</button></div></section>
+      <section class="stage-panel active" data-buyer-stage="bind"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>绑定巨量账户</div><p class="stage-help">前端只保留“前往巨量”入口。授权完成后，后台自动识别广告主、权限和可用资产。</p></div><span id="oe-status" class="status">检查中</span></div><div class="account-bind-card" id="oe-guide"><div><b id="oe-connect-title">连接巨量引擎</b><p id="oe-guide-summary">点击前往巨量完成认证绑定。授权完成后系统会自动回填投放所需信息。</p><p class="privacy-note">绑定逻辑属于投放员工详情，不再放到全局设置里。</p></div><div class="actions"><button class="primary" id="oe-guide-primary" onclick="openOceanAuth()">前往巨量</button><button onclick="runOceanGuide(); loadOceanStatus()">刷新状态</button></div></div><div class="simple-flow" id="oe-guide-steps"><div class="guide-step queued"><span>1</span><b>认证绑定</b><small>在巨量官方页面确认授权</small></div><div class="guide-step queued"><span>2</span><b>自动配置</b><small>后台识别广告账户</small></div><div class="guide-step queued"><span>3</span><b>开始工作</b><small>同步投放权限和效果数据</small></div></div><ol class="guide-list hidden" id="oe-guide-list"></ol><div class="stage-actions"><button id="buyer-next-after-bind" onclick="setBuyerStage('asset')" disabled>完成绑定后进入下一步</button></div></section>
+      <section class="stage-panel" data-buyer-stage="asset"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>选择投放成片和目标</div><p class="stage-help">这里以单条待投放视频为入口；报表复盘默认先按当前广告主账户汇总，后续可收敛到项目/推广维度。</p></div><span id="delivery-video-state" class="status">未选择</span></div><label>投放素材</label><select id="delivery-video-select" onchange="selectDeliveryVideo(this.value)"><option value="">暂无可用成片</option></select><div id="delivery-video-preview" style="margin-top:14px"></div><label style="margin-top:16px">投放目标</label><div class="choice-row" id="delivery-goals"><div class="choice active" data-goal="lead" onclick="chooseDeliveryGoal('lead')"><b>获取线索</b><p>适合展位咨询和报名留资</p></div><div class="choice" data-goal="reserve" onclick="chooseDeliveryGoal('reserve')"><b>展位预约</b><p>引导用户进入招商/预约页</p></div><div class="choice" data-goal="awareness" onclick="chooseDeliveryGoal('awareness')"><b>品牌曝光</b><p>优先积累展示与有效播放</p></div></div><div class="grid three" style="margin-top:16px"><div><label>日预算（元）</label><input id="delivery-budget" type="number" min="300" value="300"></div><div><label>开始日期</label><input id="delivery-start" type="date"></div><div><label>结束日期</label><input id="delivery-end" type="date"></div></div><div style="margin-top:14px"><label>落地页（可选）</label><input id="delivery-landing" placeholder="由投放员工自动匹配，也可手动覆盖"></div><div class="stage-actions"><button class="primary" onclick="createDeliveryDraft()">让投放员工检查并进入下一步</button></div></section>
       <section class="stage-panel" data-buyer-stage="launch"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>安全创建投放草稿</div><p class="stage-help">先创建 DISABLE 关闭状态草稿验证接口链路，不会直接产生消耗。</p></div><span class="status queued">待确认</span></div><div class="work-console" id="buyer-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>投放员工工作进度</span></div><span class="status">等待开始</span></div><div class="work-progress"><span></span><span></span><span></span><span></span></div><div class="work-summary">投放员工会检查账户、成片、目标和报表连接。</div><div class="activity-list" id="buyer-activity"></div></div><div id="delivery-checklist" class="checklist"></div><div class="safe-box"><label><input id="safe-launch-confirm" type="checkbox" onchange="updateSafeLaunchButton()"><span>我确认本次只创建 <b>DISABLE（关闭）</b> 状态的真实素材、项目和推广，用于验证完整接口链路，不会开启消耗。</span></label></div><div class="stage-actions"><button class="primary" id="safe-launch-button" onclick="runSafeDeliveryTest()" disabled>安全创建投放草稿</button><button onclick="setBuyerStage('report')">查看数据面板</button></div></section>
       <section class="stage-panel" data-buyer-stage="report"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">04</span>投放数据与复盘</div><p class="stage-help">默认展示账户/时间范围的整体复盘；当有 project_id / promotion_id 后可进一步收敛到单条视频。</p></div><button onclick="refreshDeliveryReport()">同步最新数据</button></div><div id="delivery-board" class="metric-board"></div><div id="delivery-recap" class="recap-card"><b>账户整体投放复盘</b><span>当前按广告主和所选时间范围汇总。</span></div></section>
     </div>
@@ -1261,6 +1261,8 @@
           pageStatus.textContent = connected ? '已绑定' : '等待绑定';
           pageStatus.className = `status ${connected ? 'succeeded' : ''}`;
         }
+        const nextAfterBind = document.getElementById('buyer-next-after-bind');
+        if (nextAfterBind) nextAfterBind.disabled = !connected;
         updateEmployeeStatuses();
         updateSafeLaunchButton();
       } catch (error) {
@@ -1355,10 +1357,10 @@
         official_json: official,
       }, false);
     }
-    function createDeliveryDraft() {
+    async function createDeliveryDraft() {
       const videoFile = valueOf('delivery-video-select') || valueOf('ad-video') || valueOf('publish-video');
       if (!videoFile) return notify('请先选择一条待投放成片', 'error');
-      return createTask('delivery-draft', {
+      const task = await createTask('delivery-draft', {
         landing_url: valueOf('delivery-landing'),
         budget: valueOf('delivery-budget'),
         subject: valueOf('copy-topic'),
@@ -1366,12 +1368,14 @@
         video_file: videoFile,
         goal: selectedDeliveryGoal,
       }, true);
+      if (task) setBuyerStage('launch');
+      return task;
     }
     function chooseDeliveryGoal(goal) {
       selectedDeliveryGoal = goal;
       document.querySelectorAll('#delivery-goals .choice').forEach(el => el.classList.toggle('active', el.dataset.goal === goal));
     }
-    function selectDeliveryVideo(videoFile) {
+    function selectDeliveryVideo(videoFile, shouldAdvance = false) {
       document.getElementById('ad-video').value = videoFile || '';
       document.getElementById('publish-video').value = videoFile || '';
       const asset = latestRenderAssets.find(item => item.path === videoFile);
@@ -1388,7 +1392,7 @@
       }
       renderDeliveryDraft(null);
       updateSafeLaunchButton();
-      if (videoFile) setBuyerStage('launch');
+      if (videoFile && shouldAdvance) setBuyerStage('launch');
     }
     function renderDeliveryAssets(items) {
       const seen = new Set();
@@ -1407,20 +1411,21 @@
         : '<option value="">暂无可用成片</option>';
       const next = latestRenderAssets.some(item => item.path === current) ? current : (latestRenderAssets[0]?.path || '');
       select.value = next;
-      selectDeliveryVideo(next);
+      selectDeliveryVideo(next, false);
     }
     function updateSafeLaunchButton() {
       const confirmed = document.getElementById('safe-launch-confirm')?.checked;
       const video = valueOf('delivery-video-select');
       document.getElementById('safe-launch-button').disabled = !(confirmed && video && oceanConnected);
     }
-    function runSafeDeliveryTest() {
+    async function runSafeDeliveryTest() {
       const videoFile = valueOf('delivery-video-select');
       if (!document.getElementById('safe-launch-confirm').checked) return notify('请先确认本次只创建关闭状态的安全投放草稿', 'error');
       if (!oceanConnected) return notify('请先完成巨量账户绑定', 'error');
       if (!videoFile) return notify('请先选择待投放成片', 'error');
-      setBuyerStage('report');
-      return createTask('ocean-safe-launch', { video_file: videoFile, fresh: true }, true);
+      const task = await createTask('ocean-safe-launch', { video_file: videoFile, fresh: true }, true);
+      if (task) setBuyerStage('report');
+      return task;
     }
     function switchDeliveryTab(name, button) {
       document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
