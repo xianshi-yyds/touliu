@@ -1,0 +1,10 @@
+apes2.png https://www.figma.com/api/mcp/asset/b038f695-e939-43aa-ba0e-033ea442dcbc
+figma-logo-wordmark.png https://www.figma.com/api/mcp/asset/8090e2e3-971f-4c8e-9062-66bbfa1cb32c
+figma-sidebar-logo-mask.svg https://www.figma.com/api/mcp/asset/0a734c75-d773-4475-a497-8a737db90019
+figma-sidebar-logo-fill.png https://www.figma.com/api/mcp/asset/ff7002fd-8d55-4a23-adb3-f93394e35753
+icon-message.svg https://www.figma.com/api/mcp/asset/3b945c31-92d4-4cf1-92f1-99cec96ba01e
+icon-user.svg https://www.figma.com/api/mcp/asset/ea9fc369-02d7-47b6-8574-0685d27b9dae
+icon-search.svg https://www.figma.com/api/mcp/asset/17944e3d-da43-487c-bcfa-710e425c4722
+icon-calendar.svg https://www.figma.com/api/mcp/asset/4d463ae3-e9d7-4ad9-bf09-de93b63cfd66
+icon-bot.svg https://www.figma.com/api/mcp/asset/4fa68986-5726-434a-b165-7872836fca06
+icon-plus.svg https://www.figma.com/api/mcp/asset/c889f724-2d2d-42c7-8f00-9edea9395791

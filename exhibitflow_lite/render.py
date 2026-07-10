@@ -116,6 +116,31 @@ def media_files(folder: str | Path) -> list[Path]:
     ]
 
 
+def sentence_ranges(script: str, total_duration: float, audio_file: Path) -> list[dict[str, float]]:
+    """Return sentence time ranges, preferring ranges recorded by sentence-level TTS."""
+    sentences = split_sentences(script)
+    timing_file = audio_file.with_suffix(".words.json")
+    if timing_file.is_file():
+        try:
+            recorded = (json.loads(timing_file.read_text(encoding="utf-8")) or {}).get("segments") or []
+        except Exception:
+            recorded = []
+        if len(recorded) == len(sentences):
+            return [
+                {"start": max(0.0, float(item.get("start") or 0)), "end": min(total_duration, max(0.0, float(item.get("end") or 0)))}
+                for item in recorded
+            ]
+    weights = [max(len(_clean_text(item)), 1) for item in sentences] or [1]
+    total_weight = sum(weights)
+    cursor = 0.0
+    ranges: list[dict[str, float]] = []
+    for index, weight in enumerate(weights):
+        end = total_duration if index == len(weights) - 1 else cursor + total_duration * weight / total_weight
+        ranges.append({"start": cursor, "end": end})
+        cursor = end
+    return ranges
+
+
 def split_sentences(text: str) -> list[str]:
     pieces: list[str] = []
     current = ""
@@ -560,10 +585,12 @@ def render_lite_video(
     caption_template: str = "viral",
     highlight_words: list[str] | None = None,
     cta_text: str = "",
+    sentence_material_dirs: list[str] | None = None,
 ) -> dict[str, Any]:
     materials = media_files(material_dir)
     if not materials:
         raise FileNotFoundError(f"no media files found in material dir: {material_dir}")
+    sentence_materials = [media_files(folder) for folder in (sentence_material_dirs or [])]
 
     sentences = split_sentences(script)
     run_name = safe_stem(name or f"render-{keyword}-{datetime.now().strftime('%Y%m%d-%H%M%S')}")
@@ -577,13 +604,24 @@ def render_lite_video(
         raise FileNotFoundError(f"audio file not found: {audio}")
     audio_duration = duration(audio)
     total_duration = audio_duration if audio_duration > 0 else estimated_duration
+    sentence_time_ranges = sentence_ranges(script, total_duration, audio)
     selected_highlights = [word.strip() for word in (highlight_words or []) if word.strip()]
     selected_highlights.extend(word for word in AUTO_HIGHLIGHT_WORDS if word in script and word not in selected_highlights)
     timeline = caption_timeline(script, total_duration, audio, cta_text=cta_text, highlight_words=selected_highlights)
 
     clips: list[Path] = []
     for index, item in enumerate(timeline, start=1):
-        source = materials[(index - 1) % len(materials)]
+        if sentence_materials:
+            midpoint = (float(item["start"]) + float(item["end"])) / 2
+            pool_index = next(
+                (position for position, bounds in enumerate(sentence_time_ranges) if midpoint <= bounds["end"]),
+                len(sentence_materials) - 1,
+            )
+            pool_index = min(pool_index, len(sentence_materials) - 1)
+            pool = sentence_materials[pool_index] or materials
+        else:
+            pool = materials
+        source = pool[(index - 1) % len(pool)]
         clip_duration = max(float(item["end"]) - float(item["start"]), 0.55)
         clips.append(normalize_clip(source, clips_dir / f"clip-{index:03d}.mp4", clip_duration))
 
@@ -605,7 +643,9 @@ def render_lite_video(
         "highlight_words": selected_highlights,
         "caption_timeline": timeline,
         "duration_seconds": total_duration,
+        "sentence_time_ranges": sentence_time_ranges,
         "material_dir": str(Path(material_dir).expanduser()),
+        "sentence_material_dirs": sentence_material_dirs or [],
         "materials": [str(path) for path in materials],
         "audio_file": str(audio),
         "combined_video": str(combined),

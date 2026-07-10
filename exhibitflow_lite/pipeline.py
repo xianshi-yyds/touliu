@@ -24,6 +24,7 @@ def render_video(
     caption_template: str = "viral",
     highlight_words: list[str] | None = None,
     cta_text: str = "",
+    sentence_material_dirs: list[str] | None = None,
 ) -> str:
     if settings.render_engine != "moneyprinter":
         manifest = render_lite_video(
@@ -35,6 +36,7 @@ def render_video(
             caption_template=caption_template,
             highlight_words=highlight_words,
             cta_text=cta_text,
+            sentence_material_dirs=sentence_material_dirs,
         )
         return "__SUMMARY_JSON__" + __import__("json").dumps(manifest, ensure_ascii=False)
 

@@ -49,8 +49,9 @@ class Settings:
     qwen_vl_model: str = os.getenv("QWEN_VL_MODEL", "qwen3-vl-plus").strip()
     qwen_tts_model: str = os.getenv("QWEN_TTS_MODEL", "qwen3-tts-flash").strip()
     pexels_api_key: str = os.getenv("PEXELS_API_KEY", "").strip()
+    pixabay_api_key: str = os.getenv("PIXABAY_API_KEY", "").strip()
     render_engine: str = os.getenv("EXHIBITFLOW_RENDER_ENGINE", "internal").strip().lower()
-    dashscope_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    dashscope_base_url: str = os.getenv("DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1").strip().rstrip("/")
     dashscope_multimodal_url: str = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation"
     oceanengine_app_id: str = os.getenv("OCEANENGINE_APP_ID", "").strip()
     oceanengine_secret: str = os.getenv("OCEANENGINE_SECRET", "").strip()

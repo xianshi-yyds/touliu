@@ -1,4 +1,5 @@
 .env
+.grok/
 __pycache__/
 *.py[cod]
 .venv/

@@ -409,6 +409,8 @@
     .section-panel h2 { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px; }
     .result-empty { border:1px dashed #d7dce5; border-radius:12px; padding:18px; background:#fbfcff; color:#7f8794; line-height:1.65; }
     .agent-step-label { display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:999px; background:#eef1ff; color:#3038da; font-size:12px; font-weight:900; }
+
+
     @media (max-width: 1180px) {
       .layout { grid-template-columns:1fr; }
       aside { display:none; }
@@ -580,6 +582,8 @@
     .brief-form textarea { min-height:118px; }
     .workflow-footer { margin-top:22px; padding-top:16px; border-top:1px solid #eceef2; display:flex; align-items:center; justify-content:flex-end; gap:10px; }
     .workflow-footer > span { margin-right:auto; color:#858c98; font-size:13px; }
+
+
     @media (max-width: 1180px) {
       .overview-statusbar, .flow-advisor { margin-left:20px; margin-right:20px; }
       .staff-content { padding:18px 20px 28px; }
@@ -663,6 +667,28 @@
     .source-choice.active { border-color:#17191f; box-shadow:0 0 0 3px rgba(23,25,31,.08); }
     .media-preview video { width:100%; max-height:620px; background:#111; border-radius:12px; }
     .result-empty { border:1px dashed #d8dfe9; border-radius:12px; padding:22px; color:#858e9c; background:#fbfcff; }
+
+    .buyer-entry-grid { max-width:1120px; margin:28px auto 0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; }
+    .buyer-entry-card { min-height:260px; border:1px solid #dfe3ea; border-radius:22px; background:#fff; padding:28px; text-align:left; display:flex; flex-direction:column; justify-content:space-between; gap:20px; cursor:pointer; transition:.18s ease; box-shadow:0 18px 55px rgba(24,28,38,.05); }
+    .buyer-entry-card:hover { transform:translateY(-2px); border-color:#17191f; box-shadow:0 22px 70px rgba(24,28,38,.10); }
+    .buyer-entry-card.primary { background:#17191f; color:#fff; border-color:#17191f; }
+    .buyer-entry-card .entry-index { width:42px; height:42px; border-radius:50%; display:grid; place-items:center; background:#eef1f6; color:#17191f; font-weight:950; }
+    .buyer-entry-card.primary .entry-index { background:#fff; color:#17191f; }
+    .buyer-entry-card b { font-size:30px; line-height:1.12; }
+    .buyer-entry-card p { margin:0; color:#7c8492; font-weight:800; line-height:1.8; }
+    .buyer-entry-card.primary p { color:rgba(255,255,255,.72); }
+    .buyer-entry-card ul { margin:0; padding-left:18px; color:inherit; line-height:1.9; font-weight:850; }
+    .buyer-module-page { display:none; }
+    .buyer-module-page.active { display:block; animation:fadeStage .18s ease; }
+    .buyer-page-back { max-width:1120px; margin:0 auto 12px; }
+    .buyer-panel-title { max-width:1120px; margin:0 auto 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+    .buyer-panel-title h2 { font-size:24px; margin:0 0 6px; }
+    .buyer-panel-title p { margin:0; color:#7c8492; font-weight:800; line-height:1.7; }
+    .review-project-card { border:1px solid #dfe3ea; border-radius:16px; background:#fff; padding:18px; margin-bottom:16px; }
+    .review-project-card h3 { margin:0 0 8px; font-size:20px; }
+    .review-project-card p { color:#7c8492; font-weight:800; line-height:1.7; }
+    @media (max-width: 900px) { .buyer-entry-grid { grid-template-columns:1fr; } }
+
     .buyer-stage-grid { display:grid; grid-template-columns:1fr; gap:16px; }
     .metric-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
     .metric { border:1px solid #e0e5ed; border-radius:13px; padding:15px; background:#fbfcff; }
@@ -681,19 +707,213 @@
     }
 
 
+    /* Figma-like SaaS hierarchy: 展会列表 -> 员工详情 -> 单步流水线 */
+    .brand-logo { width:24px; height:24px; object-fit:contain; }
+    .topbar { padding:0 28px; }
+    .workspace { background:#f6f7f5; }
+    .shell { background:#fff; max-width:none; }
+    .expo-list { max-width:1040px; margin:26px auto 0; grid-template-columns:repeat(2,minmax(320px,1fr)); }
+    .expo-card { min-height:170px; }
+    .employee-board { max-width:1120px; margin:0 auto; grid-template-columns:repeat(2,minmax(320px,1fr)); }
+    .employee-tile { min-height:220px; }
+    .stage-shell, .creator-flow { max-width:1120px; margin:0 auto; }
+    .flow-steps, .creator-stepper { pointer-events:none; user-select:none; }
+    .stage-panel, .flow-stage { min-height:460px; }
+    .stage-panel.active, .flow-stage.active { animation:fadeStage .18s ease; }
+    .step-mode-note { margin:10px 0 14px; padding:10px 12px; border:1px solid #e4e8ef; border-radius:12px; background:#fbfcff; color:#7a8391; font-weight:800; }
+    .step-mode-note b { color:#17191f; }
+    .stage-transition-note { margin-top:14px; color:#6f7784; font-size:13px; line-height:1.7; }
+    @keyframes fadeStage { from { opacity:.4; transform:translateY(4px);} to { opacity:1; transform:none;} }
+    @media (max-width: 900px) { .expo-list,.employee-board { grid-template-columns:1fr; } }
+
+
+
+
+    /* Employee binding + task progress refinements */
+    .employee-bind-actions { display:grid; gap:12px; }
+    .employee-bind-card-lite { border:1px solid #e2e5eb; border-radius:14px; background:#fff; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .employee-bind-card-lite b { display:block; margin-bottom:4px; }
+    .employee-bind-card-lite p { margin:0; color:#858e9c; font-size:13px; line-height:1.45; }
+    .employee-bind-card-lite button { min-width:96px; }
+    .figma-modal-bind-card { border:1px solid #dfded9; border-radius:14px; padding:16px; background:#fff; display:grid; gap:10px; }
+    .hunter-progress-meter { margin:16px auto 0; max-width:560px; text-align:left; }
+    .hunter-progress-bar { height:8px; background:#eef1f6; border-radius:999px; overflow:hidden; }
+    .hunter-progress-bar i { display:block; width:18%; height:100%; background:#17191f; border-radius:999px; transition:width .25s ease; }
+    .hunter-progress-text { margin-top:8px; color:#7d8795; font-size:13px; font-weight:800; }
+    .sample-rank-badge { display:inline-flex; align-items:center; gap:6px; border-radius:999px; background:#eff9e8; color:#3a6b17; padding:5px 9px; font-size:12px; font-weight:900; margin-bottom:8px; }
+    .sample-score-line { margin-top:6px; color:#5f6672; font-size:12px; font-weight:800; }
+    .creator-tabbar { display:none; }
+    .creator-page { display:none; }
+    .creator-page.active { display:block; }
+    .hunter-page { display:none; }
+    .hunter-page.active { display:block; }
+    .hunter-history-board { max-width:1120px; border:1px solid #dfe3ea; border-radius:16px; background:#fff; padding:24px; margin:18px auto 0; min-height:360px; }
+    .creator-entry { max-width:1120px; margin:28px auto 0; }
+    .creator-entry-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; }
+    .creator-entry-card { min-height:230px; border:1px solid #dfe3ea; border-radius:22px; background:#fff; padding:28px; text-align:left; display:flex; flex-direction:column; justify-content:space-between; gap:18px; cursor:pointer; transition:.18s ease; box-shadow:0 18px 55px rgba(24,28,38,.05); }
+    .creator-entry-card:hover { transform:translateY(-2px); border-color:#17191f; box-shadow:0 22px 70px rgba(24,28,38,.10); }
+    .creator-entry-card.primary { background:#17191f; color:#fff; border-color:#17191f; }
+    .creator-entry-card .entry-index { width:38px; height:38px; border-radius:50%; display:grid; place-items:center; background:#eef1f6; color:#17191f; font-weight:950; }
+    .creator-entry-card.primary .entry-index { background:#fff; color:#17191f; }
+    .creator-entry-card b { font-size:28px; line-height:1.1; }
+    .creator-entry-card p { margin:0; color:#7c8492; font-weight:800; line-height:1.8; }
+    .creator-entry-card.primary p { color:rgba(255,255,255,.72); }
+    .creator-entry-card i { font-style:normal; font-weight:950; color:#17191f; }
+    .creator-entry-card.primary i { color:#fff; }
+    .creator-page-back { max-width:1120px; margin:0 auto 12px; }
+    .creator-page-back button { background:#fff; }
+    .creator-history-board { max-width:1120px; border:1px solid #dfe3ea; border-radius:16px; background:#fff; padding:24px; margin:18px auto 0; min-height:360px; }
+    .creator-job-card { border:1px solid #e1e6ee; border-radius:14px; padding:14px; background:#fbfcff; margin-bottom:12px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .batch-box { margin-top:18px; border:1px dashed #d7dde8; border-radius:14px; background:#fbfcff; padding:16px; }
+    .delivery-library-card { border:1px solid #dfe3ea; border-radius:14px; background:#fbfcff; padding:14px; margin:8px 0 14px; }
+    .delivery-project-note { border:1px solid #e2e7ef; border-radius:14px; background:#f7f9fc; padding:14px 16px; margin:0 0 14px; color:#7a8391; font-weight:800; line-height:1.7; }
+    .delivery-project-note b { color:#17191f; }
+    .official-project-view { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:14px; }
+    .official-project-view > div { border:1px solid #e2e7ef; border-radius:14px; background:#fbfcff; padding:12px 14px; display:grid; gap:5px; }
+    .official-project-view span { color:#858e9c; font-weight:900; font-size:12px; }
+    .official-project-view b { font-size:16px; color:#17191f; }
+    .official-project-view small { color:#8b94a3; font-weight:800; }
+    .official-unit-list { display:grid; gap:8px; margin:0 0 14px; }
+    .official-unit-row { border:1px solid #e2e7ef; border-radius:12px; background:#fff; padding:10px 12px; display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:10px; align-items:center; }
+    .official-unit-row em { width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-style:normal; font-weight:950; color:#fff; background:#17191f; }
+    .official-unit-row b { font-size:14px; color:#17191f; }
+    .official-unit-row span { color:#8b94a3; font-size:12px; font-weight:850; }
+    .official-unit-row small { color:#4f8e2d; background:#eef9e9; border-radius:999px; padding:4px 8px; font-weight:900; }
+    .delivery-library-head { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .delivery-library-list { display:grid; gap:10px; margin-top:12px; }
+    .delivery-library-item { border:1px solid #e2e7ef; border-radius:12px; padding:10px; background:#fff; display:grid; grid-template-columns:110px minmax(0,1fr) auto; gap:12px; align-items:center; }
+    .delivery-library-item video { width:110px; height:70px; object-fit:cover; border-radius:8px; background:#111; }
+    .delivery-library-item.selected { border-color:#17191f; box-shadow:0 0 0 3px rgba(23,25,31,.08); }
+    @media (max-width: 760px) { .delivery-library-item { grid-template-columns:1fr; } .delivery-library-item video { width:100%; height:160px; } }
+    @media (max-width: 760px) { .creator-entry-grid { grid-template-columns:1fr; } .creator-entry-card { min-height:180px; } }
+
     /* final stage fixes */
     .creator-stepper .creator-step { display:flex !important; align-items:center; min-height:54px; grid-template-columns:none !important; grid-template-rows:none !important; white-space:nowrap; }
     .creator-stepper .creator-step::before { content:''; width:8px; height:8px; border-radius:50%; background:#c7cfda; margin-right:10px; flex:0 0 auto; }
     .creator-stepper .creator-step.active::before { background:#fff; }
     .creator-stepper .creator-step.done::before { background:#4f8e2d; }
     .stage-panel, .flow-stage { box-shadow:0 14px 40px rgba(24,28,38,.04); }
+    .creator-stepper .creator-step.active.done { background:#17191f; color:#fff; border-color:#17191f; }
+
+
+    /* 2026-07-07 Figma asset sync + SaaS shell exact alignment */
+    :root { --figma-bg:#f5f4f1; --figma-card:#f2f1ed; --figma-border:#deddd8; --figma-muted:#96928b; --figma-ink:#222225; }
+    body { background:var(--figma-bg) !important; color:var(--figma-ink); }
+    .figma-sidebar { display:flex !important; position:fixed; inset:0 auto 0 0; width:180px; height:100vh; background:var(--figma-bg); border-right:1px solid var(--figma-border); padding:14px 8px 12px; display:flex; flex-direction:column; z-index:60; }
+    .figma-side-brand { height:34px; display:flex; align-items:center; padding:0 6px 8px; margin-bottom:6px; }
+    .figma-side-brand img { width:124px; height:auto; display:block; }
+    .figma-nav { height:38px; min-height:38px; border:0; background:transparent; border-radius:8px; display:flex; align-items:center; justify-content:flex-start; gap:10px; padding:0 10px; margin:2px 0; color:#a19d97; font-size:14px; font-weight:780; }
+    .figma-nav img { width:18px; height:18px; opacity:.65; }
+    .figma-nav.active { background:#e9e8e4; color:#26272b; }
+    .figma-nav.active img { opacity:1; }
+    .figma-nav.muted { color:#a8a39d; }
+    .figma-side-spacer { flex:1; }
+    .figma-usage-card { height:70px; border:1px solid #dfded9; border-radius:10px; background:#fffdf8; padding:10px 10px; color:#9b907e; font-size:12px; }
+    .figma-usage-card b { display:block; color:#8a7a60; font-size:13px; margin-top:7px; font-weight:800; }
+    .figma-usage-card i { display:block; height:4px; background:#ded8ca; border-radius:999px; overflow:hidden; margin-top:8px; }
+    .figma-usage-card em { display:block; width:58%; height:100%; background:#9f8b65; border-radius:999px; }
+    .topbar { position:fixed !important; top:0; left:180px; right:0; height:48px; background:var(--figma-bg) !important; border-bottom:1px solid var(--figma-border) !important; padding:0 16px !important; z-index:55; }
+    .figma-top-title { font-size:16px; font-weight:850; color:#343436; display:flex; align-items:center; height:100%; }
+    .layout { margin-left:180px; min-height:100vh; padding-top:48px; }
+    .workspace { max-width:none !important; margin:0 !important; padding:0 8px 8px !important; background:var(--figma-bg) !important; }
+    .shell { min-height:calc(100vh - 56px) !important; border:1px solid var(--figma-border) !important; border-radius:14px !important; background:#fff !important; padding:0 !important; overflow:hidden; }
+    #expo-list-view, #expo-detail-view { min-height:842px; }
+    .figma-page-head { height:88px; display:flex; align-items:flex-start; justify-content:space-between; padding:25px 24px 0; }
+    .figma-page-head h1 { font-size:18px; font-weight:900; margin:0; color:#242529; }
+    .figma-black-btn { min-height:38px; border-radius:10px; background:#17191f; border-color:#17191f; color:#fff; padding:0 16px; display:inline-flex; align-items:center; gap:8px; font-size:14px; }
+    .figma-expo-list { width:984px !important; max-width:984px !important; margin:0 auto !important; display:grid !important; grid-template-columns:repeat(2, 484px) !important; gap:16px !important; }
+    .figma-expo-card { width:484px; height:172px; min-height:172px !important; border:0 !important; border-radius:14px !important; background:var(--figma-card) !important; padding:16px !important; display:grid !important; grid-template-columns:80px 1fr !important; grid-template-rows:96px 1px 30px !important; column-gap:16px !important; row-gap:8px !important; cursor:pointer; box-shadow:none !important; }
+    .figma-expo-card:hover { transform:none !important; box-shadow:0 6px 18px rgba(30,32,36,.06) !important; }
+    .expo-thumb { width:80px; height:80px; object-fit:cover; border-radius:10px; grid-row:1; grid-column:1; align-self:start; }
+    .expo-copy { position:relative; min-width:0; grid-row:1; grid-column:2; padding-right:68px; }
+    .expo-copy h2 { margin:2px 0 4px; font-size:18px; font-weight:900; color:#15161a; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .expo-copy p { margin:0 0 4px; color:#4e5055; font-size:14px; line-height:1.35; }
+    .expo-copy small { color:#aaa8a4; font-size:13px; }
+    .figma-status { position:absolute; right:0; top:0; height:26px; padding:0 10px; border-radius:7px; display:inline-flex; align-items:center; font-size:12px; font-weight:800; }
+    .figma-status.neutral { background:#e9e7df; color:#222; }
+    .figma-status.soon { background:#ece5d9; color:#a28243; }
+    .figma-status.ended { background:#f1e6e3; color:#c26464; }
+    .expo-divider { grid-column:1 / 3; height:1px; border-top:1px dashed #dedbd2; }
+    .figma-expo-meta { grid-column:1 / 3; display:flex !important; align-items:center; gap:10px !important; margin:0 !important; }
+    .figma-expo-meta span { height:28px; border:0 !important; background:#fff !important; border-radius:5px !important; padding:0 10px !important; display:inline-flex; gap:5px; align-items:center; color:#918d88; font-size:12px; }
+
+    .figma-expo-meta span img { width:14px; height:14px; display:block; opacity:.72; }
+    .figma-expo-meta span b { color:#71717a; font-size:12px; font-weight:500; }
+    .figma-expo-meta span small { color:#a1a1aa; font-size:12px; margin-left:2px; }
+    .figma-detail-topline { display:none; }
+    .figma-detail-topline strong { color:#2b2c30; }
+    .figma-detail-topline small { color:#aaa6a0; }
+    .figma-staff-head { height:64px; display:flex; align-items:center; justify-content:space-between; padding:0 12px; border-bottom:1px solid #e8e6e0; }
+    .figma-staff-head h1 { font-size:16px; font-weight:900; }
+    .figma-employee-board { max-width:984px !important; width:984px !important; margin:12px auto 0 !important; display:grid !important; grid-template-columns:repeat(2, 484px) !important; gap:16px !important; }
+    .figma-staff-card { width:484px; height:172px; min-height:172px !important; background:var(--figma-card) !important; border:0 !important; border-radius:14px !important; padding:16px !important; display:grid !important; grid-template-columns:140px 1fr !important; gap:16px !important; cursor:pointer; box-shadow:none !important; }
+    .figma-staff-card:hover { box-shadow:0 6px 18px rgba(30,32,36,.06) !important; transform:none !important; }
+    .figma-staff-avatar { width:140px; height:140px; object-fit:contain; align-self:center; justify-self:center; }
+    .figma-staff-copy { position:relative; min-width:0; padding-top:4px; }
+    .figma-staff-copy h2 { margin:0 0 8px; font-size:18px; font-weight:900; color:#15161a; }
+    .staff-space-name { margin:0 0 8px; color:#7f7c78; font-size:13px; line-height:1.3; }
+    .figma-work-status { position:absolute; right:0; top:0; height:24px; border-radius:7px; padding:0 10px; background:#e6dfd2; color:#8a744c; display:inline-flex; align-items:center; font-size:12px; font-weight:800; }
+    .figma-role-pill { display:inline-flex; align-items:center; height:24px; border-radius:999px; background:#fff; color:#555a62; border:1px solid #e7e5df; padding:0 9px; font-size:12px; }
+    .figma-card-line { margin:16px 0 12px; border-top:1px dashed #dedbd2; }
+    .figma-bound-row { height:28px; border-radius:6px; background:#fff; display:flex; align-items:center; padding:0 10px; color:#706d68; font-size:12px; }
+    .view-hidden { display:none !important; }
+    .employee-page-head { padding:22px 32px 12px !important; border-bottom:1px solid #eceae5; }
+    .employee-page-head { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }
+    .employee-head-actions { display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+    .employee-head-actions .primary { min-height:42px; padding:0 18px; white-space:nowrap; }
+    .process-home { width:min(1120px, calc(100% - 64px)); min-height:560px; margin:28px auto 36px; padding:26px; border:1px solid #dfe4ec; border-radius:18px; background:#fff; box-shadow:0 18px 55px rgba(24,28,38,.045); }
+    .process-home-head { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding-bottom:20px; border-bottom:1px solid #e8ecf2; }
+    .process-home-head h2 { margin:0 0 8px; font-size:22px; color:#17191f; }
+    .process-home-head p { margin:0; color:#7c8695; line-height:1.7; font-weight:750; }
+    .process-list { display:grid; gap:12px; margin-top:20px; }
+    .process-item { width:100%; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:18px; padding:17px 18px; border:1px solid #e1e6ee; border-radius:14px; background:#fbfcff; text-align:left; cursor:pointer; transition:.16s ease; }
+    .process-item:hover { border-color:#17191f; transform:translateY(-1px); box-shadow:0 10px 28px rgba(24,28,38,.06); }
+    .process-item b { display:block; margin-bottom:7px; color:#17191f; font-size:16px; }
+    .process-item p { margin:0; color:#7d8795; font-weight:750; line-height:1.6; }
+    .process-item-action { min-width:96px; text-align:center; color:#17191f; font-weight:900; }
+    .process-meta { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-top:9px; color:#9aa3b0; font-size:13px; font-weight:800; }
+    .process-empty { margin-top:20px; padding:34px; border:1px dashed #d8dfe9; border-radius:14px; background:#fbfcff; color:#7d8795; font-weight:800; line-height:1.7; }
+    .stage-shell, .creator-flow { padding:18px 32px 32px; }
+
+    .figma-employee-modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(34,34,34,.28); backdrop-filter:blur(6px); z-index:200; }
+    .figma-employee-modal.active { display:flex; }
+    .figma-modal-card { width:700px; min-height:480px; border-radius:18px; background:#fff; box-shadow:0 18px 60px rgba(0,0,0,.18); padding:22px 24px 24px; }
+    .figma-modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+    .figma-modal-head h2 { margin:0; font-size:18px; font-weight:900; color:#17191f; }
+    .figma-modal-close { width:32px; height:32px; border:0; background:transparent; color:#60646c; font-size:28px; line-height:1; padding:0; }
+    .figma-modal-body { display:grid; grid-template-columns:300px 1fr; gap:16px; }
+    .figma-modal-hero { border:1px solid #e7e5df; border-radius:12px; padding:8px; background:#fff; }
+    .figma-modal-hero-inner { min-height:380px; border-radius:9px; background:#f2f1ed; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+    .figma-modal-hero-inner img { width:245px; max-height:330px; object-fit:contain; }
+    .figma-modal-badge { position:absolute; top:18px; right:18px; width:44px; height:44px; border-radius:50%; background:#ded8ca; display:grid; place-items:center; color:#5c513d; font-weight:900; }
+    .figma-info-stack { display:grid; gap:16px; }
+    .figma-info-box { border:1px solid #e7e5df; border-radius:12px; padding:14px; background:#fff; }
+    .figma-info-box h3 { margin:0 0 12px; font-size:15px; font-weight:850; color:#222; }
+    .figma-info-row { display:grid; grid-template-columns:84px 1fr auto; gap:12px; align-items:center; min-height:34px; font-size:13px; color:#7b7f86; }
+    .figma-info-row b { color:#2b2d32; font-weight:750; }
+    .figma-info-row button { border:0; background:transparent; color:#8a744c; font-weight:800; padding:0; }
+    .figma-modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+    .figma-modal-actions button { min-height:38px; border-radius:10px; padding:0 16px; }
+    @media (max-width: 820px) { .figma-modal-card { width:calc(100vw - 32px); } .figma-modal-body { grid-template-columns:1fr; } .figma-modal-hero-inner { min-height:240px; } }
+
+    @media (max-width: 1180px) { .figma-expo-list,.figma-employee-board { width:calc(100vw - 228px) !important; max-width:calc(100vw - 228px) !important; grid-template-columns:1fr !important; } .figma-expo-card,.figma-staff-card { width:100%; } }
+    @media (max-width: 760px) { .figma-sidebar { display:none; } .topbar { left:0; } .layout { margin-left:0; } .figma-expo-list,.figma-employee-board { width:100% !important; max-width:100% !important; padding:0 12px; } }
 
   </style>
 </head>
 <body>
   <div id="toast" class="toast"></div>
+  <aside class="figma-sidebar" aria-label="展会导航">
+    <div class="figma-side-brand"><img src="/assets/figma-sync/brand-wanyou.png" alt="万有展会版"></div>
+    <button class="figma-nav active" data-nav="expo" onclick="showSection('overview'); backToExhibitionList(); setFigmaNav('expo')"><img src="/assets/figma-sync/expo-list.svg" alt="">展会列表</button>
+    <button class="figma-nav" data-nav="staff" onclick="openExhibition(currentExhibitionId || '新能源'); setFigmaNav('staff')"><img src="/assets/figma-sync/employee.svg" alt="">数字员工</button>
+    <button class="figma-nav muted" onclick="notify('用量明细后续接入')"><img src="/assets/figma-sync/usage-line.svg" alt="">用量明细</button>
+    <button class="figma-nav muted" onclick="notify('空间详情后续接入')"><img src="/assets/figma-sync/space.svg" alt="">空间详情</button>
+    <div class="figma-side-spacer"></div>
+    <div class="figma-usage-card"><span>积分用量</span><b>2.3k / 4k</b><i><em></em></i></div>
+  </aside>
   <div class="topbar">
-    <div class="brand"><span>ExhibitFlow 展会运营</span><span class="badge">AI Agent</span></div>
+    <div class="figma-top-title" id="figma-top-title">MaaS 增长黑牛代运营</div>
     <div class="top-actions">
       <span id="system-pill" class="hidden">检查中</span>
       <button class="top-refresh" onclick="refreshAll()" title="刷新状态" aria-label="刷新状态">↻</button>
@@ -704,50 +924,56 @@
       <section id="overview" class="section active">
   <div class="shell">
     <div id="expo-list-view">
-      <div class="page-toolbar">
-        <div>
-          <div class="page-title-row"><img src="/assets/figma-digital-employees/logo.png" alt=""><h1>展会运营</h1><span class="badge">AI Agent</span></div>
-          <p>以展会为维度管理数字员工。先选择展会，再为这个展会分配找爆款、生视频和投放员工。</p>
-        </div>
-        <button onclick="notify('后续接入新建展会流程')">+ 添加展会</button>
+      <div class="figma-page-head">
+        <h1>展会列表</h1>
+        <button class="figma-black-btn" onclick="notify('后续接入新建展会流程')"><span>＋</span> 新建展会</button>
       </div>
-      <div class="expo-list">
-        <div class="expo-card" onclick="openExhibition('新能源')">
-          <div><span class="status succeeded">进行中</span><h2>华南国际新能源产业展</h2><p>围绕招商、参展企业、观众线索和投放复盘组织素材与任务。</p></div>
-          <div class="expo-meta"><span>3 名员工</span><span>5 个任务</span><span>投放待绑定</span></div>
+      <div class="expo-list figma-expo-list">
+        <div class="expo-card figma-expo-card" onclick="openExhibition('新能源')">
+          <img class="expo-thumb" src="/assets/figma-sync/expo-thumb.png" alt="展会封面">
+          <div class="expo-copy"><span class="figma-status neutral">已开始</span><h2>上海国际汽配展(APES)</h2><p>上海国家展会中心</p><small>2026-08-05 至 2026-08-07</small></div>
+          <div class="expo-divider"></div>
+          <div class="expo-meta figma-expo-meta"><span><img src="/assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="/assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="/assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
         </div>
-        <div class="expo-card" onclick="openExhibition('数字人')">
-          <div><span class="status blue">待分配</span><h2>杭州国际数字人展会</h2><p>保留为下一组展会空间，员工和素材将独立配置。</p></div>
-          <div class="expo-meta"><span>0 名员工</span><span>3 个素材</span><span>未开始</span></div>
+        <div class="expo-card figma-expo-card" onclick="openExhibition('数字人')">
+          <img class="expo-thumb" src="/assets/figma-sync/expo-thumb.png" alt="展会封面">
+          <div class="expo-copy"><span class="figma-status soon">即将开始</span><h2>上海国际汽配展(APES)</h2><p>上海国家展会中心</p><small>2026-08-05 至 2026-08-07</small></div>
+          <div class="expo-divider"></div>
+          <div class="expo-meta figma-expo-meta"><span><img src="/assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="/assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="/assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
         </div>
-        <div class="expo-card" onclick="notify('后续会进入创建展会流程')">
-          <div><span class="status">新建</span><h2>添加一个展会</h2><p>创建后会生成独立的员工、账号绑定、素材库和投放数据空间。</p></div>
-          <div class="expo-meta"><span>+ 创建空间</span></div>
+        <div class="expo-card figma-expo-card" onclick="openExhibition('新能源')">
+          <img class="expo-thumb" src="/assets/figma-sync/expo-thumb.png" alt="展会封面">
+          <div class="expo-copy"><span class="figma-status ended">已结束</span><h2>上海国际汽配展(APES)</h2><p>上海国家展会中心</p><small>2026-08-05 至 2026-08-07</small></div>
+          <div class="expo-divider"></div>
+          <div class="expo-meta figma-expo-meta"><span><img src="/assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="/assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="/assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
+        </div>
+        <div class="expo-card figma-expo-card" onclick="openExhibition('数字人')">
+          <img class="expo-thumb" src="/assets/figma-sync/expo-thumb.png" alt="展会封面">
+          <div class="expo-copy"><span class="figma-status ended">已结束</span><h2>上海国际汽配展(APES)</h2><p>上海国家展会中心</p><small>2026-08-05 至 2026-08-07</small></div>
+          <div class="expo-divider"></div>
+          <div class="expo-meta figma-expo-meta"><span><img src="/assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="/assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="/assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
         </div>
       </div>
     </div>
 
     <div id="expo-detail-view" class="view-hidden">
-      <div class="page-toolbar">
-        <div><button class="breadcrumb-btn" onclick="backToExhibitionList()">← 返回展会列表</button><h1 style="margin-top:14px" id="current-expo-name">华南国际新能源产业展</h1><p>选择数字员工并配置该员工自己的账号、任务参数和产出结果。</p></div>
-        <span class="status blue">展会维度 · 员工独立配置</span>
+      <div class="figma-detail-topline"><span>MaaS 增长黑牛代运营</span><b>›</b><strong id="current-expo-name">上海国际汽配展</strong><small>2026-06-02 至 2026-08-21</small></div>
+      <div class="figma-staff-head">
+        <h1>当前展会数字员工</h1>
+        <button class="figma-black-btn" onclick="notify('选择下方员工即可进入详情')"><span>＋</span> 选择空闲员工</button>
       </div>
-      <div class="expo-detail-head">
-        <div><b>当前展会空间</b><p>员工详情里分别绑定平台账号：找爆款绑定抖音/小红书，生视频配置素材与 TTS，投放绑定巨量。</p></div>
-        <button class="primary" onclick="notify('选择下方员工即可进入详情')">分配数字员工</button>
-      </div>
-      <div class="employee-board">
-        <div class="employee-tile" data-staff-card="hunter" onclick="openEmployee('hunter')">
-          <div><div class="employee-top"><span class="status" id="hunter-status">空闲中</span><span class="status blue">参考样本</span></div><div class="employee-visual hunter-icon"><img src="/assets/figma-digital-employees/calendar-range.svg" alt="找爆款员工"></div><h2>找爆款员工</h2><p>负责找全网热点/同行爆款，产出可参考的视频样本。</p><div class="employee-role-list"><span>绑定抖音或小红书账号</span><span>按互动分排序</span><span>选择样本后交给生视频员工</span></div></div>
-          <div class="employee-bind-row"><small id="hunter-kpi">样本 0 条</small><button>进入员工详情</button></div>
+      <div class="employee-board figma-employee-board">
+        <div class="employee-tile figma-staff-card" data-staff-card="hunter" onclick="openEmployeeDetail('hunter')">
+          <img class="figma-staff-avatar" src="/assets/figma-sync/employee-blue-crop.png" alt="找爆款员工">
+          <div class="figma-staff-copy"><span class="figma-work-status" id="hunter-status">工作中</span><h2>找爆款员工</h2><p class="staff-space-name">杭州国际数字人展会</p><span class="figma-role-pill">🔎 爆款运营</span><div class="figma-card-line"></div><div class="figma-bound-row">抖音/小红书：待绑定</div></div>
         </div>
-        <div class="employee-tile" data-staff-card="creator" onclick="openEmployee('creator')">
-          <div><div class="employee-top"><span class="status" id="creator-status">空闲中</span><span class="status blue">最终成片</span></div><div class="employee-visual creator-icon"><img src="/assets/figma-digital-employees/space.svg" alt="生视频员工"></div><h2>生视频员工</h2><p>负责把参考样本、卖点和素材变成可投放的视频。</p><div class="employee-role-list"><span>确认口播和卖点</span><span>选择本地素材库或 MoneyPrinter 搜索链路</span><span>生成配音、字幕和成片</span></div></div>
-          <div class="employee-bind-row"><small id="creator-kpi">成片 0 条</small><button>进入员工详情</button></div>
+        <div class="employee-tile figma-staff-card" data-staff-card="creator" onclick="openEmployeeDetail('creator')">
+          <img class="figma-staff-avatar" src="/assets/figma-sync/employee-green-crop.png" alt="生视频员工">
+          <div class="figma-staff-copy"><span class="figma-work-status" id="creator-status">工作中</span><h2>生视频员工</h2><p class="staff-space-name">杭州国际数字人展会</p><span class="figma-role-pill">🎬 视频运营</span><div class="figma-card-line"></div><div class="figma-bound-row">素材库：本地 / MoneyPrinter</div></div>
         </div>
-        <div class="employee-tile" data-staff-card="buyer" onclick="openEmployee('buyer')">
-          <div><div class="employee-top"><span class="status" id="buyer-status">空闲中</span><span class="status blue">投放数据</span></div><div class="employee-visual buyer-icon"><img src="/assets/figma-digital-employees/usage.svg" alt="投放员工"></div><h2>投放员工</h2><p>负责绑定巨量账号、创建安全投放草稿并回收 9 项指标。</p><div class="employee-role-list"><span>绑定巨量账户</span><span>选择视频、目标、预算</span><span>同步消耗、展示、点击、转化和有效播放</span></div></div>
-          <div class="employee-bind-row"><small id="buyer-kpi">未绑定</small><button>进入员工详情</button></div>
+        <div class="employee-tile figma-staff-card" data-staff-card="buyer" onclick="openEmployeeDetail('buyer')">
+          <img class="figma-staff-avatar" src="/assets/figma-sync/employee-blue-crop.png" alt="投放员工">
+          <div class="figma-staff-copy"><span class="figma-work-status" id="buyer-status">工作中</span><h2>投放员工</h2><p class="staff-space-name">杭州国际数字人展会</p><span class="figma-role-pill">📈 巨量投放</span><div class="figma-card-line"></div><div class="figma-bound-row">巨量账号：待授权</div></div>
         </div>
       </div>
       <div class="compat-hidden" aria-hidden="true">
@@ -765,14 +991,25 @@
   <div class="shell">
     <div class="employee-page-head">
       <div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>找爆款员工详情</span></div><h1>找爆款员工</h1><p>员工详情页内完成账号绑定、检索任务和样本确认；检索完成后再展示样本画廊。</p></div>
-      <span class="status blue">输出：参考样本</span>
+      <div class="employee-head-actions"><span class="status blue">输出：参考样本</span><button class="primary" onclick="setHunterPage('task'); setHunterStage('config')">创建抓取任务</button></div>
     </div>
-    <div class="stage-shell">
+    <div class="creator-entry hunter-page active" data-hunter-page="menu">
+      <div class="process-home">
+        <div class="process-home-head"><div><h2>抓取进程与历史记录</h2><p>这里显示正在抓取的任务和过往抓取结果。点击任务进入对应进程，完成后进入推荐样本画廊。</p></div><button onclick="loadTasks()">刷新进程</button></div>
+        <div id="hunter-process-overview"></div>
+      </div>
+    </div>
+    <div class="hunter-history-board hunter-page" data-hunter-page="history">
+      <div class="stage-head"><div><div class="stage-title"><span class="stage-num">H</span>抓取历史记录</div><p class="stage-help">这里集中展示已经完成的抓取任务。点击“查看样本”后，才会进入样本画廊。</p></div><div class="actions"><button onclick="setHunterPage('menu')">返回选择</button><button onclick="loadTasks()">刷新</button></div></div>
+      <div id="hunter-history-overview"></div>
+    </div>
+    <div class="stage-shell hunter-page" data-hunter-page="task">
       <div class="flow-steps"><div class="flow-pill active" data-hunter-pill="config">1 绑定与检索</div><div class="flow-pill" data-hunter-pill="working">2 员工执行中</div><div class="flow-pill" data-hunter-pill="results">3 选择参考样本</div><div class="flow-pill" data-hunter-pill="handoff">4 交给生视频员工</div></div>
+      <div class="step-mode-note"><b>单步执行：</b>先提交检索任务，完成后才进入样本画廊；点击样本按钮后才跳到生视频员工。</div>
       <div id="hunter-order" class="workorder-strip"></div>
       <section class="stage-panel active" data-hunter-stage="config">
         <div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>先配置找爆款员工</div><p class="stage-help">账号绑定写在员工详情里。真实抓取时需要绑定抖音或小红书账号；没有抓取器时可导入已有视频链接。</p></div><span class="status">待开始</span></div>
-        <div class="account-bind-card"><div><b>平台账号绑定</b><p>抖音/小红书账号用于获取封面、标题和互动数据。</p></div><div class="actions"><button onclick="notify('这里后续接入抖音账号绑定')">绑定抖音</button><button onclick="notify('这里后续接入小红书账号绑定')">绑定小红书</button></div></div>
+        <div class="account-bind-card"><div><b>平台账号绑定</b><p>抖音/小红书账号用于获取封面、标题和互动数据。</p></div><div class="actions"><button onclick="openPlatformLogin('douyin')">绑定抖音</button><button onclick="openPlatformLogin('xhs')">绑定小红书</button></div></div>
         <div id="crawler-notice" class="notice"></div>
         <div class="single-column-form">
           <div class="grid two"><div><label>检索平台</label><select id="search-platform"><option value="douyin">抖音</option><option value="xiaohongshu">小红书</option></select></div><div><label>需要数量</label><input id="search-limit" type="number" min="1" max="50" value="12"></div></div>
@@ -782,22 +1019,33 @@
           <details><summary style="cursor:pointer;font-weight:850">没有抓取器时，导入已有视频链接</summary><div class="card soft" style="margin-top:10px"><label>每行一个抖音/小红书链接</label><textarea id="manual-links" placeholder="https://www.douyin.com/video/...&#10;https://www.xiaohongshu.com/explore/..."></textarea><div class="actions"><button onclick="importLinks()">导入给找爆款员工</button></div></div></details>
         </div>
       </section>
-      <section class="stage-panel" data-hunter-stage="working"><div class="working-panel"><div class="working-dot"></div><h2>找爆款员工正在检索</h2><p>前端不再堆叠表单和结果。员工在后台检索、去重和补全封面，完成后自动进入样本画廊。</p><div class="work-console" id="hunter-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>后台执行日志</span></div><span class="status running">工作中</span></div><div class="work-progress"><span class="done"></span><span class="done"></span><span></span><span></span></div><div class="work-summary">任务已提交。你可以留在本页等待，也可以返回展会。</div><div class="activity-list" id="hunter-activity"></div></div></div></section>
-      <section class="stage-panel" data-hunter-stage="results"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择一个参考样本</div><p class="stage-help">点击样本卡片的“设为参考并生视频”，系统会自动跳到生视频员工页面。</p></div><button onclick="setHunterStage('config')">重新检索</button></div><div class="result-gallery-wrap"><div class="gallery" id="gallery"></div></div></section>
-      <section class="stage-panel" data-hunter-stage="handoff"><div class="working-panel"><h2>样本已交给生视频员工</h2><p>下一步由生视频员工基于参考样本生成口播、配音、素材和成片。</p><button class="primary" onclick="openEmployee('creator')">进入生视频员工</button></div></section>
+      <section class="stage-panel" data-hunter-stage="working"><div class="working-panel"><div class="working-dot"></div><h2>找爆款员工正在检索</h2><p>员工会在后台检索、去重、计算互动分并补全封面；完成后自动进入样本画廊。</p><div class="hunter-progress-meter"><div class="hunter-progress-bar"><i id="hunter-progress-fill"></i></div><div class="hunter-progress-text" id="hunter-progress-text">任务已提交，正在等待后台开始...</div></div><div class="work-console" id="hunter-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>后台执行日志</span></div><span class="status running">工作中</span></div><div class="work-progress"><span class="done"></span><span class="done"></span><span></span><span></span></div><div class="work-summary">任务已提交。你可以留在本页等待，也可以返回展会。</div><div class="activity-list" id="hunter-activity"></div></div></div></section>
+      <section class="stage-panel" data-hunter-stage="results"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择一个参考样本</div><p class="stage-help">点击样本卡片的「设为参考并进入生视频员工」后，才会跳到下一位员工；不会在未确认时自动切页。</p></div><button onclick="setHunterStage('config')">重新检索</button></div><div class="result-gallery-wrap"><div class="gallery" id="gallery"></div></div></section>
+      <section class="stage-panel" data-hunter-stage="handoff"><div class="working-panel"><h2>样本已交给生视频员工</h2><p>下一步由生视频员工基于参考样本生成口播、配音、素材和成片。</p><button class="primary" onclick="openEmployeeDetail('creator')">进入生视频员工</button></div></section>
     </div>
   </div>
 </section>
 
       <section id="creator" class="section">
   <div class="shell">
-    <div class="employee-page-head"><div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>生视频员工详情</span></div><h1>生视频员工</h1><p>像给同事交代任务一样，先确认口播，再选择素材来源，员工在后台完成配音、字幕和成片。</p></div><span class="status blue">输出：最终成片</span></div>
-    <div class="creator-flow">
+    <div class="employee-page-head"><div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>生视频员工详情</span></div><h1>生视频员工</h1><p>像给同事交代任务一样，先确认口播，再选择素材来源，员工在后台完成配音、字幕和成片。</p></div><div class="employee-head-actions"><span class="status blue">输出：最终成片</span><button class="primary" onclick="setCreatorTab('create')">创建视频任务</button></div></div>
+    <div class="creator-entry creator-page active" data-creator-page="menu">
+      <div class="process-home">
+        <div class="process-home-head"><div><h2>视频生成进程与历史记录</h2><p>正在生成的视频会实时显示执行状态；历史成片可预览、恢复参数并再次生成。</p></div><button onclick="loadTasks()">刷新进程</button></div>
+        <div id="creator-process-overview"><div id="creator-active-jobs"></div><h2 style="margin-top:22px">历史成片</h2><div id="creator-history-overview"></div></div>
+      </div>
+    </div>
+    <div class="creator-history-board creator-page" data-creator-page="history"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">H</span>成片历史记录</div><p class="stage-help">点击历史版本可预览、恢复参数再生成。</p></div><div class="actions"><button onclick="setCreatorTab('menu')">返回进程页</button><button onclick="loadTasks()">刷新</button></div></div><div id="creator-history-page"></div></div>
+    <div class="creator-flow creator-page" data-creator-page="create">
+      <div class="creator-page-back"><button onclick="setCreatorTab('menu')">← 返回创作入口</button></div>
       <div class="creator-stepper"><div class="creator-step active" data-flow-step="brief">1 确认口播</div><div class="creator-step" data-flow-step="copy">2 文案与声音</div><div class="creator-step" data-flow-step="material">3 素材和字幕</div><div class="creator-step" data-flow-step="output">4 成片与历史</div></div>
+      <div class="step-mode-note"><b>单步执行：</b>点击当前步骤主按钮后才进入下一步；成片完成后再交给投放员工。</div>
       <div id="creator-order" class="workorder-strip"></div>
-      <section id="creator-stage-brief" class="flow-stage active" data-stage="brief"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>确认最终口播方向</div><p class="stage-help">这里输入业务主题、卖点或完整文案。AI 生成后会直接出现在最终口播稿里，不再左右割裂。</p></div><span id="creator-brief-status" class="status">待确认</span></div><div class="single-column-form"><label>业务主题 / 手动文案</label><textarea id="copy-topic" placeholder="例如：2026北京国际会展大会招商推广，突出人流量、采购商质量、提前锁定展位"></textarea><div class="grid two"><div><label>推广主题</label><input id="brief-subject" value="2026北京国际会展大会招商推广"></div><div><label>目标观众</label><input id="brief-audience" placeholder="参展企业负责人 / 采购商"></div></div><div><label>核心卖点</label><textarea id="brief-selling" placeholder="突出人流量、采购商质量、提前锁定展位"></textarea></div><div><label>表达风格</label><input id="brief-tone" placeholder="专业、紧迫、招商转化"></div><div class="stage-actions"><button class="primary" onclick="createCopy()">AI 生成口播稿</button><button onclick="useManualCopy(); markCreatorStepDone('brief'); focusCreatorStep('copy')">使用手动文案</button></div></div></section>
-      <section id="creator-stage-copy" class="flow-stage" data-stage="copy"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>确认文案和声音</div><p class="stage-help">最终口播稿会用于配音和字幕。视频结尾会自动追加行动引导。</p></div><span id="creator-copy-status" class="status">等待文案</span></div><label>最终口播稿（用于配音和字幕）</label><textarea id="final-copy" placeholder="AI 生成或手动填写的最终口播稿会出现在这里"></textarea><div style="margin-top:14px"><label>视频结尾行动引导</label><input id="video-cta" value="点击下方链接，立即报名吧"></div><div class="grid two" style="margin-top:14px"><div><label>TTS 服务</label><select id="tts-service" onchange="syncTtsVoices()"><option value="edge">Microsoft Edge TTS（免密）</option><option value="qwen">阿里云百炼 Qwen TTS</option></select></div><div><label>音色</label><select id="tts-voice"></select></div></div><div class="stage-actions"><button class="primary" onclick="createTts(); markCreatorStepDone('copy')">生成语音</button><button onclick="focusCreatorStep('material')">跳过，直接配置素材</button></div><div id="tts-preview" class="media-preview hidden" style="margin-top:14px"></div></section>
-      <section id="creator-stage-material" class="flow-stage" data-stage="material"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择素材来源和字幕</div><p class="stage-help">素材来源只有两个选项：本地素材库，或 MoneyPrinter 原始 Pexels/Pixabay 搜索链路。</p></div><span id="creator-material-status" class="status">待配置</span></div><div class="grid two" id="material-source-choices"><div class="source-choice active" data-source="local" onclick="chooseMaterialSource('local')"><b>本地素材库</b><p>使用你上传或放入 materials 的素材。</p></div><div class="source-choice" data-source="pexels" onclick="chooseMaterialSource('pexels')"><b>MoneyPrinter 搜索链路</b><p>走原始 Pexels/Pixabay 全局搜索下载逻辑。</p></div></div><div id="local-material-settings" style="margin-top:16px"><label>素材目录</label><input id="material-dir" placeholder="/path/to/materials"><div style="margin-top:12px"><label>参考样本目录（可选）</label><input id="competitor-dir" placeholder="可选"></div><div style="margin-top:12px"><label>添加本地素材</label><input id="material-files" type="file" multiple><div class="actions"><button onclick="notify('素材上传接口保留，后续接入')">上传到素材库</button><span class="status" id="material-count">素材 0 个</span><span class="status" id="local-source-count">素材 0 个</span></div></div></div><div class="grid two" style="margin-top:16px"><div><label>字幕视觉模板</label><div id="caption-templates" class="grid two"><div class="choice active" data-template="viral" onclick="chooseCaptionTemplate('viral')"><b>爆款强调</b><p>白字黑描边，黄色重点词</p></div><div class="choice" data-template="business" onclick="chooseCaptionTemplate('business')"><b>专业展会</b><p>稳重白字，蓝色业务重点</p></div><div class="choice" data-template="minimal" onclick="chooseCaptionTemplate('minimal')"><b>极简商务</b><p>半透明底板，清晰克制</p></div><div class="choice" data-template="active" onclick="chooseCaptionTemplate('active')"><b>活力招展</b><p>橙色大字，强化行动号召</p></div></div></div><div><label>重点词（逗号分隔）</label><textarea id="highlight-words" placeholder="专业买家, 人流量, 提前锁定, 限时报名"></textarea><p id="moneyprint-source-status">MoneyPrinter 在线链路状态待检查</p></div></div><div class="stage-actions"><button class="primary" onclick="runCreatorPipeline()">开始生成推广视频</button></div></section>
+      <section id="creator-stage-brief" class="flow-stage active" data-stage="brief"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>确认最终口播方向</div><p class="stage-help">这里输入业务主题、卖点或完整文案。AI 生成后会直接出现在最终口播稿里，不再左右割裂。</p></div><span id="creator-brief-status" class="status">待确认</span></div><div class="single-column-form"><label>业务主题 / 手动文案</label><textarea id="copy-topic" placeholder="例如：2026北京国际会展大会招商推广，突出人流量、采购商质量、提前锁定展位"></textarea><div class="grid two"><div><label>推广主题</label><input id="brief-subject" value="2026北京国际会展大会招商推广"></div><div><label>目标观众</label><input id="brief-audience" placeholder="参展企业负责人 / 采购商"></div></div><div><label>核心卖点</label><textarea id="brief-selling" placeholder="突出人流量、采购商质量、提前锁定展位"></textarea></div><div><label>表达风格</label><input id="brief-tone" placeholder="专业、紧迫、招商转化"></div><div class="stage-actions"><button class="primary" onclick="createCopy()">AI 生成口播稿</button><button onclick="useManualCopy()">使用手动文案</button></div></div></section>
+      <section id="creator-stage-copy" class="flow-stage" data-stage="copy"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>确认文案和声音</div><p class="stage-help">最终口播稿会用于配音和字幕。视频结尾会自动追加行动引导。</p></div><span id="creator-copy-status" class="status">等待文案</span></div><label>最终口播稿（用于配音和字幕）</label><textarea id="final-copy" placeholder="AI 生成或手动填写的最终口播稿会出现在这里"></textarea><div style="margin-top:14px"><label>视频结尾行动引导</label><input id="video-cta" value="点击下方链接，立即报名吧"></div><div class="grid two" style="margin-top:14px"><div><label>TTS 服务</label><select id="tts-service" onchange="syncTtsVoices()"><option value="edge">Microsoft Edge TTS（免密）</option><option value="qwen">阿里云百炼 Qwen TTS</option></select></div><div><label>音色</label><select id="tts-voice"></select></div></div><div class="stage-actions"><button class="primary" onclick="createTts()">生成语音</button><button onclick="confirmCreatorCopy()">确认文案，进入素材配置</button></div><div id="tts-preview" class="media-preview hidden" style="margin-top:14px"></div><div class="stage-transition-note">生成语音成功后会自动进入「素材和字幕」；如果不需要试听，点「确认文案，进入素材配置」。</div></section>
+      <section id="creator-stage-material" class="flow-stage" data-stage="material"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择素材来源和字幕</div><p class="stage-help">素材来源只有两个选项：本地素材库，或 MoneyPrinter 原始 Pexels/Pixabay 搜索链路。</p></div><span id="creator-material-status" class="status">待配置</span></div><div class="grid two" id="material-source-choices"><div class="source-choice active" data-source="local" onclick="chooseMaterialSource('local')"><b>本地素材库</b><p>使用你上传或放入 materials 的素材。</p></div><div class="source-choice" data-source="pexels" onclick="chooseMaterialSource('pexels')"><b>MoneyPrinter 搜索链路</b><p>走原始 Pexels/Pixabay 全局搜索下载逻辑。</p></div></div><div id="local-material-settings" style="margin-top:16px"><label>素材目录</label><input id="material-dir" placeholder="/path/to/materials"><div style="margin-top:12px"><label>参考样本目录（可选）</label><input id="competitor-dir" placeholder="可选"></div><div style="margin-top:12px"><label>添加本地素材</label><input id="material-files" type="file" multiple><div class="actions"><button onclick="notify('素材上传接口保留，后续接入')">上传到素材库</button><span class="status" id="material-count">素材 0 个</span><span class="status" id="local-source-count">素材 0 个</span></div></div></div><div class="grid two" style="margin-top:16px"><div><label>字幕视觉模板</label><div id="caption-templates" class="grid two"><div class="choice active" data-template="viral" onclick="chooseCaptionTemplate('viral')"><b>爆款强调</b><p>白字黑描边，黄色重点词</p></div><div class="choice" data-template="business" onclick="chooseCaptionTemplate('business')"><b>专业展会</b><p>稳重白字，蓝色业务重点</p></div><div class="choice" data-template="minimal" onclick="chooseCaptionTemplate('minimal')"><b>极简商务</b><p>半透明底板，清晰克制</p></div><div class="choice" data-template="active" onclick="chooseCaptionTemplate('active')"><b>活力招展</b><p>橙色大字，强化行动号召</p></div></div></div><div><label>重点词（逗号分隔）</label><textarea id="highlight-words" placeholder="专业买家, 人流量, 提前锁定, 限时报名"></textarea><p id="moneyprint-source-status">MoneyPrinter 在线链路状态待检查</p></div></div><div class="batch-box"><h3>批量化产出</h3><p>每一行一条主题或完整口播稿。提交后会以后台任务队列逐条生成，不阻塞前端页面。</p><textarea id="batch-copy-list" placeholder="例如：
+北京国展招商推广，突出采购商质量
+上海电子展品牌曝光，突出专业观众"></textarea><div class="stage-actions"><button onclick="runBatchCreatorPipeline()">批量提交生成任务</button></div></div><div class="stage-actions"><button class="primary" onclick="runCreatorPipeline()">开始生成推广视频</button></div></section>
       <section id="creator-stage-output" class="flow-stage" data-stage="output"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">04</span>成片与历史版本</div><p class="stage-help">不满意时从历史版本恢复参数，只改需要调整的环节后再次生成。</p></div><span id="creator-output-status" class="status">等待生成</span></div><div id="render-preview" class="result-empty">成片任务完成后会出现在这里，并自动同步给投放员工。</div><h2 style="margin-top:24px">历史版本</h2><div id="creator-history"></div></section>
     </div>
   </div>
@@ -805,14 +1053,31 @@
 
       <section id="buyer" class="section">
   <div class="shell">
-    <div class="employee-page-head"><div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>投放员工详情</span></div><h1>投放员工</h1><p>这是投放员工自己的工作台：巨量账号绑定、投放素材选择、草稿创建和数据回流都在这里完成，不放在全局页面里。</p></div><span id="buyer-page-status" class="status">等待绑定</span></div>
-    <div class="stage-shell">
-      <div class="flow-steps"><div class="flow-pill active" data-buyer-pill="bind">1 绑定巨量</div><div class="flow-pill" data-buyer-pill="asset">2 选择成片</div><div class="flow-pill" data-buyer-pill="launch">3 创建安全草稿</div><div class="flow-pill" data-buyer-pill="report">4 查看数据</div></div>
-      <div id="buyer-order" class="workorder-strip"></div>
-      <section class="stage-panel active" data-buyer-stage="bind"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>员工账号配置：绑定巨量</div><p class="stage-help">用户只需要点“前往巨量”。授权成功后，后台自动拿 Token、广告主 ID、权限范围和可用投放资产。</p></div><span id="oe-status" class="status">检查中</span></div><div class="binding-scope-card"><b>绑定归属：当前展会的投放员工</b><small>这里保存的是投放员工执行任务所需的巨量授权，不影响找爆款员工和生视频员工。后续如果一个展会对应多个投放账户，也从这个员工详情里扩展。</small></div><div class="account-bind-card" id="oe-guide"><div><b id="oe-connect-title">连接巨量引擎</b><p id="oe-guide-summary">点击前往巨量完成认证绑定。授权完成后系统会自动回填投放所需信息。</p><p class="privacy-note">前端不再让你手填 advertiser_id、access_token、回调参数；这些属于后台授权流程。</p></div><div class="actions"><button class="primary" id="oe-guide-primary" onclick="openOceanAuth()">前往巨量</button><button onclick="runOceanGuide(); loadOceanStatus()">刷新状态</button></div></div><div class="simple-flow" id="oe-guide-steps"><div class="guide-step queued"><span>1</span><b>认证绑定</b><small>在巨量官方页面确认授权</small></div><div class="guide-step queued"><span>2</span><b>自动配置</b><small>后台识别广告账户</small></div><div class="guide-step queued"><span>3</span><b>开始工作</b><small>同步投放权限和效果数据</small></div></div><ol class="guide-list hidden" id="oe-guide-list"></ol><div class="stage-actions"><button id="buyer-next-after-bind" onclick="setBuyerStage('asset')" disabled>绑定完成，选择投放成片</button></div></section>
-      <section class="stage-panel" data-buyer-stage="asset"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>配置本次投放任务</div><p class="stage-help">先选生视频员工交付的成片，再确认投放目标、预算和日期。点按钮后才进入下一步，不自动跳转。</p></div><span id="delivery-video-state" class="status">未选择</span></div><label>投放素材</label><select id="delivery-video-select" onchange="selectDeliveryVideo(this.value)"><option value="">暂无可用成片</option></select><div id="delivery-video-preview" style="margin-top:14px"></div><label style="margin-top:16px">投放目标</label><div class="choice-row" id="delivery-goals"><div class="choice active" data-goal="lead" onclick="chooseDeliveryGoal('lead')"><b>获取线索</b><p>适合展位咨询和报名留资</p></div><div class="choice" data-goal="reserve" onclick="chooseDeliveryGoal('reserve')"><b>展位预约</b><p>引导用户进入招商/预约页</p></div><div class="choice" data-goal="awareness" onclick="chooseDeliveryGoal('awareness')"><b>品牌曝光</b><p>优先积累展示与有效播放</p></div></div><div class="grid three" style="margin-top:16px"><div><label>日预算（元）</label><input id="delivery-budget" type="number" min="300" value="300"></div><div><label>开始日期</label><input id="delivery-start" type="date"></div><div><label>结束日期</label><input id="delivery-end" type="date"></div></div><div style="margin-top:14px"><label>落地页（可选）</label><input id="delivery-landing" placeholder="由投放员工自动匹配，也可手动覆盖"></div><div class="stage-actions"><button class="primary" onclick="createDeliveryDraft()">确认任务，让投放员工检查</button></div></section>
-      <section class="stage-panel" data-buyer-stage="launch"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>安全创建投放草稿</div><p class="stage-help">先创建 DISABLE 关闭状态草稿验证接口链路，不会直接产生消耗。</p></div><span class="status queued">待确认</span></div><div class="work-console" id="buyer-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>投放员工工作进度</span></div><span class="status">等待开始</span></div><div class="work-progress"><span></span><span></span><span></span><span></span></div><div class="work-summary">投放员工会检查账户、成片、目标和报表连接。</div><div class="activity-list" id="buyer-activity"></div></div><div id="delivery-checklist" class="checklist"></div><div class="safe-box"><label><input id="safe-launch-confirm" type="checkbox" onchange="updateSafeLaunchButton()"><span>我确认本次只创建 <b>DISABLE（关闭）</b> 状态的真实素材、项目和推广，用于验证完整接口链路，不会开启消耗。</span></label></div><div class="stage-actions"><button class="primary" id="safe-launch-button" onclick="runSafeDeliveryTest()" disabled>安全创建投放草稿并进入数据面板</button></div></section>
-      <section class="stage-panel" data-buyer-stage="report"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">04</span>投放数据与复盘</div><p class="stage-help">默认展示当前展会投放员工绑定账户下的整体数据；有 project_id / promotion_id 后可进一步按单条视频复盘 9 项指标。</p></div><button onclick="refreshDeliveryReport()">同步最新数据</button></div><div id="delivery-board" class="metric-board"></div><div id="delivery-recap" class="recap-card"><b>账户整体投放复盘</b><span>当前按广告主和所选时间范围汇总。</span></div></section>
+    <div class="employee-page-head"><div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>投放员工详情</span></div><h1>投放员工</h1><p>这是投放员工自己的工作台：巨量账号绑定、投放任务创建和数据回流都在这里完成。</p></div><div class="employee-head-actions"><span id="buyer-page-status" class="status">等待绑定</span><button class="primary" onclick="setBuyerPage('panel'); setBuyerStage('bind')">创建投放任务</button></div></div>
+    <div id="buyer-module-menu" class="buyer-module-page active">
+      <div class="process-home">
+        <div class="process-home-head"><div><h2>投放进程与数据复盘</h2><p>显示正在配置、等待检查和已经创建的投放任务。点击任务进入投放面板，点击项目进入数据复盘。</p></div><button onclick="loadTasks(); refreshDeliveryReport()">刷新进程</button></div>
+        <div id="buyer-process-overview"></div>
+      </div>
+    </div>
+    <div id="buyer-module-panel" class="buyer-module-page">
+      <div class="buyer-page-back"><button onclick="setBuyerPage('menu')">← 返回投放员工</button></div>
+      <div class="buyer-panel-title"><div><h2>投放面板</h2><p>这里完成投放前配置：账号绑定、选择产出视频、投放标准、人群/目标和安全草稿检查。</p></div><span class="status queued">投放配置</span></div>
+      <div class="stage-shell">
+        <div class="flow-steps"><div class="flow-pill active" data-buyer-pill="bind">1 绑定巨量</div><div class="flow-pill" data-buyer-pill="asset">2 选择视频与参数</div><div class="flow-pill" data-buyer-pill="launch">3 创建投放任务</div></div>
+        <div class="step-mode-note"><b>投放面板：</b>只负责创建投放任务：先绑定巨量，再选成片、投放目标、预算和日期，最后创建关闭状态草稿，避免误消耗。</div>
+        <div id="buyer-order" class="workorder-strip"></div>
+        <section class="stage-panel active" data-buyer-stage="bind"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>员工账号配置：绑定巨量</div><p class="stage-help">用户只需要点“前往巨量”。授权成功后，后台自动拿 Token、广告主 ID、权限范围和可用投放资产。</p></div><span id="oe-status" class="status">检查中</span></div><div class="binding-scope-card"><b>绑定归属：当前展会的投放员工</b><small>这里保存的是投放员工执行任务所需的巨量授权，不影响找爆款员工和生视频员工。后续如果一个展会对应多个投放账户，也从这个员工详情里扩展。</small></div><div class="account-bind-card" id="oe-guide"><div><b id="oe-connect-title">连接巨量引擎</b><p id="oe-guide-summary">点击前往巨量完成认证绑定。授权完成后系统会自动回填投放所需信息。</p><p class="privacy-note">前端不再让你手填 advertiser_id、access_token、回调参数；这些属于后台授权流程。</p></div><div class="actions"><button class="primary" id="oe-guide-primary" onclick="openOceanAuth()">前往巨量</button><button onclick="runOceanGuide(); loadOceanStatus()">刷新状态</button></div></div><div class="simple-flow" id="oe-guide-steps"><div class="guide-step queued"><span>1</span><b>认证绑定</b><small>在巨量官方页面确认授权</small></div><div class="guide-step queued"><span>2</span><b>自动配置</b><small>后台识别广告账户</small></div><div class="guide-step queued"><span>3</span><b>开始工作</b><small>同步投放权限和效果数据</small></div></div><ol class="guide-list hidden" id="oe-guide-list"></ol><div class="stage-actions"><button id="buyer-next-after-bind" onclick="setBuyerStage('asset')" disabled>绑定完成，选择投放成片</button></div></section>
+        <section class="stage-panel" data-buyer-stage="asset"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>配置本次投放任务</div><p class="stage-help">先选生视频员工交付的成片，再确认投放目标、预算、日期和落地页。官方标准是：一个项目包含多个单元，每个单元对应一个视频。</p></div><span id="delivery-video-state" class="status">未选择</span></div><div class="delivery-project-note"><b>官方项目 / 单元关系：</b>当前展会对应一个官方投放项目；每个产出视频会作为该项目下的一个官方投放单元；点击项目后可查看所有单元，每个单元按自己的视频回流消耗、展示、点击、转化和播放数据。</div><label>产出视频</label><select id="delivery-video-select" class="compat-hidden" onchange="selectDeliveryVideo(this.value)"><option value="">暂无可用成片</option></select><div class="delivery-library-card"><div class="delivery-library-head"><div><b>产出视频</b><p>从生视频员工历史成片里选择一个视频，选择后列表会自动折叠。</p></div><button id="delivery-library-toggle" onclick="openDeliveryLibrary()">选择产出视频</button></div><div id="delivery-library-list" class="delivery-library-list hidden"></div></div><div id="delivery-video-preview" style="margin-top:14px"></div><label style="margin-top:16px">投放目标</label><div class="choice-row" id="delivery-goals"><div class="choice active" data-goal="lead" onclick="chooseDeliveryGoal('lead')"><b>获取线索</b><p>适合展位咨询和报名留资</p></div><div class="choice" data-goal="reserve" onclick="chooseDeliveryGoal('reserve')"><b>展位预约</b><p>引导用户进入招商/预约页</p></div><div class="choice" data-goal="awareness" onclick="chooseDeliveryGoal('awareness')"><b>品牌曝光</b><p>优先积累展示与有效播放</p></div></div><div class="grid three" style="margin-top:16px"><div><label>日预算（元）</label><input id="delivery-budget" type="number" min="300" value="300"></div><div><label>开始日期</label><input id="delivery-start" type="date"></div><div><label>结束日期</label><input id="delivery-end" type="date"></div></div><div style="margin-top:14px"><label>落地页 / 人群补充（可选）</label><input id="delivery-landing" placeholder="可不填；如有招商页、人群包或地域要求，可在这里补充"></div><div class="stage-actions"><button class="primary" id="delivery-draft-button" onclick="createDeliveryDraft()">确认任务，让投放员工检查</button></div></section>
+        <section class="stage-panel" data-buyer-stage="launch"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>安全创建投放草稿</div><p class="stage-help">先创建 DISABLE 关闭状态草稿验证接口链路，不会直接产生消耗。</p></div><span class="status queued">待确认</span></div><div class="work-console" id="buyer-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>投放员工工作进度</span></div><span class="status">等待开始</span></div><div class="work-progress"><span></span><span></span><span></span><span></span></div><div class="work-summary">投放员工会检查账户、成片、目标和报表连接。</div><div class="activity-list" id="buyer-activity"></div></div><div id="delivery-checklist" class="checklist"></div><div class="safe-box"><label><input id="safe-launch-confirm" type="checkbox" onchange="updateSafeLaunchButton()"><span>我确认本次只创建 <b>DISABLE（关闭）</b> 状态的真实素材、项目和推广，用于验证完整接口链路，不会开启消耗。</span></label></div><div class="stage-actions"><button class="primary" id="safe-launch-button" onclick="runSafeDeliveryTest()" disabled>创建投放任务草稿</button></div></section>
+      </div>
+    </div>
+    <div id="buyer-module-recap" class="buyer-module-page">
+      <div class="buyer-page-back"><button onclick="setBuyerPage('menu')">← 返回投放员工</button></div>
+      <div class="buyer-panel-title"><div><h2>数据复盘</h2><p>以官方项目为单位查看整体效果，并下钻到项目内不同视频单元。系统会根据数据给出继续投放或停止投放建议。</p></div><button onclick="refreshDeliveryReport()">同步最新数据</button></div>
+      <div class="stage-shell">
+        <section class="stage-panel active" data-buyer-recap-panel="report"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>项目投放数据与单元复盘</div><p class="stage-help">项目看整体预算和效果；单元看每条视频的消耗、展示、点击、转化、有效播放，并给出继续/停止建议。</p></div><span class="status succeeded">数据面板</span></div><div class="review-project-card"><h3>当前项目：华南国际新能源产业展</h3><p>一个官方投放项目可包含多个投放单元；每个单元对应一条视频，后续报表按单元回流后再汇总到项目。</p></div><div id="delivery-board" class="metric-board"></div><div id="delivery-recap" class="recap-card"><b>项目整体投放复盘</b><span>当前按广告主和所选时间范围汇总；有 project_id / unit_id 后展示单元明细。</span></div></section>
+      </div>
     </div>
     <div class="compat-hidden" aria-hidden="true"><input id="oe-auth-code"><input id="ad-advertiser"><input id="ad-token" type="password"><input id="ad-start" type="date"><input id="ad-end" type="date"><input id="ad-filter"><input id="ad-video"><input id="ad-landing"><input id="ad-convert"><input id="ad-budget" value="300"><select id="ad-goal"><option value="lead">线索收集</option></select><input id="publish-video"><input id="publish-title"><textarea id="publish-desc"></textarea><select id="publish-platform"><option value="douyin">抖音</option></select><div id="publisher-notice"></div><button id="publish-button"></button><input id="oe-video-file"><input id="oe-video-id"><textarea id="oe-project-json"></textarea><input id="oe-project-id"><textarea id="oe-promotion-json"></textarea><input id="oe-promotion-id"><div id="publish-panel"></div><div id="ads-panel"></div></div>
   </div>
@@ -827,8 +1092,43 @@
     </main>
   </div>
 
+
+  <div id="figma-employee-modal" class="figma-employee-modal" onclick="if(event.target===this) closeEmployeeDetail()">
+    <div class="figma-modal-card" role="dialog" aria-modal="true" aria-labelledby="figma-modal-title">
+      <div class="figma-modal-head">
+        <h2 id="figma-modal-title">数字员工详情</h2>
+        <button class="figma-modal-close" onclick="closeEmployeeDetail()" aria-label="关闭">×</button>
+      </div>
+      <div class="figma-modal-body">
+        <div class="figma-modal-hero"><div class="figma-modal-hero-inner"><span class="figma-modal-badge" id="figma-modal-badge">⚙</span><img id="figma-modal-avatar" src="/assets/figma-sync/employee-modal-cow-clean.png" alt="数字员工"></div></div>
+        <div class="figma-info-stack">
+          <div class="figma-info-box">
+            <h3>数字员工信息</h3>
+            <div class="figma-info-row"><span>员工岗位</span><b id="figma-modal-role">企业运营</b><span></span></div>
+            <div class="figma-info-row"><span>员工状态</span><b id="figma-modal-state">空闲中</b><span></span></div>
+            <div class="figma-info-row"><span>员工名称</span><b id="figma-modal-name">Jerome Bell</b><button onclick="notify('名称修改后续接入')">修改</button></div>
+            <div class="figma-info-row"><span>分配展会</span><b id="figma-modal-expo">上海国际汽配展</b><button onclick="notify('展会分配后续接入')">修改</button></div>
+          </div>
+          <div class="figma-info-box">
+            <h3>设备 / 账号信息</h3>
+            <div id="figma-modal-account-area" class="employee-bind-actions"></div>
+          </div>
+          <div class="figma-modal-actions">
+            <button onclick="closeEmployeeDetail()">取消</button>
+            <button class="figma-black-btn" id="figma-modal-enter" onclick="enterEmployeeFromModal()">进入员工工作台</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    const api = (path, options = {}) => fetch(path, {
+    // 前端可独立部署：通过 ?api= 或 window.EXHIBITFLOW_API_BASE 指向后端。
+    const queryApiBase = new URLSearchParams(window.location.search).get('api');
+    const API_BASE = (queryApiBase || window.EXHIBITFLOW_API_BASE || '').replace(/\/$/, '');
+    const apiPath = path => /^https?:\/\//i.test(path) ? path : `${API_BASE}${path}`;
+    const assetPath = path => /^https?:\/\//i.test(path || '') ? path : `${API_BASE}${path || ''}`;
+    const api = (path, options = {}) => fetch(apiPath(path), {
       headers: { 'Content-Type': 'application/json' },
       ...options
     }).then(async r => {
@@ -855,38 +1155,188 @@
     let selectedMaterialSource = 'local';
     let hasHydratedTasks = false;
     let oceanConnected = false;
+    let latestOceanStatus = null;
+    let currentHunterTaskId = sessionStorage.getItem('currentHunterTaskId') || '';
+    const creatorSessionTaskIds = new Set(JSON.parse(sessionStorage.getItem('creatorSessionTaskIds') || '[]'));
+    const platformBindings = JSON.parse(localStorage.getItem('platformBindings') || '{}');
+    const creatorCompletedSteps = new Set();
+
+    function persistPlatformBindings() {
+      localStorage.setItem('platformBindings', JSON.stringify(platformBindings));
+    }
+    function platformLabel(platform) {
+      return platform === 'xhs' || platform === 'xiaohongshu' ? '小红书' : '抖音';
+    }
+    function platformStatusText(platform) {
+      const item = platformBindings[platform] || {};
+      if (item.status === 'confirmed') return `已确认登录${item.checked_at ? ` · ${item.checked_at.slice(5,16)}` : ''}`;
+      if (item.status === 'pending') return `已打开登录页${item.checked_at ? ` · ${item.checked_at.slice(5,16)}` : ''}`;
+      if (item.status === 'invalid') return '登录可能失效';
+      return '未绑定';
+    }
+    function rememberPlatformBinding(platform, status = 'pending') {
+      platformBindings[platform] = {status, checked_at: new Date().toISOString()};
+      persistPlatformBindings();
+      renderEmployeeAccountPanel(currentEmployeeModal, employeeModalModels[currentEmployeeModal] || employeeModalModels.hunter);
+      renderHunterBindingSummary();
+    }
+    function confirmPlatformLogin(platform) {
+      rememberPlatformBinding(platform, 'confirmed');
+      notify(`${platformLabel(platform)}已标记为已登录；下一次检索会用真实抓取结果校验。`);
+    }
+    function invalidatePlatformLogin(platform) {
+      platformBindings[platform] = {status:'invalid', checked_at:new Date().toISOString()};
+      persistPlatformBindings();
+      renderHunterBindingSummary();
+    }
+    function rememberCreatorTask(task) {
+      if (!task?.id) return;
+      creatorSessionTaskIds.add(task.id);
+      sessionStorage.setItem('creatorSessionTaskIds', JSON.stringify(Array.from(creatorSessionTaskIds)));
+    }
+    function isCreatorSessionTask(task) {
+      return Boolean(task?.id && creatorSessionTaskIds.has(task.id));
+    }
 
     let currentExhibitionId = '新能源';
+    const exhibitionNameMap = {新能源:'华南国际新能源产业展', 数字人:'杭州国际数字人展会'};
+    function currentExhibitionName() {
+      return exhibitionNameMap[currentExhibitionId] || currentExhibitionId || '当前展会';
+    }
     let currentHunterStage = 'config';
     let currentBuyerStage = 'bind';
+    let currentBuyerPage = 'menu';
     let hunterRequested = false;
+    function setFigmaNav(name, expoName = '') {
+      document.querySelectorAll('.figma-nav').forEach(el => el.classList.toggle('active', el.dataset.nav === name));
+      const top = document.getElementById('figma-top-title');
+      if (!top) return;
+      if (name === 'expo') {
+        top.textContent = 'MaaS 增长黑牛代运营';
+      } else {
+        const title = expoName || document.getElementById('current-expo-name')?.textContent || '上海国际汽配展';
+        top.innerHTML = `<span>MaaS 增长黑牛代运营</span><b style="margin:0 10px;color:#9c9892">›</b><span>${escapeHtml(title)}</span><small style="margin-left:12px;color:#aaa6a0;font-size:14px;font-weight:800">2026-06-02 至 2026-08-21</small>`;
+      }
+    }
 
     function openExhibition(id = '新能源') {
       currentExhibitionId = id;
-      const nameMap = {新能源:'华南国际新能源产业展', 数字人:'杭州国际数字人展会'};
+      const nameMap = exhibitionNameMap;
       const nameEl = document.getElementById('current-expo-name');
       if (nameEl) nameEl.textContent = nameMap[id] || id;
       document.querySelectorAll('.employee-expo-crumb').forEach(el => { el.textContent = nameMap[id] || id; });
       document.getElementById('expo-list-view')?.classList.add('view-hidden');
       document.getElementById('expo-detail-view')?.classList.remove('view-hidden');
       showSection('overview');
+      setFigmaNav('staff', nameMap[id] || id);
     }
     function backToExhibitionList() {
       document.getElementById('expo-detail-view')?.classList.add('view-hidden');
       document.getElementById('expo-list-view')?.classList.remove('view-hidden');
       showSection('overview');
+      setFigmaNav('expo');
     }
     function backToExhibitionDetail() {
       openExhibition(currentExhibitionId);
     }
     function openEmployee(id) {
       showSection(id);
-      if (id === 'hunter') setHunterStage(currentHunterStage || 'config');
-      if (id === 'creator') focusCreatorStep('brief');
-      if (id === 'buyer') setBuyerStage(oceanConnected ? 'asset' : 'bind');
+      setFigmaNav('staff');
+      if (id === 'hunter') setHunterPage('menu', false);
+      if (id === 'creator') setCreatorTab('menu');
+      if (id === 'buyer') setBuyerPage('menu', false);
+      loadTasks().catch(error => notify(error.message || '员工进程加载失败', 'error'));
       window.scrollTo({top:0, behavior:'smooth'});
     }
+
+    let currentHunterPage = 'menu';
+    let latestHunterHistoryTasks = [];
+    let currentEmployeeModal = 'hunter';
+    const employeeModalModels = {
+      hunter: {title:'找爆款员工详情', name:'Jerome Bell', role:'爆款运营', state:'工作中', accountType:'抖音 / 小红书', accountState:'未登录', accountName:'未登录', accountId:'未登录', badge:'🔎', avatar:'/assets/figma-sync/employee-modal-cow-clean.png'},
+      creator: {title:'生视频员工详情', name:'小金', role:'视频运营', state:'工作中', accountType:'素材库 / TTS', accountState:'已配置', accountName:'本地素材 + MoneyPrinter', accountId:'Edge / Qwen TTS', badge:'🎬', avatar:'/assets/figma-sync/employee-modal-cow-clean.png'},
+      buyer: {title:'投放员工详情', name:'投放员', role:'巨量投放', state:'待授权', accountType:'巨量引擎 Marketing API', accountState:'未授权', accountName:'未绑定广告主', accountId:'未获取', badge:'📈', avatar:'/assets/figma-sync/employee-modal-cow-clean.png'},
+    };
+    function openEmployeeDetail(id) {
+      currentEmployeeModal = id || 'hunter';
+      const model = employeeModalModels[currentEmployeeModal] || employeeModalModels.hunter;
+      const set = (key, value) => { const el = document.getElementById(key); if (el) el.textContent = value; };
+      set('figma-modal-title', model.title);
+      set('figma-modal-name', model.name);
+      set('figma-modal-role', model.role);
+      set('figma-modal-state', model.state);
+      renderEmployeeAccountPanel(currentEmployeeModal, model);
+      set('figma-modal-badge', model.badge);
+      const avatar = document.getElementById('figma-modal-avatar');
+      if (avatar) avatar.src = model.avatar;
+      const expo = document.getElementById('figma-modal-expo');
+      if (expo) expo.textContent = document.getElementById('current-expo-name')?.textContent || '上海国际汽配展';
+      document.getElementById('figma-employee-modal')?.classList.add('active');
+    }
+    function closeEmployeeDetail() { document.getElementById('figma-employee-modal')?.classList.remove('active'); }
+    function enterEmployeeFromModal() { closeEmployeeDetail(); openEmployee(currentEmployeeModal); }
+    function openPlatformLogin(platform) {
+      const urls = {
+        douyin:'https://www.douyin.com/',
+        xhs:'https://www.xiaohongshu.com/explore',
+      };
+      rememberPlatformBinding(platform, 'pending');
+      window.open(urls[platform] || 'about:blank', '_blank', 'noopener,noreferrer,width=1100,height=820');
+      notify(`已打开${platformLabel(platform)}登录窗口。登录完成后点“我已登录”，检索成功才视为真实可用。`);
+    }
+    function renderEmployeeAccountPanel(id, model) {
+      const box = document.getElementById('figma-modal-account-area');
+      if (!box) return;
+      if (id === 'hunter') {
+        const row = (platform, title, desc) => {
+          const status = platformStatusText(platform);
+          const cls = status.includes('已确认') ? 'succeeded' : status.includes('失效') ? 'failed' : status.includes('已打开') ? 'running' : '';
+          return `<div class="employee-bind-card-lite"><div><b>${title}</b><p>${desc}</p><span class="status ${cls}">${escapeHtml(status)}</span></div><div class="actions"><button onclick="openPlatformLogin('${platform}')">绑定</button><button onclick="confirmPlatformLogin('${platform}')">我已登录</button></div></div>`;
+        };
+        box.innerHTML = row('douyin', '抖音账号', '用于检索抖音热点和视频样本。') + row('xhs', '小红书账号', '用于检索小红书笔记和视频样本。');
+        return;
+      }
+      if (id === 'creator') {
+        box.innerHTML = `<div class="figma-modal-bind-card"><div class="figma-info-row"><span>素材来源</span><b>本地素材库 / MoneyPrinter 搜索链路</b><span></span></div><div class="figma-info-row"><span>配音服务</span><b>Edge TTS / Qwen TTS</b><span></span></div><div class="figma-info-row"><span>状态</span><b>已配置</b><span></span></div></div>`;
+        return;
+      }
+      const st = latestOceanStatus || {};
+      const connected = Boolean(oceanConnected && st.advertiser_id);
+      const accountName = st.advertiser_name || (connected ? '已绑定广告主' : '未绑定广告主');
+      const accountId = st.advertiser_id || '未获取';
+      const authTime = st.binding_verified_at || st.last_authorized_at || '';
+      box.innerHTML = `<div class="figma-modal-bind-card employee-ocean-status-card">
+        <div class="figma-info-row"><span>账号类型</span><b>巨量引擎 Marketing API</b><span></span></div>
+        <div class="figma-info-row"><span>授权状态</span><b class="${connected ? 'text-ok' : ''}">${connected ? '已绑定' : '未授权'}</b><button onclick="openOceanAuth()">${connected ? '切换账号' : '立即登录'}</button></div>
+        <div class="figma-info-row"><span>广告主名称</span><b>${escapeHtml(accountName)}</b><span></span></div>
+        <div class="figma-info-row"><span>广告主 ID</span><b>${escapeHtml(accountId)}</b><span></span></div>
+        ${authTime ? `<div class="figma-info-row"><span>绑定时间</span><b>${escapeHtml(authTime)}</b><span></span></div>` : ''}
+        <p class="privacy-note">授权成功后会写入本地 storage/oceanengine/oauth.json；重新授权会覆盖为新的巨量账号。</p>
+      </div>`;
+    }
+
+    function renderHunterBindingSummary() {
+      const card = document.querySelector('#hunter .account-bind-card');
+      if (!card) return;
+      const summary = `<div class="binding-status-row"><span class="status ${platformBindings.douyin?.status === 'confirmed' ? 'succeeded' : platformBindings.douyin?.status === 'pending' ? 'running' : ''}">抖音：${escapeHtml(platformStatusText('douyin'))}</span><span class="status ${platformBindings.xhs?.status === 'confirmed' ? 'succeeded' : platformBindings.xhs?.status === 'pending' ? 'running' : ''}">小红书：${escapeHtml(platformStatusText('xhs'))}</span></div>`;
+      if (!card.querySelector('.binding-status-row')) card.insertAdjacentHTML('beforeend', summary);
+      else card.querySelector('.binding-status-row').outerHTML = summary;
+    }
+
+    function setHunterPage(page, shouldScroll = true) {
+      currentHunterPage = ['menu','task','history'].includes(page) ? page : 'menu';
+      document.querySelectorAll('[data-hunter-page]').forEach(el => el.classList.toggle('active', el.dataset.hunterPage === currentHunterPage));
+      if (currentHunterPage === 'history') renderHunterHistory(latestTaskItems || []);
+      if (shouldScroll) window.scrollTo({top:0, behavior:'smooth'});
+    }
+    function isHunterWorkflowOpen() {
+      return Boolean(document.querySelector('#hunter.section.active [data-hunter-page="task"].active'));
+    }
+    function maybeSetHunterStage(stage) {
+      if (isHunterWorkflowOpen() || hunterRequested) setHunterStage(stage);
+    }
     function setHunterStage(stage) {
+      setHunterPage('task', false);
       currentHunterStage = stage || 'config';
       document.querySelectorAll('[data-hunter-stage]').forEach(el => el.classList.toggle('active', el.dataset.hunterStage === currentHunterStage));
       document.querySelectorAll('[data-hunter-pill]').forEach(el => {
@@ -897,17 +1347,33 @@
       });
       window.scrollTo({top:0, behavior:'smooth'});
     }
-    function setBuyerStage(stage) {
+    function setBuyerPage(page = 'menu', shouldScroll = true) {
+      currentBuyerPage = ['menu','panel','recap'].includes(page) ? page : 'menu';
+      document.querySelectorAll('#buyer .buyer-module-page').forEach(el => {
+        el.classList.toggle('active', el.id === `buyer-module-${currentBuyerPage}`);
+      });
+      if (shouldScroll) window.scrollTo({top:0, behavior:'smooth'});
+    }
+    function setBuyerStage(stage, shouldScroll = true) {
+      if (stage === 'report') {
+        setBuyerPage('recap', shouldScroll);
+        return;
+      }
       currentBuyerStage = stage || 'bind';
+      currentBuyerPage = 'panel';
+      document.querySelectorAll('#buyer .buyer-module-page').forEach(el => {
+        el.classList.toggle('active', el.id === `buyer-module-${currentBuyerPage}`);
+      });
       document.querySelectorAll('[data-buyer-stage]').forEach(el => el.classList.toggle('active', el.dataset.buyerStage === currentBuyerStage));
       document.querySelectorAll('[data-buyer-pill]').forEach(el => {
-        const order = ['bind','asset','launch','report'];
+        const order = ['bind','asset','launch'];
         const done = order.indexOf(el.dataset.buyerPill) < order.indexOf(currentBuyerStage);
         el.classList.toggle('active', el.dataset.buyerPill === currentBuyerStage);
         el.classList.toggle('done', done);
       });
-      window.scrollTo({top:0, behavior:'smooth'});
+      if (shouldScroll) window.scrollTo({top:0, behavior:'smooth'});
     }
+
 
 
     window.addEventListener('message', async event => {
@@ -925,7 +1391,7 @@
       clearTimeout(window.__toastTimer);
       window.__toastTimer = setTimeout(() => box.className = 'toast', 4200);
     }
-    function valueOf(id) { return document.getElementById(id).value.trim(); }
+    function valueOf(id) { return (document.getElementById(id)?.value || '').trim(); }
     function ensureFields(fields) {
       for (const [id, label] of fields) {
         if (!valueOf(id)) {
@@ -937,13 +1403,36 @@
       return true;
     }
     function focusCreatorStep(name) {
-      document.querySelectorAll('.creator-step').forEach(el => el.classList.toggle('active', el.dataset.flowStep === name));
+      setCreatorTab('create', false);
+      const order = ['brief','copy','material','output'];
+      document.querySelectorAll('.creator-step').forEach(el => {
+        const key = el.dataset.flowStep;
+        el.classList.toggle('active', key === name);
+        el.classList.toggle('done', creatorCompletedSteps.has(key) && key !== name);
+      });
       document.querySelectorAll('.flow-stage').forEach(el => el.classList.toggle('active', el.dataset.stage === name));
       const target = document.getElementById(`creator-stage-${name}`);
       if (target) window.scrollTo({top: Math.max(0, target.getBoundingClientRect().top + window.scrollY - 70), behavior:'smooth'});
     }
+    function isCreatorWorkbenchOpen() {
+      return Boolean(document.querySelector('#creator.section.active [data-creator-page="create"].active'));
+    }
+    function maybeFocusCreatorStep(name) {
+      if (isCreatorWorkbenchOpen()) focusCreatorStep(name);
+    }
     function markCreatorStepDone(name) {
-      document.querySelector(`.creator-step[data-flow-step="${name}"]`)?.classList.add('done');
+      creatorCompletedSteps.add(name);
+      document.querySelectorAll('.creator-step').forEach(el => {
+        const key = el.dataset.flowStep;
+        el.classList.toggle('done', creatorCompletedSteps.has(key) && !el.classList.contains('active'));
+      });
+    }
+    function setCreatorTab(tab, scroll = true) {
+      const next = tab === 'history' ? 'history' : (tab === 'create' ? 'create' : 'menu');
+      document.querySelectorAll('[data-creator-tab]').forEach(el => el.classList.toggle('active', el.dataset.creatorTab === next));
+      document.querySelectorAll('[data-creator-page]').forEach(el => el.classList.toggle('active', el.dataset.creatorPage === next));
+      if (next === 'history') loadTasks();
+      if (scroll) window.scrollTo({top:0, behavior:'smooth'});
     }
     function saveCreatorBrief() {
       if (!ensureFields([['brief-subject','推广主题'], ['brief-selling','核心卖点']])) return;
@@ -976,7 +1465,7 @@
       document.querySelectorAll('#material-source-choices .source-choice').forEach(el => el.classList.toggle('active', el.dataset.source === selectedMaterialSource));
       document.getElementById('local-material-settings')?.classList.toggle('hidden', selectedMaterialSource !== 'local');
     }
-    function runCreatorPipeline() {
+    async function runCreatorPipeline() {
       const script = finalCopyWithCta();
       if (!script) return notify('请先生成或填写最终口播稿', 'error');
       if (selectedMaterialSource === 'local' && !valueOf('material-dir')) return notify('请选择本地素材目录', 'error');
@@ -986,7 +1475,7 @@
       focusCreatorStep('output');
       document.getElementById('creator-output-status').textContent = '生成中';
       document.getElementById('creator-output-status').className = 'status running';
-      return createTask('creator-pipeline', {
+      const task = await createTask('creator-pipeline', {
         topic: valueOf('copy-topic') || '展会推广',
         sample: selectedSample || {},
         script,
@@ -999,16 +1488,56 @@
         tts_service: valueOf('tts-service'),
         voice: valueOf('tts-voice'),
       }, true);
+      rememberCreatorTask(task);
+      return task;
+    }
+    async function runBatchCreatorPipeline() {
+      const raw = document.getElementById('batch-copy-list')?.value || '';
+      const lines = raw.split(/\n+/).map(s => s.trim()).filter(Boolean);
+      if (!lines.length) return notify('请先按行填写批量主题或文案', 'error');
+      if (selectedMaterialSource === 'local' && !valueOf('material-dir')) return notify('请选择本地素材目录', 'error');
+      setCreatorTab('history');
+      notify(`已提交 ${lines.length} 条批量生成任务，前端可继续操作。`);
+      for (const line of lines) {
+        const task = await createTask('creator-pipeline', {
+          topic: line.slice(0, 80),
+          sample: selectedSample || {},
+          script: line.includes('。') || line.length > 80 ? ensureCta(line) : line,
+          material_source: selectedMaterialSource,
+          material_dir: valueOf('material-dir'),
+          competitor_dir: valueOf('competitor-dir'),
+          cta_text: valueOf('video-cta'),
+          caption_template: selectedCaptionTemplate,
+          highlight_words: valueOf('highlight-words'),
+          tts_service: valueOf('tts-service'),
+          voice: valueOf('tts-voice'),
+          batch: true,
+        }, true);
+        rememberCreatorTask(task);
+      }
     }
     function showSection(id) {
       document.querySelectorAll('.section').forEach(el => el.classList.toggle('active', el.id === id));
       document.querySelectorAll('[data-staff-card]').forEach(el => el.classList.toggle('is-active', el.dataset.staffCard === id));
-      if (id === 'hunter') setHunterStage(currentHunterStage || 'config');
-      if (id === 'buyer') setBuyerStage(currentBuyerStage || (oceanConnected ? 'asset' : 'bind'));
+      if (id === 'hunter') setHunterPage('menu', false);
+      if (id === 'buyer') setBuyerPage('menu', false);
       if (id === 'tasks') loadTasks();
     }
     function goTo(sectionId, targetId) {
       showSection(sectionId);
+      if (sectionId === 'creator') {
+        if (targetId) setCreatorTab('create', false);
+        else setCreatorTab('menu', false);
+      }
+      if (sectionId === 'hunter') {
+        if (targetId) setHunterPage('task', false);
+        else setHunterPage('menu', false);
+      }
+      if (sectionId === 'buyer') {
+        if (targetId === 'delivery-board') setBuyerPage('recap', false);
+        else if (targetId) setBuyerStage(targetId === 'safe-launch-button' ? 'launch' : targetId === 'delivery-video-select' ? 'asset' : 'bind');
+        else setBuyerPage('menu', false);
+      }
       window.setTimeout(() => {
         const target = document.getElementById(targetId);
         if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
@@ -1043,6 +1572,7 @@
       try {
         const task = await api(`/api/tasks/${kind}`, { method:'POST', body: JSON.stringify(payload) });
         notify('任务已提交，员工正在后台处理。');
+        if (task?.id) startTaskPolling(task.id, kind);
         await loadTasks();
         return task;
       } catch (error) {
@@ -1050,31 +1580,64 @@
         return null;
       }
     }
+    function startTaskPolling(taskId, kind) {
+      clearInterval(window.__taskPollTimer);
+      let ticks = 0;
+      window.__taskPollTimer = setInterval(async () => {
+        ticks += 1;
+        try {
+          const task = await api(`/api/tasks/${encodeURIComponent(taskId)}`);
+          await loadTasks();
+          if (['succeeded','failed'].includes(task.status) || ticks > 180) clearInterval(window.__taskPollTimer);
+        } catch (error) {
+          clearInterval(window.__taskPollTimer);
+        }
+      }, 2000);
+    }
     function retryTask(index) {
       const task = latestTaskItems[index];
       if (!task) return notify('找不到要重试的任务', 'error');
       notify(`已重新提交：${taskKindLabel(task.kind)}`);
       return createTask(task.kind, task.payload || {}, false);
     }
-    function createSearch(deep) {
+    async function createSearch(deep) {
       hunterRequested = true;
+      const platform = valueOf('search-platform');
       setHunterStage('working');
-      return createTask('search', {
-        platform: valueOf('search-platform'),
+      document.getElementById('hunter-progress-text').textContent = '正在提交后台任务...';
+      const task = await createTask('search', {
+        platform,
         keyword: valueOf('search-keyword'),
         limit: Number(valueOf('search-limit') || 10),
         deep
       }, true);
+      if (task?.id) {
+        currentHunterTaskId = task.id;
+        sessionStorage.setItem('currentHunterTaskId', currentHunterTaskId);
+        renderHunterProgress(task);
+      } else {
+        setHunterStage('config');
+      }
+      return task;
     }
-    function importLinks() {
+    async function importLinks() {
       if (!ensureFields([['search-keyword','样本主题'], ['manual-links','至少一个视频链接']])) return;
       hunterRequested = true;
       setHunterStage('working');
-      return createTask('import-links', {
+      document.getElementById('hunter-progress-text').textContent = '正在提交导入任务...';
+      const task = await createTask('import-links', {
         platform: valueOf('search-platform'),
         keyword: valueOf('search-keyword'),
         links: document.getElementById('manual-links').value,
       }, true);
+      if (task?.id) {
+        currentHunterTaskId = task.id;
+        sessionStorage.setItem('currentHunterTaskId', currentHunterTaskId);
+        renderHunterProgress(task);
+      } else {
+        setHunterStage('config');
+      }
+      return task;
     }
     function createCopy() {
       if (!valueOf('copy-topic') && !selectedSample) {
@@ -1153,7 +1716,7 @@
       if (!files.length) return notify('请先选择视频或图片素材', 'error');
       try {
         for (const file of files) {
-          const response = await fetch(`/api/materials/upload?name=${encodeURIComponent(file.name)}`, {
+          const response = await api(`/api/materials/upload?name=${encodeURIComponent(file.name)}`, {
             method:'POST',
             headers:{'Content-Type':'application/octet-stream'},
             body:file,
@@ -1255,6 +1818,7 @@
     async function loadOceanStatus() {
       try {
         const data = await api('/api/oceanengine/status');
+        latestOceanStatus = data;
         const el = document.getElementById('oe-status');
         if (!el) return;
         const connected = data.has_access_token && data.advertiser_id && data.binding_verified;
@@ -1271,6 +1835,11 @@
         const nextAfterBind = document.getElementById('buyer-next-after-bind');
         if (nextAfterBind) nextAfterBind.disabled = !connected;
         updateEmployeeStatuses();
+        if (currentEmployeeModal === 'buyer' && document.getElementById('figma-employee-modal')?.classList.contains('active')) {
+          renderEmployeeAccountPanel('buyer', employeeModalModels.buyer);
+          const set = (key, value) => { const item = document.getElementById(key); if (item) item.textContent = value; };
+          set('figma-modal-state', oceanConnected ? '已授权' : '待授权');
+        }
         updateSafeLaunchButton();
       } catch (error) {
         oceanConnected = false;
@@ -1364,25 +1933,62 @@
         official_json: official,
       }, false);
     }
+    function getSelectedDeliveryVideoFile() {
+      const current = valueOf('delivery-video-select') || valueOf('ad-video') || valueOf('publish-video');
+      if (current) return current;
+      const first = latestRenderAssets?.[0]?.path || '';
+      if (first) {
+        selectDeliveryVideo(first, false);
+        return first;
+      }
+      return '';
+    }
     async function createDeliveryDraft() {
-      const videoFile = valueOf('delivery-video-select') || valueOf('ad-video') || valueOf('publish-video');
-      if (!videoFile) return notify('请先选择一条待投放成片', 'error');
-      const task = await createTask('delivery-draft', {
-        landing_url: valueOf('delivery-landing'),
-        budget: valueOf('delivery-budget'),
-        subject: valueOf('copy-topic'),
-        selling_points: valueOf('final-copy').slice(0, 120),
-        video_file: videoFile,
-        goal: selectedDeliveryGoal,
-      }, true);
-      if (task) setBuyerStage('launch');
-      return task;
+      const button = document.getElementById('delivery-draft-button');
+      const oldText = button?.textContent || '确认任务，让投放员工检查';
+      const videoFile = getSelectedDeliveryVideoFile();
+      if (!videoFile) {
+        openDeliveryLibrary();
+        return notify('请先在“产出视频”里选择一条待投放成片', 'error');
+      }
+      selectDeliveryVideo(videoFile, false);
+      if (button) {
+        button.disabled = true;
+        button.textContent = '投放员工检查中...';
+      }
+      notify('投放员工开始检查账户、视频和项目/单元配置。');
+      try {
+        const task = await createTask('delivery-draft', {
+          landing_url: valueOf('delivery-landing'),
+          budget: valueOf('delivery-budget'),
+          subject: valueOf('copy-topic'),
+          selling_points: valueOf('final-copy').slice(0, 120),
+          video_file: videoFile,
+          goal: selectedDeliveryGoal,
+          official_model: 'project_with_units',
+          project_name: currentExhibitionName() || valueOf('copy-topic') || '展会投放项目',
+          unit_name: (latestRenderAssets.find(item => item.path === videoFile)?.name || '视频投放单元'),
+          unit_video_file: videoFile,
+        }, true);
+        if (task) {
+          setBuyerStage('launch');
+          notify('投放检查任务已提交，进入安全创建草稿步骤。');
+        }
+        return task;
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = oldText;
+        }
+      }
     }
     function chooseDeliveryGoal(goal) {
       selectedDeliveryGoal = goal;
       document.querySelectorAll('#delivery-goals .choice').forEach(el => el.classList.toggle('active', el.dataset.goal === goal));
     }
     function selectDeliveryVideo(videoFile, shouldAdvance = false) {
+      const deliverySelect = document.getElementById('delivery-video-select');
+      if (deliverySelect && videoFile !== undefined) deliverySelect.value = videoFile || '';
       document.getElementById('ad-video').value = videoFile || '';
       document.getElementById('publish-video').value = videoFile || '';
       const asset = latestRenderAssets.find(item => item.path === videoFile);
@@ -1393,11 +1999,16 @@
         state.textContent = '未选择';
         state.className = 'status';
       } else {
-        box.innerHTML = `<div class="delivery-asset"><video controls preload="metadata" src="${escapeAttr(asset.preview)}"></video><div><b>${escapeHtml(asset.name)}</b><p>该视频将交给投放员工做条件检查和安全投放草稿。</p></div></div>`;
+        box.innerHTML = `<div class="delivery-asset"><video controls preload="metadata" src="${escapeAttr(assetPath(asset.preview))}"></video><div><b>${escapeHtml(asset.name)}</b><p>该视频将交给投放员工做条件检查和安全投放草稿。</p></div></div>`;
         state.textContent = '已选择';
         state.className = 'status succeeded';
       }
       renderDeliveryDraft(null);
+      renderDeliveryLibrary(false);
+      const deliveryList = document.getElementById('delivery-library-list');
+      const deliveryToggle = document.getElementById('delivery-library-toggle');
+      if (deliveryList) deliveryList.classList.add('hidden');
+      if (deliveryToggle) deliveryToggle.textContent = latestRenderAssets.length ? '更换产出视频' : '选择产出视频';
       updateSafeLaunchButton();
       if (videoFile && shouldAdvance) setBuyerStage('launch');
     }
@@ -1409,16 +2020,49 @@
           path: task.result.summary.final_video,
           preview: task.result.summary.preview_url,
           name: task.payload?.topic || task.payload?.keyword || task.result.summary.keyword || '推广成片',
+          created_at: task.created_at || '',
         }))
         .filter(item => item.path && !seen.has(item.path) && seen.add(item.path));
       const select = document.getElementById('delivery-video-select');
+      if (!select) return;
       const current = select.value || valueOf('ad-video');
       select.innerHTML = latestRenderAssets.length
         ? latestRenderAssets.map((item, index) => `<option value="${escapeAttr(item.path)}">${index + 1}. ${escapeHtml(item.name)}</option>`).join('')
         : '<option value="">暂无可用成片</option>';
       const next = latestRenderAssets.some(item => item.path === current) ? current : (latestRenderAssets[0]?.path || '');
       select.value = next;
+      renderDeliveryLibrary(false);
       selectDeliveryVideo(next, false);
+    }
+    function openDeliveryLibrary() {
+      const list = document.getElementById('delivery-library-list');
+      const toggle = document.getElementById('delivery-library-toggle');
+      if (!list) return;
+      const willOpen = list.classList.contains('hidden');
+      renderDeliveryLibrary(willOpen);
+      list.classList.toggle('hidden', !willOpen);
+      if (toggle) toggle.textContent = willOpen ? '收起产出视频' : (latestRenderAssets.length ? '更换产出视频' : '选择产出视频');
+      if (!latestRenderAssets.length) notify('产出视频暂无成片。请先让生视频员工生成视频。', 'error');
+    }
+    function renderDeliveryLibrary(show = false) {
+      const box = document.getElementById('delivery-library-list');
+      if (!box) return;
+      if (show) box.classList.remove('hidden');
+      if (!latestRenderAssets.length) {
+        box.innerHTML = '<div class="result-empty">暂无产出视频。生视频员工完成后会自动同步到这里。</div>';
+        return;
+      }
+      const current = valueOf('delivery-video-select') || valueOf('ad-video');
+      box.innerHTML = latestRenderAssets.map((item, index) => `<div class="delivery-library-item ${item.path === current ? 'selected' : ''}">
+        <video preload="metadata" src="${escapeAttr(assetPath(item.preview || item.path))}"></video>
+        <div><b>${index + 1}. ${escapeHtml(item.name)}</b><p>${escapeHtml(item.created_at)} · 来自生视频员工历史记录</p></div>
+        <button onclick="selectDeliveryAsset(${index})">${item.path === current ? '已选择' : '选择投放'}</button>
+      </div>`).join('');
+    }
+    function selectDeliveryAsset(index) {
+      const item = latestRenderAssets[index];
+      if (!item) return notify('找不到该素材', 'error');
+      selectDeliveryVideo(item.path, false);
     }
     function updateSafeLaunchButton() {
       const confirmed = document.getElementById('safe-launch-confirm')?.checked;
@@ -1431,7 +2075,11 @@
       if (!oceanConnected) return notify('请先完成巨量账户绑定', 'error');
       if (!videoFile) return notify('请先选择待投放成片', 'error');
       const task = await createTask('ocean-safe-launch', { video_file: videoFile, fresh: true }, true);
-      if (task) setBuyerStage('report');
+      if (task) {
+        notify('投放任务草稿已创建。需要看数据时，请返回投放员工首页进入“数据复盘”。');
+        await refreshDeliveryReport();
+        setBuyerStage('launch', false);
+      }
       return task;
     }
     function switchDeliveryTab(name, button) {
@@ -1484,23 +2132,41 @@
       const latest = await api('/api/latest?action=search,manual-import');
       renderGallery(latest.items || []);
     }
+    function metricValue(item, keys) {
+      for (const key of keys) {
+        const value = Number(item?.[key]);
+        if (!Number.isNaN(value) && value > 0) return value;
+      }
+      return 0;
+    }
+    function sampleInteractionScore(item) {
+      const like = metricValue(item, ['digg_count','like_count','likes','liked_count','赞']);
+      const comment = metricValue(item, ['comment_count','comments','评论']);
+      const share = metricValue(item, ['share_count','shares','转发']);
+      return Math.round((like * 1 + comment * 1.5 + share * 2) * 10) / 10;
+    }
     function renderGallery(items) {
-      latestSamples = items;
+      latestSamples = [...items].sort((a, b) => sampleInteractionScore(b) - sampleInteractionScore(a));
       const box = document.getElementById('gallery');
-      if (!items.length) {
+      if (!latestSamples.length) {
         box.innerHTML = '<div class="card soft">暂无样本。先让员工检索，或导入已有视频链接。</div>';
         return;
       }
-      box.innerHTML = items.map((item, i) => {
+      box.innerHTML = latestSamples.map((item, i) => {
         const title = (item.title || item.desc || '未命名视频').slice(0, 64);
-        const cover = item.cover_url || item.origin_cover_url || item.dynamic_cover_url || '';
-        const score = item.interaction_score || 0;
+        const cover = item.cover_url || item.origin_cover_url || item.dynamic_cover_url || item.cover || '';
+        const like = metricValue(item, ['digg_count','like_count','likes','liked_count','赞']);
+        const comment = metricValue(item, ['comment_count','comments','评论']);
+        const share = metricValue(item, ['share_count','shares','转发']);
+        const score = sampleInteractionScore(item);
         const selected = selectedSample && selectedSample.url && item.url === selectedSample.url;
         return `<div class="sample ${selected ? 'selected' : ''}">
+          <div class="sample-rank-badge">推荐参考 #${i + 1}</div>
           ${cover ? `<img src="${escapeAttr(cover)}" alt="视频封面">` : '<div class="card soft" style="height:140px;display:grid;place-items:center;">无封面</div>'}
           <div class="sample-title">#${item.rank || i + 1} ${escapeHtml(title)}</div>
-          <div class="sample-meta">赞 ${item.digg_count || 0} ｜ 评 ${item.comment_count || 0} ｜ 转 ${item.share_count || 0}<br>互动分 ${score}</div>
-          <div class="actions"><button onclick="selectSample(${i})">${selected ? '当前参考' : '设为参考并生视频'}</button></div>
+          <div class="sample-meta">赞 ${like} ｜ 评 ${comment} ｜ 转 ${share}</div>
+          <div class="sample-score-line">互动分 ${score} = 点赞×1 + 评论×1.5 + 转发×2</div>
+          <div class="actions"><button onclick="selectSample(${i})">${selected ? '当前参考' : '设为参考并进入生视频员工'}</button></div>
         </div>`;
       }).join('');
       updateEmployeeStatuses();
@@ -1512,9 +2178,88 @@
       document.getElementById('brief-subject').value = item.title || item.desc || document.getElementById('brief-subject').value;
       renderGallery(latestSamples);
       updateEmployeeStatuses();
-      notify('已选为参考样本，已自动交给生视频员工。');
+      notify('已选为参考样本，正在进入生视频员工。');
       setHunterStage('handoff');
-      window.setTimeout(() => openEmployee('creator'), 450);
+      window.setTimeout(() => openEmployee('creator'), 160);
+    }
+    function renderHunterHistory(items = []) {
+      latestHunterHistoryTasks = (items || []).filter(task => ['search','import-links'].includes(task.kind));
+      const box = document.getElementById('hunter-history-overview');
+      if (!box) return;
+      if (!latestHunterHistoryTasks.length) {
+        box.innerHTML = '<div class="card soft">暂无抓取历史。先创建一次抓取任务，完成后会出现在这里。</div>';
+        return;
+      }
+      box.innerHTML = latestHunterHistoryTasks.map((task, index) => {
+        const count = task.result?.count || task.result?.items?.length || 0;
+        const keyword = task.payload?.keyword || task.result?.keyword || '未命名抓取任务';
+        const platform = platformLabel(task.payload?.platform || 'douyin');
+        const canOpen = task.status === 'succeeded' && (task.result?.items || []).length;
+        const statusClass = task.status === 'succeeded' ? 'succeeded' : task.status === 'failed' ? 'failed' : 'running';
+        return `<div class="creator-job-card">
+          <div><b>${index + 1}. ${escapeHtml(keyword)}</b><p>${escapeHtml(platform)} · ${escapeHtml(task.created_at || '')} · ${escapeHtml(taskKindLabel(task.kind))} · ${count} 条样本</p></div>
+          <div class="actions"><span class="status ${statusClass}">${escapeHtml(taskStateText(task.status))}</span>${canOpen ? `<button onclick="openHunterHistoryResult(${index})">查看样本</button>` : `<button onclick="retryTask(${latestTaskItems.indexOf(task)})">重新执行</button>`}</div>
+        </div>`;
+      }).join('');
+    }
+    function renderHunterProcessBoard(items = []) {
+      const box = document.getElementById('hunter-process-overview');
+      if (!box) return;
+      latestHunterHistoryTasks = (items || []).filter(task => ['search','import-links'].includes(task.kind));
+      if (!latestHunterHistoryTasks.length) {
+        box.innerHTML = '<div class="process-empty">暂无抓取进程。点击右上角“创建抓取任务”，绑定平台账号并开始第一次检索。</div>';
+        return;
+      }
+      box.innerHTML = `<div class="process-list">${latestHunterHistoryTasks.slice(0, 10).map((task, index) => {
+        const keyword = task.payload?.keyword || task.result?.keyword || '未命名抓取任务';
+        const count = task.result?.count || task.result?.items?.length || 0;
+        const running = ['queued','running'].includes(task.status);
+        const description = running
+          ? '员工正在后台检索、去重、计算互动分并补全封面。'
+          : task.status === 'succeeded'
+            ? `已产出 ${count} 个参考样本，点击进入推荐样本画廊。`
+            : '任务执行未完成，点击查看后可重新提交。';
+        return `<button class="process-item" onclick="openHunterProcessTask(${index})"><div><b>${index + 1}. ${escapeHtml(keyword)}</b><p>${escapeHtml(description)}</p><div class="process-meta"><span class="status ${escapeAttr(task.status || '')}">${escapeHtml(taskStateText(task.status))}</span><span>${escapeHtml(platformLabel(task.payload?.platform || 'douyin'))}</span><span>${escapeHtml(task.created_at || '')}</span></div></div><span class="process-item-action">${task.status === 'succeeded' && count ? '查看样本 →' : '查看进程 →'}</span></button>`;
+      }).join('')}</div>`;
+    }
+    function openHunterProcessTask(index) {
+      const task = latestHunterHistoryTasks[index];
+      if (!task) return;
+      currentHunterTaskId = task.id || '';
+      sessionStorage.setItem('currentHunterTaskId', currentHunterTaskId);
+      if (task.status === 'succeeded' && (task.result?.items || []).length) {
+        openHunterHistoryResult(index);
+        return;
+      }
+      setHunterPage('task', false);
+      setHunterStage(['queued','running'].includes(task.status) ? 'working' : 'config');
+    }
+    function renderBuyerProcessBoard(items = []) {
+      const box = document.getElementById('buyer-process-overview');
+      if (!box) return;
+      const deliveryKinds = ['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch'];
+      const tasks = (items || []).filter(task => deliveryKinds.includes(task.kind));
+      const rows = [];
+      if (latestRenderAssets.length) {
+        rows.push(`<button class="process-item" onclick="setBuyerPage('panel'); setBuyerStage('asset')"><div><b>有 ${latestRenderAssets.length} 条产出视频等待投放</b><p>进入投放面板选择视频、目标、预算、日期和人群参数。</p><div class="process-meta"><span class="status succeeded">素材已就绪</span></div></div><span class="process-item-action">配置投放 →</span></button>`);
+      }
+      tasks.slice(0, 8).forEach((task, index) => {
+        const isReport = task.kind === 'delivery-report';
+        const description = isReport ? '项目数据已回流，点击查看项目整体和视频单元复盘。' : (['queued','running'].includes(task.status) ? '投放员工正在后台检查账户、素材和官方项目/单元参数。' : '投放任务已处理，点击查看任务状态和草稿结果。');
+        rows.push(`<button class="process-item" onclick="${isReport ? "setBuyerPage('recap')" : "setBuyerPage('panel'); setBuyerStage('launch')"}"><div><b>${index + 1}. ${escapeHtml(taskKindLabel(task.kind))}</b><p>${escapeHtml(description)}</p><div class="process-meta"><span class="status ${escapeAttr(task.status || '')}">${escapeHtml(taskStateText(task.status))}</span><span>${escapeHtml(task.created_at || '')}</span></div></div><span class="process-item-action">${isReport ? '查看复盘 →' : '查看任务 →'}</span></button>`);
+      });
+      rows.push(`<button class="process-item" onclick="setBuyerPage('recap')"><div><b>项目数据复盘</b><p>以官方项目为单位查看整体表现，并下钻到每个视频单元获得继续或停止投放建议。</p></div><span class="process-item-action">进入复盘 →</span></button>`);
+      box.innerHTML = rows.length ? `<div class="process-list">${rows.join('')}</div>` : '<div class="process-empty">暂无投放任务。点击右上角“创建投放任务”开始。</div>';
+    }
+    function openHunterHistoryResult(index) {
+      const task = latestHunterHistoryTasks[index];
+      const items = task?.result?.items || [];
+      if (!items.length) return notify('这条历史记录没有可展示样本', 'error');
+      currentHunterTaskId = task.id || currentHunterTaskId;
+      sessionStorage.setItem('currentHunterTaskId', currentHunterTaskId || '');
+      renderGallery(items);
+      setHunterPage('task', false);
+      setHunterStage('results');
     }
     async function loadTasks() {
       const data = await api('/api/tasks');
@@ -1529,6 +2274,9 @@
       updateFlowAdvisor(data.items || []);
       renderApprovalQueue(data.items || []);
       renderCreatorHistory(data.items || []);
+      renderHunterHistory(data.items || []);
+      renderHunterProcessBoard(data.items || []);
+      renderBuyerProcessBoard(data.items || []);
       updateCreatorPipelineStatus(data.items || []);
       hasHydratedTasks = true;
       updateEmployeeStatuses(data.items || []);
@@ -1562,6 +2310,7 @@
       if (/access_token无效|token.*invalid|invalid.*token/i.test(error)) return '巨量授权已失效，请重新点击“前往巨量”完成绑定后重试。';
       if (/list'?: \[\]|广告主|advertiser/i.test(error) && /为空|empty|list'?: \[\]/i.test(error)) return '当前授权账号没有可用投放广告主，请先在巨量侧开通或共享广告主。';
       if (/频率超限|rate|限流|too many/i.test(error)) return '巨量接口当前限流，请稍后在任务中心重试。';
+      if (/osascript|Google Chrome|douyin|抖音|xiaohongshu|小红书|没有检索到/i.test(error)) return '平台检索没有成功：请确认浏览器已登录对应平台、页面可以正常搜索，并在员工详情里标记账号已登录后重试。';
       if (/视频上传失败|video upload|素材|material/i.test(error)) return '视频素材上传失败，请检查文件大小、格式和巨量素材权限。';
       if (/DashScope|qwen|百炼|TTS|tts|voice/i.test(error)) return 'AI 或配音服务调用失败，请检查模型 Key、音色和网络后重试。';
       if (/FFmpeg|ffmpeg|moviepy|render/i.test(error)) return '视频合成失败，请检查素材、FFmpeg 和字幕/配音文件是否可用。';
@@ -1820,7 +2569,18 @@
         const completed = task.status === 'succeeded' || task.status === 'failed' ? 4 : task.status === 'running' ? 2 : 1;
         bars.forEach((bar, index) => bar.classList.toggle('done', index < completed));
         summary.textContent = taskBusinessMessage(task) || (task.status === 'running' ? '员工正在后台执行，完成后结果会自动显示在本页。' : '任务已进入队列。');
+        if (employee === 'hunter') renderHunterProgress(task);
       });
+    }
+    function renderHunterProgress(task) {
+      const fill = document.getElementById('hunter-progress-fill');
+      const text = document.getElementById('hunter-progress-text');
+      if (!fill || !text) return;
+      if (!task) { fill.style.width = '0%'; text.textContent = '等待检索任务。'; return; }
+      const progress = task.status === 'succeeded' ? 100 : task.status === 'failed' ? 100 : task.status === 'running' ? 58 : 22;
+      fill.style.width = `${progress}%`;
+      const suffix = taskBusinessMessage(task) || taskSummary(task) || '员工正在后台执行。';
+      text.textContent = `${taskStateText(task.status)} · ${suffix}`;
     }
     function renderTaskList(items) {
       latestTaskItems = items;
@@ -1871,15 +2631,40 @@
         document.getElementById('creator-copy-status').textContent = '已生成';
         document.getElementById('creator-copy-status').className = 'status succeeded';
         markCreatorStepDone('brief');
-        focusCreatorStep('copy');
+        maybeFocusCreatorStep('copy');
         if (hasHydratedTasks) notify('生视频员工已生成口播稿。');
+      }
+      const latestCopyRunning = items.find(t => t.kind === 'copy' && ['queued','running'].includes(t.status));
+      if (latestCopyRunning) {
+        const statusEl = document.getElementById('creator-copy-status');
+        if (statusEl) {
+          statusEl.textContent = latestCopyRunning.status === 'queued' ? '排队中' : '生成中';
+          statusEl.className = 'status running';
+        }
+      }
+      const latestCopyFailed = items.find(t => t.kind === 'copy' && t.status === 'failed');
+      if (latestCopyFailed && latestCopyFailed.id !== lastCompletedCopy && hasHydratedTasks) {
+        lastCompletedCopy = latestCopyFailed.id;
+        const statusEl = document.getElementById('creator-copy-status');
+        if (statusEl) {
+          statusEl.textContent = '生成失败';
+          statusEl.className = 'status failed';
+        }
+        const finalCopyEl = document.getElementById('final-copy');
+        if (finalCopyEl && /^生视频员工正在/.test(finalCopyEl.value || '')) finalCopyEl.value = '';
+        notify(taskBusinessMessage(latestCopyFailed) || 'AI 文案生成失败。', 'error');
+      }
+      const latestHunter = currentHunterTaskId ? items.find(t => t.id === currentHunterTaskId) : items.find(t => ['search','import-links'].includes(t.kind));
+      if (latestHunter) {
+        renderHunterProgress(latestHunter);
+        if (latestHunter.status === 'failed' && latestHunter.payload?.platform) invalidatePlatformLogin(latestHunter.payload.platform === 'xiaohongshu' ? 'xhs' : latestHunter.payload.platform);
       }
       const latestSearch = items.find(t => ['search','import-links'].includes(t.kind) && t.status === 'succeeded');
       if (latestSearch && latestSearch.id !== lastCompletedSearch) {
         lastCompletedSearch = latestSearch.id;
         if (latestSearch.result?.items) renderGallery(latestSearch.result.items);
         else loadLatest();
-        if (hunterRequested) setHunterStage('results');
+        if (hunterRequested || (latestSearch.id === currentHunterTaskId && isHunterWorkflowOpen())) maybeSetHunterStage('results');
       }
       const latestTts = items.find(t => t.kind === 'tts' && t.status === 'succeeded' && t.result?.preview_url);
       if (latestTts) {
@@ -1889,25 +2674,25 @@
       if (latestTts && latestTts.id !== lastCompletedTts) {
         lastCompletedTts = latestTts.id;
         const preview = document.getElementById('tts-preview');
-        preview.innerHTML = `<label>语音预览</label><audio controls src="${escapeAttr(latestTts.result.preview_url)}"></audio>`;
+        preview.innerHTML = `<label>语音预览</label><audio controls src="${escapeAttr(assetPath(latestTts.result.preview_url))}"></audio>`;
         preview.classList.remove('hidden');
         markCreatorStepDone('copy');
-        focusCreatorStep('material');
+        maybeFocusCreatorStep('material');
       }
-      const latestRender = items.find(t => t.kind === 'render' && t.status === 'succeeded' && t.result?.summary?.preview_url);
+      const latestRender = items.find(t => isCreatorSessionTask(t) && t.kind === 'render' && t.status === 'succeeded' && t.result?.summary?.preview_url);
       if (latestRender && latestRender.id !== lastCompletedRender) {
         lastCompletedRender = latestRender.id;
         const preview = document.getElementById('render-preview');
         const finalVideo = latestRender.result.summary.final_video || '';
         const subtitle = latestRender.result.summary.subtitle_preview_url || '';
-        const track = subtitle && !latestRender.result.summary.captions_hard_burned ? `<track kind="subtitles" srclang="zh" label="中文" src="${escapeAttr(subtitle)}" default>` : '';
-        preview.innerHTML = `<label>成片预览</label><video controls preload="metadata" src="${escapeAttr(latestRender.result.summary.preview_url)}">${track}</video>`;
+        const track = subtitle && !latestRender.result.summary.captions_hard_burned ? `<track kind="subtitles" srclang="zh" label="中文" src="${escapeAttr(assetPath(subtitle))}" default>` : '';
+        preview.innerHTML = `<label>成片预览</label><video controls preload="metadata" src="${escapeAttr(assetPath(latestRender.result.summary.preview_url))}">${track}</video>`;
         preview.classList.remove('hidden');
         document.getElementById('publish-video').value ||= finalVideo;
         document.getElementById('ad-video').value ||= finalVideo;
         if (hasHydratedTasks) notify('生视频员工已生成成片。');
       }
-      const latestPipeline = items.find(t => t.kind === 'creator-pipeline' && t.status === 'succeeded' && t.result?.summary?.preview_url);
+      const latestPipeline = items.find(t => isCreatorSessionTask(t) && t.kind === 'creator-pipeline' && t.status === 'succeeded' && t.result?.summary?.preview_url);
       if (latestPipeline) {
         latestAudioPath = latestPipeline.result.audio_path || latestAudioPath;
         latestAudioText = latestPipeline.result.copy || latestAudioText;
@@ -1918,13 +2703,13 @@
         const preview = document.getElementById('render-preview');
         const summary = latestPipeline.result.summary || {};
         preview.className = 'media-preview';
-        preview.innerHTML = `<label>最新成片</label><video controls preload="metadata" src="${escapeAttr(summary.preview_url)}"></video>`;
+        preview.innerHTML = `<label>最新成片</label><video controls preload="metadata" src="${escapeAttr(assetPath(summary.preview_url))}"></video>`;
         document.getElementById('publish-video').value = summary.final_video || '';
         document.getElementById('ad-video').value = summary.final_video || '';
         document.getElementById('creator-output-status').textContent = '已生成';
         document.getElementById('creator-output-status').className = 'status succeeded';
         ['copy','material','output'].forEach(markCreatorStepDone);
-        focusCreatorStep('output');
+        maybeFocusCreatorStep('output');
         if (hasHydratedTasks) notify('完整视频流水线已完成。');
       }
       const latestOceanVideo = items.find(t => t.kind === 'ocean-video-upload' && t.status === 'succeeded' && t.result?.video_id);
@@ -1943,19 +2728,30 @@
       }
     }
     function renderCreatorHistory(items = []) {
-      const box = document.getElementById('creator-history');
-      if (!box) return;
-      const history = items.filter(task => ['creator-pipeline','render'].includes(task.kind) && task.status === 'succeeded' && task.result?.summary?.final_video).slice(0, 12);
-      if (!history.length) {
-        box.innerHTML = '<div class="result-empty">暂无历史版本。生成第一条视频后，每一版参数和成片都会保留在这里。</div>';
-        return;
+      const boxes = [document.getElementById('creator-history'), document.getElementById('creator-history-page'), document.getElementById('creator-history-overview')].filter(Boolean);
+      if (!boxes.length) return;
+      const activeBox = document.getElementById('creator-active-jobs');
+      // 进程和历史来自后端持久化任务，不应依赖当前浏览器的 sessionStorage。
+      // 否则刷新页面、重启服务或从另一台前端打开时，已经完成的成片会被错误隐藏。
+      const running = items.filter(task => ['creator-pipeline','render','tts','copy'].includes(task.kind) && ['queued','running'].includes(task.status)).slice(0, 6);
+      if (activeBox) {
+        activeBox.innerHTML = running.length ? running.map(task => `<div class="creator-job-card"><div><b>${escapeHtml(taskKindLabel(task.kind))}</b><p>${escapeHtml(taskBusinessMessage(task) || '员工正在后台执行，完成后会同步到历史记录。')}</p></div><span class="status ${escapeAttr(task.status)}">${escapeHtml(taskStateText(task.status))}</span></div>`).join('') : '<div class="result-empty">当前没有正在生成的视频。</div>';
       }
-      box.innerHTML = history.map(task => {
+      const history = items.filter(task => ['creator-pipeline','render'].includes(task.kind) && ['succeeded','failed'].includes(task.status)).slice(0, 12);
+      const html = history.length ? history.map(task => {
         const index = items.indexOf(task);
-        const source = task.payload?.material_source === 'pexels' ? 'MoneyPrinter 在线搜索' : '本地素材库';
+        const source = ['pexels','pixabay'].includes(task.payload?.material_source) ? 'MoneyPrinter 在线搜索' : '本地素材库';
         const title = task.payload?.topic || task.payload?.keyword || '推广视频';
-        return `<div class="history-item"><div><b>${escapeHtml(title)}</b><p>${escapeHtml(task.created_at || '')} · ${escapeHtml(source)} · ${escapeHtml(task.payload?.voice || '默认音色')}</p></div><div class="actions"><button onclick="previewCreatorVersion(${index})">预览</button><button onclick="restoreCreatorVersion(${index})">恢复参数</button></div></div>`;
-      }).join('');
+        const sampleTitle = task.payload?.sample?.title || task.payload?.sample?.desc || '未关联参考样本';
+        const summary = task.result?.summary || {};
+        const statusClass = task.status === 'succeeded' ? 'succeeded' : 'failed';
+        const statusText = task.status === 'succeeded' ? '已生成' : '生成失败';
+        const detail = task.status === 'failed' ? (task.error || '后台任务失败，请重试') : `参考：${String(sampleTitle).slice(0, 60)}`;
+        const preview = summary.preview_url ? `<button onclick="previewCreatorVersion(${index})">预览</button>` : '';
+        const retry = task.status === 'failed' ? `<button onclick="retryTask(${index})">重试</button>` : '';
+        return `<div class="history-item"><div><b>${escapeHtml(title)}</b><span class="status ${statusClass}" style="margin-left:8px">${statusText}</span><p>${escapeHtml(task.created_at || '')} · ${escapeHtml(source)} · ${escapeHtml(task.payload?.voice || '默认音色')}</p><p>${escapeHtml(detail)}</p></div><div class="actions">${preview}<button onclick="restoreCreatorVersion(${index})">恢复参数</button>${retry}</div></div>`;
+      }).join('') : '<div class="result-empty">暂无历史版本。生成第一条视频后，每一版参数和成片都会保留在这里。</div>';
+      boxes.forEach(box => box.innerHTML = html);
     }
     function previewCreatorVersion(index) {
       const task = latestTaskItems[index];
@@ -1963,7 +2759,7 @@
       if (!summary.preview_url) return notify('该历史版本没有可用预览', 'error');
       const preview = document.getElementById('render-preview');
       preview.className = 'media-preview';
-      preview.innerHTML = `<label>历史版本预览</label><video controls autoplay preload="metadata" src="${escapeAttr(summary.preview_url)}"></video>`;
+      preview.innerHTML = `<label>历史版本预览</label><video controls autoplay preload="metadata" src="${escapeAttr(assetPath(summary.preview_url))}"></video>`;
       focusCreatorStep('output');
     }
     function restoreCreatorVersion(index) {
@@ -2006,6 +2802,27 @@
       const recap = document.getElementById('delivery-recap');
       if (recap) recap.innerHTML = buildDeliveryRecap(metrics, draft);
     }
+    function buildOfficialProjectUnitView(draft) {
+      const model = draft?.official_model || {};
+      const project = model.project || {};
+      const unit = model.unit || {};
+      const projectName = project.name || draft?.summary?.project_name || currentExhibitionName() || '当前展会投放项目';
+      const unitName = unit.name || draft?.summary?.unit_name || '当前视频投放单元';
+      const projectId = project.project_id || draft?.summary?.project_id || '待创建';
+      const unitId = unit.unit_id || draft?.summary?.unit_id || draft?.summary?.promotion_id || '待创建';
+      const units = Array.isArray(draft?.official_project_record?.units) ? draft.official_project_record.units : [];
+      const unitRows = units.length ? `<div class="official-unit-list">${units.map((item, index) => {
+        const summary = item.summary || {};
+        const title = item.name || summary.unit_name || summary.project_name || item.video_file || `视频单元 ${index + 1}`;
+        const id = item.unit_id || item.promotion_id || summary.unit_id || summary.promotion_id || '待创建';
+        const file = item.video_file || summary.video_file || '';
+        return `<div class="official-unit-row"><em>${index + 1}</em><div><b>${escapeHtml(title)}</b><span>unit_id：${escapeHtml(id)}${file ? ` · ${escapeHtml(file.split('/').pop())}` : ''}</span></div><small>单元数据</small></div>`;
+      }).join('')}</div>` : '';
+      return `<div class="official-project-view">
+        <div><span>官方项目</span><b>${escapeHtml(projectName)}</b><small>project_id：${escapeHtml(projectId)}</small></div>
+        <div><span>项目内当前单元</span><b>${escapeHtml(unitName)}</b><small>unit_id：${escapeHtml(unitId)} · 每个单元对应一个视频</small></div>
+      </div>${unitRows}`;
+    }
     function buildDeliveryRecap(metrics, draft) {
       const showCnt = Number(metrics.show_cnt || 0);
       const clickCnt = Number(metrics.click_cnt || 0);
@@ -2026,7 +2843,7 @@
       }
       const recommendation = draft?.recommendation;
       if (recommendation) tips.unshift(recommendation);
-      return `<b>账户整体投放复盘</b><p>当前口径：广告主账户 + 报表时间范围，并非单条视频归因。</p>
+      return `${buildOfficialProjectUnitView(draft)}<b>官方项目 / 单元复盘</b><p>当前口径：项目汇总 + 单元明细。项目下可包含多个视频单元，单元数据独立回流后再汇总到项目。</p>
         <div class="recap-score">
           <span>曝光基础：${showCnt ? '已有数据' : '待启动'}</span>
           <span>点击表现：${ctr ? `${ctr.toFixed(2)}%` : '待观察'}</span>
@@ -2053,6 +2870,8 @@
       setStatus('creator-status', runningCreator ? '工作中' : hasVideo ? '已产出成片' : hasCopy ? '已有文案' : hasSamples ? '可开始' : '空闲中', runningCreator ? 'running' : hasVideo ? 'succeeded' : hasCopy ? 'blue' : '');
       const buyerReady = oceanConnected || Boolean(valueOf('ad-advertiser') && valueOf('ad-token'));
       setStatus('buyer-status', runningBuyer ? '工作中' : buyerReady ? '已配置账号' : '空闲中', runningBuyer ? 'running' : buyerReady ? 'blue' : '');
+      const hunterBound = document.querySelector('[data-staff-card="hunter"] .figma-bound-row');
+      if (hunterBound) hunterBound.textContent = `抖音：${platformStatusText('douyin')} / 小红书：${platformStatusText('xhs')}`;
       const hunterKpi = document.getElementById('hunter-kpi');
       if (hunterKpi) hunterKpi.innerHTML = `<span>样本 ${latestSamples.length || 0} 条</span><span>${selectedSample ? '已选参考' : hasSamples ? '可选择样本' : '等待任务'}</span>`;
       const creatorKpi = document.getElementById('creator-kpi');
@@ -2078,6 +2897,17 @@
       el.textContent = text;
       el.className = `status ${cls || ''}`;
     }
+
+    function applyInitialRouteFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const modal = params.get('modal');
+      const view = params.get('view');
+      const staff = params.get('staff');
+      if (staff) { openExhibition(params.get('expo') || currentExhibitionId || '新能源'); openEmployee(staff); return; }
+      if (view === 'detail') { openExhibition(params.get('expo') || currentExhibitionId || '新能源'); if (modal) setTimeout(() => openEmployeeDetail(modal), 80); return; }
+      if (modal) { openExhibition(params.get('expo') || currentExhibitionId || '新能源'); setTimeout(() => openEmployeeDetail(modal), 80); return; }
+      setFigmaNav('expo');
+    }
     function taskSummary(task) {
       if (!task.result) return '';
       if (task.kind === 'search' || task.kind === 'import-links') return `找到了 ${task.result.count || 0} 条参考样本`;
@@ -2089,7 +2919,7 @@
       if (task.kind === 'delivery-report') return '投放报表已刷新，可在投放员工面板查看 9 项指标';
       if (task.kind === 'ocean-video-upload') return task.result.video_id ? `视频已上传，video_id：${task.result.video_id}` : '视频上传任务完成';
       if (task.kind === 'ocean-project-create') return task.result.project_id ? `项目已创建，project_id：${task.result.project_id}` : '项目创建任务完成';
-      if (task.kind === 'ocean-promotion-create') return task.result.promotion_id ? `单元已创建，promotion_id：${task.result.promotion_id}` : '单元创建任务完成';
+      if (task.kind === 'ocean-promotion-create') return task.result.promotion_id ? `官方投放单元已创建，unit_id/promotion_id：${task.result.promotion_id}` : '官方投放单元创建任务完成';
       if (task.kind === 'ocean-safe-launch') return task.result.ok ? '真实接口链路已跑通，项目和推广均保持关闭，不会产生消耗' : '安全投放测试完成';
       if (task.kind === 'publish') return '发布任务已完成';
       return '任务已完成';
@@ -2111,6 +2941,8 @@
     refreshAll();
     syncTtsVoices();
     chooseMaterialSource('local');
+    renderHunterBindingSummary();
+    setTimeout(applyInitialRouteFromUrl, 0);
     setInterval(loadTasks, 5000);
   </script>
 </body>

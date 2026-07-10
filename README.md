@@ -85,18 +85,40 @@ api_server.py            # 后台任务 API
 storage/api_tasks/*.json # 任务状态和结果
 ```
 
-启动：
+启动后端 API：
 
 ```bash
 cd exhibitflow-lite
 ./scripts/start-saas.sh
 ```
 
-打开：
+如果希望一次启动前后端开发栈：
+
+```bash
+./scripts/start-stack.sh
+```
+
+后端默认地址：
 
 ```text
 http://127.0.0.1:8501
 ```
+
+开发时也可以把前端作为独立静态站点启动。前端不执行检索、模型调用或成片逻辑，
+只通过 API 创建任务、轮询状态和展示结果：
+
+```bash
+./scripts/start-frontend.sh
+```
+
+前端单独部署时打开：
+
+```text
+http://127.0.0.1:5173/?api=http://127.0.0.1:8501
+```
+
+生产部署时可把 `frontend/` 放到 Nginx、对象存储或任意静态托管，
+通过 `?api=https://你的后端域名` 或 `window.EXHIBITFLOW_API_BASE` 指向后端。
 
 ### 三个员工的统一交互
 

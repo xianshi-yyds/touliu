@@ -155,24 +155,38 @@ def parse_render_result(log: str) -> dict[str, Any]:
     return {"summary": summary, "log": log[:4000]}
 
 
+def requests_post_no_proxy(*args, **kwargs):
+    session = requests.Session()
+    session.trust_env = False
+    try:
+        return session.post(*args, **kwargs)
+    finally:
+        session.close()
+
+
 def dashscope_health() -> dict[str, Any]:
-    """Validate the credential, rather than treating a non-empty Key as ready."""
+    """Validate DashScope with the same OpenAI-compatible chat endpoint used by copy generation."""
     global _DASHSCOPE_HEALTH
     if not settings.dashscope_api_key:
         return {"valid": False, "status": "missing"}
     if time.time() - float(_DASHSCOPE_HEALTH.get("checked_at") or 0) < 300:
         return {key: value for key, value in _DASHSCOPE_HEALTH.items() if key != "checked_at"}
     try:
-        response = requests.get(
-            settings.dashscope_base_url.rstrip("/") + "/models",
-            headers={"Authorization": f"Bearer {settings.dashscope_api_key}"},
-            timeout=5,
+        response = requests_post_no_proxy(
+            settings.dashscope_base_url.rstrip("/") + "/chat/completions",
+            headers={"Authorization": f"Bearer {settings.dashscope_api_key}", "Content-Type": "application/json"},
+            json={
+                "model": settings.qwen_text_model,
+                "messages": [{"role": "user", "content": "ping"}],
+                "stream": False,
+            },
+            timeout=8,
         )
         valid = response.status_code == 200
         status = "ready" if valid else ("invalid_key" if response.status_code == 401 else f"http_{response.status_code}")
-    except requests.RequestException:
+    except requests.RequestException as exc:
         valid = False
-        status = "unreachable"
+        status = f"unreachable:{exc.__class__.__name__}"
     _DASHSCOPE_HEALTH = {"checked_at": time.time(), "valid": valid, "status": status}
     return {"valid": valid, "status": status}
 
@@ -195,6 +209,7 @@ def public_config() -> dict[str, Any]:
         "dashscope_status": ai_health.get("status"),
         "material_count": len(materials),
         "moneyprint_stock_configured": bool(settings.pexels_api_key),
+        "pixabay_stock_configured": bool(settings.pixabay_api_key),
         "ffmpeg_configured": bool(shutil.which("ffmpeg") and shutil.which("ffprobe")),
         "oceanengine": ocean_config_public(),
     }
@@ -1053,6 +1068,68 @@ def ocean_promotion_create(payload: dict[str, Any]) -> dict[str, Any]:
     return {"ok": True, "raw": result, **data}
 
 
+
+def upsert_delivery_project_unit(draft: dict[str, Any]) -> dict[str, Any]:
+    """Maintain a local mirror of the official Project -> Units relationship.
+
+    Official IDs are kept when available: project_id for the project and
+    promotion_id/unit_id for each video unit. This mirror lets the UI show a
+    project page with multiple video units before/after official creation.
+    """
+    model = draft.get("official_model") or {}
+    project = dict(model.get("project") or {})
+    unit = dict(model.get("unit") or {})
+    project_key = str(project.get("project_id") or project.get("name") or "展会投放项目")
+    base = settings.storage_dir / "oceanengine" / "projects"
+    base.mkdir(parents=True, exist_ok=True)
+    path = base / f"{safe_stem(project_key)}.json"
+    if path.exists():
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            record = {}
+    else:
+        record = {}
+    record.setdefault("created_at", now())
+    record["updated_at"] = now()
+    record["project"] = {**(record.get("project") or {}), **project}
+    units = record.get("units") if isinstance(record.get("units"), list) else []
+    unit_key = str(unit.get("unit_id") or unit.get("promotion_id") or unit.get("video_file") or unit.get("name") or uuid4().hex)
+    unit_record = {
+        **unit,
+        "unit_key": unit_key,
+        "dashboard": draft.get("dashboard") or {},
+        "summary": draft.get("summary") or {},
+        "updated_at": now(),
+    }
+    replaced = False
+    for idx, item in enumerate(units):
+        item_key = str(item.get("unit_key") or item.get("unit_id") or item.get("promotion_id") or item.get("video_file") or "")
+        if item_key == unit_key:
+            units[idx] = {**item, **unit_record}
+            replaced = True
+            break
+    if not replaced:
+        units.append(unit_record)
+    record["units"] = units
+    write_json(path, record)
+    return {"path": str(path), "project": record.get("project") or {}, "units": units}
+
+
+def list_delivery_project_units() -> dict[str, Any]:
+    base = settings.storage_dir / "oceanengine" / "projects"
+    items: list[dict[str, Any]] = []
+    if base.exists():
+        for path in sorted(base.glob("*.json"), key=lambda item: item.stat().st_mtime, reverse=True):
+            try:
+                record = json.loads(path.read_text(encoding="utf-8"))
+                record["_path"] = str(path)
+                items.append(record)
+            except Exception:
+                continue
+    return {"ok": True, "count": len(items), "items": items}
+
+
 def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
     saved = load_ocean_token()
     advertiser_id = str(
@@ -1081,14 +1158,42 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
         {"key": "video", "label": "投放视频", "ok": bool(video_file)},
         {"key": "budget", "label": "日预算", "ok": bool(budget)},
     ]
+    project_name = payload.get("project_name") or payload.get("subject") or "展会投放项目"
+    unit_name = payload.get("unit_name") or Path(video_file).stem or "视频投放单元"
+    project_id = str(payload.get("project_id") or saved.get("last_project_id") or "").strip()
+    unit_id = str(payload.get("unit_id") or payload.get("promotion_id") or saved.get("last_promotion_id") or "").strip()
+    official_model = {
+        "model": "project_with_units",
+        "project": {
+            "name": project_name,
+            "project_id": project_id,
+            "source": "official_project",
+            "description": "当前展会对应一个官方投放项目。",
+        },
+        "unit": {
+            "name": unit_name,
+            "unit_id": unit_id,
+            "promotion_id": unit_id,
+            "video_file": video_file,
+            "video_id": payload.get("video_id") or "",
+            "source": "official_unit",
+            "description": "每个产出视频对应项目下一个官方投放单元，数据按该单元回流。",
+        },
+        "report_scope": "unit_first_project_summary",
+    }
     draft = {
         "created_at": now(),
         "ok": not missing,
         "status": "ready" if not missing else "needs_config",
         "missing": missing,
         "checks": checks,
+        "official_model": official_model,
         "summary": {
-            "project_name": payload.get("project_name") or payload.get("subject") or "展会推广项目",
+            "project_name": project_name,
+            "project_id": project_id,
+            "unit_name": unit_name,
+            "unit_id": unit_id,
+            "promotion_id": unit_id,
             "subject": payload.get("subject") or "",
             "selling_points": payload.get("selling_points") or "",
             "budget": budget,
@@ -1099,15 +1204,17 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
             "goal": payload.get("goal") or "lead",
         },
         "dashboard": build_delivery_dashboard(payload.get("dashboard")),
-        "recommendation": "草稿已就绪后，下一步应上传视频素材、创建项目和推广；真实投放产生数据后再判断是否加预算或停投。",
+        "recommendation": "草稿就绪后，按官方链路先确认项目 project，再在项目下为每个视频创建一个投放单元；真实投放产生数据后，先按单元复盘，再汇总到项目。",
         "next_steps": [
             "检查广告主授权",
             "上传视频素材并回填 video_id",
-            "创建广告项目",
-            "创建推广并查询报表",
+            "确认或创建官方投放项目 project",
+            "在项目下创建该视频对应的官方投放单元并查询单元报表",
         ],
     }
     out = settings.storage_dir / "manifests" / f"{datetime.now().strftime('%Y%m%d-%H%M%S')}-delivery-draft-{safe_stem(draft['summary']['project_name'])}.json"
+    project_record = upsert_delivery_project_unit(draft)
+    draft["official_project_record"] = project_record
     draft["_manifest_path"] = str(write_json(out, draft))
     return draft
 
@@ -1226,8 +1333,8 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
         topic = require_text(payload, "topic", "视频需求")
         sample = payload.get("sample") or {}
         source = str(payload.get("material_source") or "local").strip().lower()
-        if source not in {"local", "pexels"}:
-            raise ValueError("素材来源必须是 local 或 pexels")
+        if source not in {"local", "pexels", "pixabay"}:
+            raise ValueError("素材来源必须是 local、pexels 或 pixabay")
         cta_text = str(payload.get("cta_text") or DEFAULT_VIDEO_CTA)
         voice = str(payload.get("voice") or "zh-CN-XiaoxiaoNeural")
         tts_service = str(payload.get("tts_service") or "edge")
@@ -1236,20 +1343,28 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
             raise ValueError(f"未知字幕模板：{caption_template}")
 
         def creator_pipeline_job() -> dict[str, Any]:
-            manual_script = str(payload.get("script") or "").strip()
+            # 兼容前端的 manual_script 和直接 API 调用的 script。
+            # 之前这里只读取 script，导致用户已经填写手动文案时仍然调用 Qwen，
+            # 也会让手动文案链路误报为模型生成失败。
+            manual_script = str(payload.get("script") or payload.get("manual_script") or "").strip()
             script = final_script_with_cta(manual_script or qwen.generate_copy(topic, sample), cta_text)
-            audio = tts.synthesize(
-                script,
-                service=tts_service,
-                voice=voice,
-                output_name=f"pipeline-{tts_service}-{uuid4().hex[:10]}.mp3",
-            )
+            sentences = render.split_sentences(script)
+            sentence_audio: list[Path] = []
+            for index, sentence in enumerate(sentences, start=1):
+                sentence_audio.append(tts.synthesize(sentence, service=tts_service, voice=voice, output_name=f"pipeline-{tts_service}-{uuid4().hex[:10]}-part-{index:02d}.mp3"))
+            audio = tts.concat_segments(sentence_audio, output_name=f"pipeline-{tts_service}-{uuid4().hex[:10]}.mp3", text=script, voice=voice)
             material_info: dict[str, Any] = {"source": source}
-            if source == "pexels":
+            sentence_material_dirs: list[str] = []
+            if source in {"pexels", "pixabay"}:
                 terms = qwen.generate_search_terms(topic, script, amount=5)
-                target_duration = max(20.0, render.duration(Path(audio)) + 6.0)
                 online_dir = settings.storage_dir / "online_materials" / f"moneyprint-{uuid4().hex[:10]}"
-                material_info.update(stock.download_moneyprinter_materials(terms, online_dir, target_duration))
+                # 每句单独检索并下载，保留一个总目录用于渲染器兜底。
+                for index, sentence in enumerate(sentences, start=1):
+                    sentence_terms = qwen.generate_search_terms(sentence, sentence, amount=2) or terms[:2]
+                    sentence_dir = online_dir / f"sentence-{index:02d}"
+                    sentence_material_dirs.append(str(sentence_dir))
+                    stock.download_moneyprinter_materials(sentence_terms, sentence_dir, target_duration=max(5.0, render.duration(sentence_audio[index - 1])), source=source, max_clip_duration=5)
+                material_info.update({"material_dir": str(online_dir), "search_terms": terms, "sentence_material_dirs": sentence_material_dirs})
                 material_dir = material_info["material_dir"]
             else:
                 material_dir = require_text(payload, "material_dir", "本地素材目录")
@@ -1274,6 +1389,7 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
                     caption_template=caption_template,
                     highlight_words=highlights,
                     cta_text=cta_text,
+                    sentence_material_dirs=sentence_material_dirs,
                 )
             )
             return {
@@ -1538,6 +1654,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/oceanengine/status":
             self.send_json({"ok": True, **ocean_config_public()})
+            return
+        if path == "/api/oceanengine/projects":
+            self.send_json(list_delivery_project_units())
             return
         if path == "/api/oceanengine/auth-url":
             query = parse_qs(parsed.query)

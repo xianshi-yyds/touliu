@@ -14,6 +14,15 @@ from .config import settings
 from .storage import manifest_path, write_json
 
 
+def post_no_proxy(*args, **kwargs):
+    session = requests.Session()
+    session.trust_env = False
+    try:
+        return session.post(*args, **kwargs)
+    finally:
+        session.close()
+
+
 def require_key() -> str:
     if not settings.dashscope_api_key:
         raise RuntimeError("Missing DASHSCOPE_API_KEY. Put it in .env or environment variables.")
@@ -38,11 +47,28 @@ def generate_copy(topic: str, sample: dict[str, Any] | None = None) -> str:
 2. 面向展商/观众，不要写成泛泛广告。
 3. 输出只给成片口播文案，不要解释。
 """.strip()
-    completion = openai_client().chat.completions.create(
-        model=settings.qwen_text_model,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return completion.choices[0].message.content or ""
+    url = settings.dashscope_base_url.rstrip("/") + "/chat/completions"
+    payload = {
+        "model": settings.qwen_text_model,
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": False,
+    }
+    try:
+        response = post_no_proxy(
+            url,
+            headers={"Authorization": f"Bearer {require_key()}", "Content-Type": "application/json"},
+            json=payload,
+            timeout=(8, 45),
+        )
+    except requests.RequestException as exc:
+        raise RuntimeError(f"Qwen copy generation failed: {exc}") from exc
+    if response.status_code >= 400:
+        raise RuntimeError(f"Qwen copy generation failed: HTTP {response.status_code} {response.text[:800]}")
+    data = response.json()
+    try:
+        return data["choices"][0]["message"].get("content") or ""
+    except Exception as exc:
+        raise RuntimeError(f"Qwen copy generation failed: invalid response {json.dumps(data, ensure_ascii=False)[:800]}") from exc
 
 
 def generate_search_terms(topic: str, script: str, amount: int = 5) -> list[str]:
@@ -130,7 +156,7 @@ def synthesize_speech(text: str, voice: str = "Cherry", output_name: str = "qwen
             "language_type": "Chinese",
         },
     }
-    response = requests.post(
+    response = post_no_proxy(
         settings.dashscope_multimodal_url,
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         json=payload,

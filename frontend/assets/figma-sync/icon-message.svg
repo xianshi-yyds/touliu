@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="lucide/message-circle" clip-path="url(#clip0_0_347)">
+<path id="Vector" d="M3.95 10C4.90429 10.4895 6.00204 10.6221 7.04544 10.3739C8.08884 10.1257 9.00928 9.51292 9.64088 8.64609C10.2725 7.77926 10.5737 6.71535 10.4903 5.64608C10.4069 4.57681 9.94429 3.57248 9.1859 2.8141C8.42752 2.05571 7.42319 1.59313 6.35392 1.50971C5.28465 1.42629 4.22074 1.72752 3.35391 2.35912C2.48708 2.99072 1.87435 3.91116 1.62611 4.95456C1.37788 5.99796 1.51047 7.09571 2 8.05L1 11L3.95 10Z" stroke="var(--stroke-0, #9C8BA2)" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_0_347">
+<rect width="12" height="12" fill="white"/>
+</clipPath>
+</defs>
+</svg>
