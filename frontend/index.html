@@ -773,6 +773,11 @@
     .official-project-view span { color:#858e9c; font-weight:900; font-size:12px; }
     .official-project-view b { font-size:16px; color:#17191f; }
     .official-project-view small { color:#8b94a3; font-weight:800; }
+    .delivery-state-banner { display:flex; justify-content:space-between; gap:14px; align-items:center; margin:0 0 14px; padding:12px 14px; border:1px solid #e2e7ef; border-radius:12px; background:#f8fafc; }
+    .delivery-state-banner span { color:#717b8d; font-size:13px; font-weight:750; }
+    .delivery-state-banner.succeeded { border-color:#cce8b9; background:#f2faec; }
+    .delivery-state-banner.queued { border-color:#f0dca7; background:#fff9e9; }
+    .delivery-state-banner.failed { border-color:#efc3c3; background:#fff3f3; }
     .official-unit-list { display:grid; gap:8px; margin:0 0 14px; }
     .official-unit-row { border:1px solid #e2e7ef; border-radius:12px; background:#fff; padding:10px 12px; display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:10px; align-items:center; }
     .official-unit-row em { width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-style:normal; font-weight:950; color:#fff; background:#17191f; }
@@ -1043,7 +1048,7 @@
       <div id="creator-order" class="workorder-strip"></div>
       <section id="creator-stage-brief" class="flow-stage active" data-stage="brief"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>确认最终口播方向</div><p class="stage-help">这里输入业务主题、卖点或完整文案。AI 生成后会直接出现在最终口播稿里，不再左右割裂。</p></div><span id="creator-brief-status" class="status">待确认</span></div><div class="single-column-form"><label>业务主题 / 手动文案</label><textarea id="copy-topic" placeholder="例如：2026北京国际会展大会招商推广，突出人流量、采购商质量、提前锁定展位"></textarea><div class="grid two"><div><label>推广主题</label><input id="brief-subject" value="2026北京国际会展大会招商推广"></div><div><label>目标观众</label><input id="brief-audience" placeholder="参展企业负责人 / 采购商"></div></div><div><label>核心卖点</label><textarea id="brief-selling" placeholder="突出人流量、采购商质量、提前锁定展位"></textarea></div><div><label>表达风格</label><input id="brief-tone" placeholder="专业、紧迫、招商转化"></div><div class="stage-actions"><button class="primary" onclick="createCopy()">AI 生成口播稿</button><button onclick="useManualCopy()">使用手动文案</button></div></div></section>
       <section id="creator-stage-copy" class="flow-stage" data-stage="copy"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>确认文案和声音</div><p class="stage-help">最终口播稿会用于配音和字幕。视频结尾会自动追加行动引导。</p></div><span id="creator-copy-status" class="status">等待文案</span></div><label>最终口播稿（用于配音和字幕）</label><textarea id="final-copy" placeholder="AI 生成或手动填写的最终口播稿会出现在这里"></textarea><div style="margin-top:14px"><label>视频结尾行动引导</label><input id="video-cta" value="点击下方链接，立即报名吧"></div><div class="grid two" style="margin-top:14px"><div><label>TTS 服务</label><select id="tts-service" onchange="syncTtsVoices()"><option value="edge">Microsoft Edge TTS（免密）</option><option value="qwen">阿里云百炼 Qwen TTS</option></select></div><div><label>音色</label><select id="tts-voice"></select></div></div><div class="stage-actions"><button class="primary" onclick="createTts()">生成语音</button><button onclick="confirmCreatorCopy()">确认文案，进入素材配置</button></div><div id="tts-preview" class="media-preview hidden" style="margin-top:14px"></div><div class="stage-transition-note">生成语音成功后会自动进入「素材和字幕」；如果不需要试听，点「确认文案，进入素材配置」。</div></section>
-      <section id="creator-stage-material" class="flow-stage" data-stage="material"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择素材来源和字幕</div><p class="stage-help">素材来源只有两个选项：本地素材库，或 MoneyPrinter 原始 Pexels/Pixabay 搜索链路。</p></div><span id="creator-material-status" class="status">待配置</span></div><div class="grid two" id="material-source-choices"><div class="source-choice active" data-source="local" onclick="chooseMaterialSource('local')"><b>本地素材库</b><p>使用你上传或放入 materials 的素材。</p></div><div class="source-choice" data-source="pexels" onclick="chooseMaterialSource('pexels')"><b>MoneyPrinter 搜索链路</b><p>走原始 Pexels/Pixabay 全局搜索下载逻辑。</p></div></div><div id="local-material-settings" style="margin-top:16px"><label>素材目录</label><input id="material-dir" placeholder="/path/to/materials"><div style="margin-top:12px"><label>参考样本目录（可选）</label><input id="competitor-dir" placeholder="可选"></div><div style="margin-top:12px"><label>添加本地素材</label><input id="material-files" type="file" multiple><div class="actions"><button onclick="notify('素材上传接口保留，后续接入')">上传到素材库</button><span class="status" id="material-count">素材 0 个</span><span class="status" id="local-source-count">素材 0 个</span></div></div></div><div class="grid two" style="margin-top:16px"><div><label>字幕视觉模板</label><div id="caption-templates" class="grid two"><div class="choice active" data-template="viral" onclick="chooseCaptionTemplate('viral')"><b>爆款强调</b><p>白字黑描边，黄色重点词</p></div><div class="choice" data-template="business" onclick="chooseCaptionTemplate('business')"><b>专业展会</b><p>稳重白字，蓝色业务重点</p></div><div class="choice" data-template="minimal" onclick="chooseCaptionTemplate('minimal')"><b>极简商务</b><p>半透明底板，清晰克制</p></div><div class="choice" data-template="active" onclick="chooseCaptionTemplate('active')"><b>活力招展</b><p>橙色大字，强化行动号召</p></div></div></div><div><label>重点词（逗号分隔）</label><textarea id="highlight-words" placeholder="专业买家, 人流量, 提前锁定, 限时报名"></textarea><p id="moneyprint-source-status">MoneyPrinter 在线链路状态待检查</p></div></div><div class="batch-box"><h3>批量化产出</h3><p>每一行一条主题或完整口播稿。提交后会以后台任务队列逐条生成，不阻塞前端页面。</p><textarea id="batch-copy-list" placeholder="例如：
+      <section id="creator-stage-material" class="flow-stage" data-stage="material"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择素材来源和字幕</div><p class="stage-help">素材来源只有两个选项：本地素材库，或 MoneyPrinter 原始 Pexels/Pixabay 搜索链路。</p></div><span id="creator-material-status" class="status">待配置</span></div><div class="grid two" id="material-source-choices"><div class="source-choice active" data-source="local" onclick="chooseMaterialSource('local')"><b>本地素材库</b><p>使用你上传或放入 materials 的素材。</p></div><div class="source-choice" data-source="pexels" onclick="chooseMaterialSource('pexels')"><b>MoneyPrinter 搜索链路</b><p>走原始 Pexels/Pixabay 全局搜索下载逻辑。</p></div></div><div id="local-material-settings" style="margin-top:16px"><label>素材目录</label><input id="material-dir" placeholder="/path/to/materials"><div style="margin-top:12px"><label>参考样本目录（可选）</label><input id="competitor-dir" placeholder="可选"></div><div style="margin-top:12px"><label>添加本地素材</label><input id="material-files" type="file" multiple><div class="actions"><button onclick="notify('素材上传接口保留，后续接入')">上传到素材库</button><span class="status" id="material-count">素材 0 个</span><span class="status" id="local-source-count">素材 0 个</span></div></div></div><div class="grid two" style="margin-top:16px"><div><label>字幕视觉模板</label><div id="caption-templates" class="grid two"><div class="choice active" data-template="viral" onclick="chooseCaptionTemplate('viral')"><b>爆款强调</b><p>白字黑描边，黄色重点词</p></div><div class="choice" data-template="business" onclick="chooseCaptionTemplate('business')"><b>专业展会</b><p>稳重白字，蓝色业务重点</p></div><div class="choice" data-template="minimal" onclick="chooseCaptionTemplate('minimal')"><b>极简商务</b><p>半透明底板，清晰克制</p></div><div class="choice" data-template="energetic" onclick="chooseCaptionTemplate('energetic')"><b>活力招展</b><p>橙色大字，强化行动号召</p></div></div></div><div><label>重点词（逗号分隔）</label><textarea id="highlight-words" placeholder="专业买家, 人流量, 提前锁定, 限时报名"></textarea><p id="moneyprint-source-status">MoneyPrinter 在线链路状态待检查</p></div></div><div class="batch-box"><h3>批量化产出</h3><p>每一行一条主题或完整口播稿。提交后会以后台任务队列逐条生成，不阻塞前端页面。</p><textarea id="batch-copy-list" placeholder="例如：
 北京国展招商推广，突出采购商质量
 上海电子展品牌曝光，突出专业观众"></textarea><div class="stage-actions"><button onclick="runBatchCreatorPipeline()">批量提交生成任务</button></div></div><div class="stage-actions"><button class="primary" onclick="runCreatorPipeline()">开始生成推广视频</button></div></section>
       <section id="creator-stage-output" class="flow-stage" data-stage="output"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">04</span>成片与历史版本</div><p class="stage-help">不满意时从历史版本恢复参数，只改需要调整的环节后再次生成。</p></div><span id="creator-output-status" class="status">等待生成</span></div><div id="render-preview" class="result-empty">成片任务完成后会出现在这里，并自动同步给投放员工。</div><h2 style="margin-top:24px">历史版本</h2><div id="creator-history"></div></section>
@@ -2312,7 +2317,9 @@
       if (/频率超限|rate|限流|too many/i.test(error)) return '巨量接口当前限流，请稍后在任务中心重试。';
       if (/osascript|Google Chrome|douyin|抖音|xiaohongshu|小红书|没有检索到/i.test(error)) return '平台检索没有成功：请确认浏览器已登录对应平台、页面可以正常搜索，并在员工详情里标记账号已登录后重试。';
       if (/视频上传失败|video upload|素材|material/i.test(error)) return '视频素材上传失败，请检查文件大小、格式和巨量素材权限。';
-      if (/DashScope|qwen|百炼|TTS|tts|voice/i.test(error)) return 'AI 或配音服务调用失败，请检查模型 Key、音色和网络后重试。';
+      if (/Read timed out|连接失败|网络连接失败|handshake|DNS|nodename/i.test(error)) return 'AI 或配音服务网络连接超时。任务已停止，不会继续卡在“生成中”；请检查 VPN/网络后直接重试。';
+      if (/所有配音服务均失败/i.test(error)) return 'Edge TTS 和 Qwen TTS 都未能生成语音，请检查网络与模型服务后重试。';
+      if (/DashScope|qwen|百炼|TTS|tts|voice/i.test(error)) return 'AI 或配音服务调用失败，请检查模型 Key、模型名称、音色和网络后重试。';
       if (/FFmpeg|ffmpeg|moviepy|render/i.test(error)) return '视频合成失败，请检查素材、FFmpeg 和字幕/配音文件是否可用。';
       if (error && error.length < 180 && !/Traceback|File "|RuntimeError|Exception/i.test(error)) return error;
       return '任务执行失败，已收起技术细节；请展开查看原因，修正后重试。';
@@ -2339,7 +2346,9 @@
         hasAudio: Boolean(latestAudioPath) || Boolean(latestSucceeded(items, ['tts','creator-pipeline'])),
         hasVideo: Boolean(valueOf('ad-video') || valueOf('publish-video')) || Boolean(latestSucceeded(items, ['render','creator-pipeline'])),
         hasOcean: Boolean(oceanConnected),
-        hasDelivery: Boolean(latestSucceeded(items, ['delivery-draft','ocean-safe-launch','delivery-report'])),
+        // 本地 delivery-draft 只代表参数检查通过，不代表已创建官方
+        // 项目/单元，更不代表已有投放数据。
+        hasDelivery: Boolean(latestSucceeded(items, ['ocean-safe-launch','delivery-report'])),
       };
     }
     function flowStepModel(state) {
@@ -2678,6 +2687,9 @@
         preview.classList.remove('hidden');
         markCreatorStepDone('copy');
         maybeFocusCreatorStep('material');
+        if (hasHydratedTasks && latestTts.result.fallback_used) {
+          notify(`原配音服务不可用，已自动切换到 ${latestTts.result.service} 并生成成功。`);
+        }
       }
       const latestRender = items.find(t => isCreatorSessionTask(t) && t.kind === 'render' && t.status === 'succeeded' && t.result?.summary?.preview_url);
       if (latestRender && latestRender.id !== lastCompletedRender) {
@@ -2710,7 +2722,13 @@
         document.getElementById('creator-output-status').className = 'status succeeded';
         ['copy','material','output'].forEach(markCreatorStepDone);
         maybeFocusCreatorStep('output');
-        if (hasHydratedTasks) notify('完整视频流水线已完成。');
+        if (hasHydratedTasks) {
+          const requestedTts = latestPipeline.result.tts?.requested_service;
+          const usedTts = latestPipeline.result.tts?.used_service;
+          notify(requestedTts && usedTts && requestedTts !== usedTts
+            ? `完整视频流水线已完成；配音已从 ${requestedTts} 自动切换到 ${usedTts}。`
+            : '完整视频流水线已完成。');
+        }
       }
       const latestOceanVideo = items.find(t => t.kind === 'ocean-video-upload' && t.status === 'succeeded' && t.result?.video_id);
       if (latestOceanVideo) document.getElementById('oe-video-id').value ||= latestOceanVideo.result.video_id;
@@ -2724,7 +2742,10 @@
       if (latestDelivery && latestDelivery.id !== lastCompletedDelivery) {
         lastCompletedDelivery = latestDelivery.id;
         renderDeliveryDraft(latestDelivery.result);
-        if (hasHydratedTasks) notify('投放员工已生成投放草稿。');
+        if (hasHydratedTasks) {
+          const official = latestDelivery.kind !== 'delivery-draft' || latestDelivery.result?.official_created;
+          notify(official ? '投放员工已完成官方安全草稿或数据同步。' : '投放参数检查通过，尚未创建巨量官方项目和单元。');
+        }
       }
     }
     function renderCreatorHistory(items = []) {
@@ -2741,12 +2762,21 @@
       const html = history.length ? history.map(task => {
         const index = items.indexOf(task);
         const source = ['pexels','pixabay'].includes(task.payload?.material_source) ? 'MoneyPrinter 在线搜索' : '本地素材库';
+        const material = task.result?.material || {};
+        const searchTerms = Array.isArray(material.search_terms) ? material.search_terms.filter(Boolean) : [];
+        const strategy = material.strategy === 'moneyprinter_global' ? '全局素材池' : '';
         const title = task.payload?.topic || task.payload?.keyword || '推广视频';
         const sampleTitle = task.payload?.sample?.title || task.payload?.sample?.desc || '未关联参考样本';
         const summary = task.result?.summary || {};
         const statusClass = task.status === 'succeeded' ? 'succeeded' : 'failed';
         const statusText = task.status === 'succeeded' ? '已生成' : '生成失败';
-        const detail = task.status === 'failed' ? (task.error || '后台任务失败，请重试') : `参考：${String(sampleTitle).slice(0, 60)}`;
+        const detail = task.status === 'failed'
+          ? (task.error || '后台任务失败，请重试')
+          : [
+              `参考：${String(sampleTitle).slice(0, 60)}`,
+              strategy ? `素材策略：${strategy}` : '',
+              searchTerms.length ? `检索词：${searchTerms.join('、')}` : '',
+            ].filter(Boolean).join(' · ');
         const preview = summary.preview_url ? `<button onclick="previewCreatorVersion(${index})">预览</button>` : '';
         const retry = task.status === 'failed' ? `<button onclick="retryTask(${index})">重试</button>` : '';
         return `<div class="history-item"><div><b>${escapeHtml(title)}</b><span class="status ${statusClass}" style="margin-left:8px">${statusText}</span><p>${escapeHtml(task.created_at || '')} · ${escapeHtml(source)} · ${escapeHtml(task.payload?.voice || '默认音色')}</p><p>${escapeHtml(detail)}</p></div><div class="actions">${preview}<button onclick="restoreCreatorVersion(${index})">恢复参数</button>${retry}</div></div>`;
@@ -2843,7 +2873,14 @@
       }
       const recommendation = draft?.recommendation;
       if (recommendation) tips.unshift(recommendation);
-      return `${buildOfficialProjectUnitView(draft)}<b>官方项目 / 单元复盘</b><p>当前口径：项目汇总 + 单元明细。项目下可包含多个视频单元，单元数据独立回流后再汇总到项目。</p>
+      const officialCreated = Boolean(draft?.official_created || draft?.status === 'official_created');
+      const configurationComplete = Boolean(draft?.configuration_complete || draft?.status === 'draft_ready');
+      const deliveryState = officialCreated
+        ? '<div class="delivery-state-banner succeeded"><b>官方项目/单元已创建</b><span>可以等待数据回流并按单元复盘。</span></div>'
+        : configurationComplete
+          ? '<div class="delivery-state-banner queued"><b>本地参数检查通过</b><span>尚未创建巨量官方项目和投放单元，不会产生投放与数据。</span></div>'
+          : '<div class="delivery-state-banner failed"><b>投放配置尚未完成</b><span>请先补齐检查项。</span></div>';
+      return `${deliveryState}${buildOfficialProjectUnitView(draft)}<b>官方项目 / 单元复盘</b><p>当前口径：项目汇总 + 单元明细。项目下可包含多个视频单元，单元数据独立回流后再汇总到项目。</p>
         <div class="recap-score">
           <span>曝光基础：${showCnt ? '已有数据' : '待启动'}</span>
           <span>点击表现：${ctr ? `${ctr.toFixed(2)}%` : '待观察'}</span>
@@ -2912,10 +2949,12 @@
       if (!task.result) return '';
       if (task.kind === 'search' || task.kind === 'import-links') return `找到了 ${task.result.count || 0} 条参考样本`;
       if (task.kind === 'copy') return '口播稿已回填到生视频员工面板';
-      if (task.kind === 'tts') return `语音已生成，音色：${task.result.voice || ''}`;
+      if (task.kind === 'tts') return `语音已生成，音色：${task.result.voice || ''}${task.result.fallback_used ? `（已自动切换到 ${task.result.service}）` : ''}`;
       if (task.kind === 'render') return task.result.summary?.final_video ? '成片已生成，可在生视频员工面板预览' : '成片任务已完成';
       if (task.kind === 'creator-pipeline') return task.result.summary?.final_video ? '口播、配音、素材和成片已全部生成' : '视频流水线已完成';
-      if (task.kind === 'delivery-draft') return '投放草稿已生成，可在投放员工面板查看配置检查';
+      if (task.kind === 'delivery-draft') return task.result.official_created
+        ? '官方项目和投放单元已创建'
+        : '投放参数检查通过，当前仍是本地草稿，尚未提交巨量创建';
       if (task.kind === 'delivery-report') return '投放报表已刷新，可在投放员工面板查看 9 项指标';
       if (task.kind === 'ocean-video-upload') return task.result.video_id ? `视频已上传，video_id：${task.result.video_id}` : '视频上传任务完成';
       if (task.kind === 'ocean-project-create') return task.result.project_id ? `项目已创建，project_id：${task.result.project_id}` : '项目创建任务完成';

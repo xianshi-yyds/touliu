@@ -32,7 +32,8 @@ FRONTEND_DIR = settings.project_root / "frontend"
 TASK_DIR = settings.storage_dir / "api_tasks"
 TASKS: dict[str, dict[str, Any]] = {}
 TASK_LOCK = threading.Lock()
-_DASHSCOPE_HEALTH: dict[str, Any] = {"checked_at": 0.0, "valid": False, "status": "unchecked"}
+_DASHSCOPE_HEALTH: dict[str, Any] = {"checked_at": 0.0, "valid": False, "status": "unchecked", "checking": False}
+_DASHSCOPE_HEALTH_LOCK = threading.Lock()
 
 OCEAN_BASE_URL = "https://api.oceanengine.com"
 OCEAN_TOKEN_FILE = settings.storage_dir / "oceanengine" / "oauth.json"
@@ -164,13 +165,8 @@ def requests_post_no_proxy(*args, **kwargs):
         session.close()
 
 
-def dashscope_health() -> dict[str, Any]:
-    """Validate DashScope with the same OpenAI-compatible chat endpoint used by copy generation."""
+def _probe_dashscope_health() -> None:
     global _DASHSCOPE_HEALTH
-    if not settings.dashscope_api_key:
-        return {"valid": False, "status": "missing"}
-    if time.time() - float(_DASHSCOPE_HEALTH.get("checked_at") or 0) < 300:
-        return {key: value for key, value in _DASHSCOPE_HEALTH.items() if key != "checked_at"}
     try:
         response = requests_post_no_proxy(
             settings.dashscope_base_url.rstrip("/") + "/chat/completions",
@@ -180,15 +176,30 @@ def dashscope_health() -> dict[str, Any]:
                 "messages": [{"role": "user", "content": "ping"}],
                 "stream": False,
             },
-            timeout=8,
+            timeout=(3, 8),
         )
         valid = response.status_code == 200
         status = "ready" if valid else ("invalid_key" if response.status_code == 401 else f"http_{response.status_code}")
     except requests.RequestException as exc:
         valid = False
         status = f"unreachable:{exc.__class__.__name__}"
-    _DASHSCOPE_HEALTH = {"checked_at": time.time(), "valid": valid, "status": status}
-    return {"valid": valid, "status": status}
+    with _DASHSCOPE_HEALTH_LOCK:
+        _DASHSCOPE_HEALTH = {"checked_at": time.time(), "valid": valid, "status": status, "checking": False}
+
+
+def dashscope_health() -> dict[str, Any]:
+    """Return cached model health and refresh it without blocking page APIs."""
+    global _DASHSCOPE_HEALTH
+    if not settings.dashscope_api_key:
+        return {"valid": False, "status": "missing", "checking": False}
+    with _DASHSCOPE_HEALTH_LOCK:
+        stale = time.time() - float(_DASHSCOPE_HEALTH.get("checked_at") or 0) >= 300
+        if stale and not _DASHSCOPE_HEALTH.get("checking"):
+            _DASHSCOPE_HEALTH["checking"] = True
+            if _DASHSCOPE_HEALTH.get("status") == "unchecked":
+                _DASHSCOPE_HEALTH["status"] = "checking"
+            threading.Thread(target=_probe_dashscope_health, daemon=True, name="dashscope-health").start()
+        return {key: value for key, value in _DASHSCOPE_HEALTH.items() if key != "checked_at"}
 
 
 def public_config() -> dict[str, Any]:
@@ -1160,31 +1171,39 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
     ]
     project_name = payload.get("project_name") or payload.get("subject") or "展会投放项目"
     unit_name = payload.get("unit_name") or Path(video_file).stem or "视频投放单元"
-    project_id = str(payload.get("project_id") or saved.get("last_project_id") or "").strip()
-    unit_id = str(payload.get("unit_id") or payload.get("promotion_id") or saved.get("last_promotion_id") or "").strip()
+    # A new draft must not silently inherit IDs from an unrelated previous
+    # launch. Official IDs are attached only when this draft explicitly
+    # supplies them or after the official create APIs return them.
+    project_id = str(payload.get("project_id") or "").strip()
+    unit_id = str(payload.get("unit_id") or payload.get("promotion_id") or "").strip()
+    video_id = str(payload.get("video_id") or "").strip()
+    configuration_complete = not missing
+    official_created = bool(project_id and unit_id and video_id)
     official_model = {
         "model": "project_with_units",
         "project": {
             "name": project_name,
             "project_id": project_id,
-            "source": "official_project",
-            "description": "当前展会对应一个官方投放项目。",
+            "source": "official_project" if project_id else "local_draft_project",
+            "description": "已创建官方投放项目。" if project_id else "本地项目草稿，尚未提交巨量创建。",
         },
         "unit": {
             "name": unit_name,
             "unit_id": unit_id,
             "promotion_id": unit_id,
             "video_file": video_file,
-            "video_id": payload.get("video_id") or "",
-            "source": "official_unit",
-            "description": "每个产出视频对应项目下一个官方投放单元，数据按该单元回流。",
+            "video_id": video_id,
+            "source": "official_unit" if unit_id else "local_draft_unit",
+            "description": "已创建官方投放单元。" if unit_id else "本地视频单元草稿，尚未提交巨量创建。",
         },
         "report_scope": "unit_first_project_summary",
     }
     draft = {
         "created_at": now(),
-        "ok": not missing,
-        "status": "ready" if not missing else "needs_config",
+        "ok": configuration_complete,
+        "status": "official_created" if official_created else ("draft_ready" if configuration_complete else "needs_config"),
+        "configuration_complete": configuration_complete,
+        "official_created": official_created,
         "missing": missing,
         "checks": checks,
         "official_model": official_model,
@@ -1199,12 +1218,16 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
             "budget": budget,
             "landing_url": landing_url,
             "convert_id": convert_id,
-            "video_id": payload.get("video_id") or "",
+            "video_id": video_id,
             "video_file": video_file,
             "goal": payload.get("goal") or "lead",
         },
         "dashboard": build_delivery_dashboard(payload.get("dashboard")),
-        "recommendation": "草稿就绪后，按官方链路先确认项目 project，再在项目下为每个视频创建一个投放单元；真实投放产生数据后，先按单元复盘，再汇总到项目。",
+        "recommendation": (
+            "官方项目和单元已创建，可按单元回流数据后汇总项目。"
+            if official_created
+            else "本地参数检查已通过，但尚未创建官方项目/单元；下一步执行关闭状态的官方安全草稿。"
+        ),
         "next_steps": [
             "检查广告主授权",
             "上传视频素材并回填 video_id",
@@ -1350,21 +1373,58 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
             script = final_script_with_cta(manual_script or qwen.generate_copy(topic, sample), cta_text)
             sentences = render.split_sentences(script)
             sentence_audio: list[Path] = []
+            tts_attempts: list[dict[str, Any]] = []
+            active_tts_service = tts_service
+            active_voice = voice
             for index, sentence in enumerate(sentences, start=1):
-                sentence_audio.append(tts.synthesize(sentence, service=tts_service, voice=voice, output_name=f"pipeline-{tts_service}-{uuid4().hex[:10]}-part-{index:02d}.mp3"))
-            audio = tts.concat_segments(sentence_audio, output_name=f"pipeline-{tts_service}-{uuid4().hex[:10]}.mp3", text=script, voice=voice)
+                audio_part, used_service, used_voice, errors = tts.synthesize_resilient(
+                    sentence,
+                    service=active_tts_service,
+                    voice=active_voice,
+                    output_name=f"pipeline-{active_tts_service}-{uuid4().hex[:10]}-part-{index:02d}.mp3",
+                )
+                sentence_audio.append(audio_part)
+                tts_attempts.append({
+                    "sentence": index,
+                    "requested_service": active_tts_service,
+                    "used_service": used_service,
+                    "used_voice": used_voice,
+                    "fallback_errors": errors,
+                })
+                # Once the first provider falls back successfully, prefer the
+                # working provider for the remaining sentences.
+                active_tts_service = used_service
+                active_voice = used_voice
+            audio = tts.concat_segments(
+                sentence_audio,
+                output_name=f"pipeline-{active_tts_service}-{uuid4().hex[:10]}.mp3",
+                text=script,
+                voice=active_voice,
+            )
             material_info: dict[str, Any] = {"source": source}
             sentence_material_dirs: list[str] = []
             if source in {"pexels", "pixabay"}:
+                # Follow MoneyPrinterTurbo's original online-material chain:
+                # generate one global set of English search terms from the full
+                # subject + script, then build one shared material pool whose
+                # usable duration covers the complete narration.  Do not search
+                # independently for every sentence here; that sentence-local
+                # strategy makes adjacent shots semantically fragmented and is
+                # not how MoneyPrinterTurbo/app/services/task.py works.
                 terms = qwen.generate_search_terms(topic, script, amount=5)
                 online_dir = settings.storage_dir / "online_materials" / f"moneyprint-{uuid4().hex[:10]}"
-                # 每句单独检索并下载，保留一个总目录用于渲染器兜底。
-                for index, sentence in enumerate(sentences, start=1):
-                    sentence_terms = qwen.generate_search_terms(sentence, sentence, amount=2) or terms[:2]
-                    sentence_dir = online_dir / f"sentence-{index:02d}"
-                    sentence_material_dirs.append(str(sentence_dir))
-                    stock.download_moneyprinter_materials(sentence_terms, sentence_dir, target_duration=max(5.0, render.duration(sentence_audio[index - 1])), source=source, max_clip_duration=5)
-                material_info.update({"material_dir": str(online_dir), "search_terms": terms, "sentence_material_dirs": sentence_material_dirs})
+                downloaded = stock.download_moneyprinter_materials(
+                    terms,
+                    online_dir,
+                    target_duration=max(5.0, render.duration(audio)),
+                    source=source,
+                    max_clip_duration=5,
+                )
+                material_info.update({
+                    **downloaded,
+                    "strategy": "moneyprinter_global",
+                    "sentence_material_dirs": [],
+                })
                 material_dir = material_info["material_dir"]
             else:
                 material_dir = require_text(payload, "material_dir", "本地素材目录")
@@ -1382,7 +1442,7 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
                     competitor_dir=str(payload.get("competitor_dir") or ""),
                     material_dir=material_dir,
                     name=str(payload.get("name") or f"creator-pipeline-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{uuid4().hex[:6]}"),
-                    tts_mode=tts_service,
+                    tts_mode=active_tts_service,
                     script_mode="manual",
                     script=script,
                     audio_file=str(audio),
@@ -1396,6 +1456,12 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
                 "copy": script,
                 "audio_path": str(audio),
                 "audio_preview_url": media_url(audio),
+                "tts": {
+                    "requested_service": tts_service,
+                    "used_service": active_tts_service,
+                    "used_voice": active_voice,
+                    "attempts": tts_attempts,
+                },
                 "summary": parsed.get("summary") or parsed,
                 "material": material_info,
                 "cta_text": cta_text,
@@ -1426,8 +1492,22 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
         voice = payload.get("voice") or "Cherry"
         service = str(payload.get("service") or "qwen")
         def tts_job() -> dict[str, Any]:
-            audio = tts.synthesize(text, service=service, voice=voice, output_name=f"{service}-tts-{uuid4().hex[:10]}.mp3")
-            return {"audio_path": str(audio), "preview_url": media_url(audio), "voice": voice, "service": service, "text": text}
+            audio, used_service, used_voice, fallback_errors = tts.synthesize_resilient(
+                text,
+                service=service,
+                voice=voice,
+                output_name=f"{service}-tts-{uuid4().hex[:10]}.mp3",
+            )
+            return {
+                "audio_path": str(audio),
+                "preview_url": media_url(audio),
+                "voice": used_voice,
+                "service": used_service,
+                "requested_service": service,
+                "fallback_used": used_service != service,
+                "fallback_errors": fallback_errors,
+                "text": text,
+            }
         return enqueue(kind, payload, tts_job)
     if kind == "render":
         script = final_script_with_cta(
@@ -1450,22 +1530,22 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
 
         def render_job() -> dict[str, Any]:
             resolved_audio = audio_file
+            actual_tts_service = str(payload.get("tts_service") or "qwen")
             if not resolved_audio and payload.get("auto_tts", True):
-                resolved_audio = str(
-                    tts.synthesize(
-                        script,
-                        service=str(payload.get("tts_service") or "qwen"),
-                        voice=str(payload.get("voice") or "Cherry"),
-                        output_name=f"render-tts-{uuid4().hex[:10]}.mp3",
-                    )
+                generated_audio, actual_tts_service, _actual_voice, _fallback_errors = tts.synthesize_resilient(
+                    script,
+                    service=actual_tts_service,
+                    voice=str(payload.get("voice") or "Cherry"),
+                    output_name=f"render-tts-{uuid4().hex[:10]}.mp3",
                 )
+                resolved_audio = str(generated_audio)
             parsed = parse_render_result(
                 pipeline.render_video(
                     keyword=payload.get("keyword") or payload.get("subject") or "展会推广",
                     competitor_dir=payload.get("competitor_dir") or "",
                     material_dir=material_dir,
                     name=render_name,
-                    tts_mode=payload.get("tts_mode") or ("qwen" if resolved_audio else "silent"),
+                    tts_mode=payload.get("tts_mode") or (actual_tts_service if resolved_audio else "silent"),
                     script_mode=payload.get("script_mode") or "formula",
                     script=script,
                     audio_file=resolved_audio,

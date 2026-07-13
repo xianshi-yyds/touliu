@@ -16,6 +16,9 @@ EDGE_VOICES = {
     "zh-CN-XiaoyiNeural": "zh-CN-XiaoyiNeural",
 }
 
+DEFAULT_EDGE_VOICE = "zh-CN-XiaoxiaoNeural"
+DEFAULT_QWEN_VOICE = "Cherry"
+
 
 def synthesize(text: str, service: str, voice: str, output_name: str) -> Path:
     service = (service or "qwen").strip().lower()
@@ -60,6 +63,41 @@ def synthesize(text: str, service: str, voice: str, output_name: str) -> Path:
     if not out.is_file() or out.stat().st_size == 0:
         raise RuntimeError("Edge TTS 未生成有效音频")
     return out
+
+
+def synthesize_resilient(
+    text: str,
+    service: str,
+    voice: str,
+    output_name: str,
+) -> tuple[Path, str, str, list[str]]:
+    """Generate speech and transparently try the other configured provider.
+
+    The returned metadata lets API tasks report which provider actually
+    produced the audio instead of claiming that the originally selected one
+    succeeded. Both failures are preserved in the final error message.
+    """
+    requested = (service or "qwen").strip().lower()
+    if requested not in {"edge", "qwen"}:
+        raise ValueError(f"不支持的 TTS 服务：{requested}")
+    fallback = "qwen" if requested == "edge" else "edge"
+    candidates = [requested, fallback]
+    errors: list[str] = []
+    requested_suffix = Path(output_name).suffix or ".mp3"
+    requested_stem = Path(output_name).stem
+    for index, candidate in enumerate(candidates):
+        candidate_voice = voice
+        if candidate == "edge" and candidate_voice not in EDGE_VOICES:
+            candidate_voice = DEFAULT_EDGE_VOICE
+        if candidate == "qwen" and candidate_voice in EDGE_VOICES:
+            candidate_voice = DEFAULT_QWEN_VOICE
+        candidate_name = output_name if index == 0 else f"{requested_stem}-fallback-{candidate}{requested_suffix}"
+        try:
+            path = synthesize(text, service=candidate, voice=candidate_voice, output_name=candidate_name)
+            return path, candidate, candidate_voice, errors
+        except Exception as exc:
+            errors.append(f"{candidate}: {type(exc).__name__}: {exc}")
+    raise RuntimeError("所有配音服务均失败：" + " | ".join(errors))
 
 
 def concat_segments(segments: list[Path], output_name: str, text: str = "", voice: str = "") -> Path:

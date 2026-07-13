@@ -4,6 +4,7 @@ import base64
 import json
 import mimetypes
 import re
+import time
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,48 @@ def post_no_proxy(*args, **kwargs):
         return session.post(*args, **kwargs)
     finally:
         session.close()
+
+
+def post_json_with_retry(
+    url: str,
+    *,
+    headers: dict[str, str],
+    payload: dict[str, Any],
+    timeout: tuple[int, int] = (8, 45),
+    attempts: int = 3,
+) -> requests.Response:
+    """Call an OpenAI-compatible endpoint with bounded retries.
+
+    Authentication/validation errors are returned immediately. Transient
+    network, timeout, rate-limit and 5xx failures are retried so a background
+    task does not fail on the first short connection fluctuation.
+    """
+    errors: list[str] = []
+    for attempt in range(1, max(1, attempts) + 1):
+        try:
+            response = post_no_proxy(
+                url,
+                headers=headers,
+                json=payload,
+                timeout=timeout,
+            )
+        except requests.RequestException as exc:
+            errors.append(f"第 {attempt} 次请求：{type(exc).__name__}: {exc}")
+            if attempt < attempts:
+                time.sleep(min(2 ** (attempt - 1), 4))
+                continue
+            raise RuntimeError(
+                "模型服务网络连接失败（已重试 "
+                f"{attempts} 次）：{' | '.join(errors[-3:])}"
+            ) from exc
+
+        retryable = response.status_code == 429 or response.status_code >= 500
+        if retryable and attempt < attempts:
+            errors.append(f"第 {attempt} 次请求：HTTP {response.status_code}")
+            time.sleep(min(2 ** (attempt - 1), 4))
+            continue
+        return response
+    raise RuntimeError("模型服务请求失败")
 
 
 def require_key() -> str:
@@ -54,13 +97,14 @@ def generate_copy(topic: str, sample: dict[str, Any] | None = None) -> str:
         "stream": False,
     }
     try:
-        response = post_no_proxy(
+        response = post_json_with_retry(
             url,
             headers={"Authorization": f"Bearer {require_key()}", "Content-Type": "application/json"},
-            json=payload,
+            payload=payload,
             timeout=(8, 45),
+            attempts=3,
         )
-    except requests.RequestException as exc:
+    except RuntimeError as exc:
         raise RuntimeError(f"Qwen copy generation failed: {exc}") from exc
     if response.status_code >= 400:
         raise RuntimeError(f"Qwen copy generation failed: HTTP {response.status_code} {response.text[:800]}")
@@ -156,11 +200,12 @@ def synthesize_speech(text: str, voice: str = "Cherry", output_name: str = "qwen
             "language_type": "Chinese",
         },
     }
-    response = post_no_proxy(
+    response = post_json_with_retry(
         settings.dashscope_multimodal_url,
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json=payload,
-        timeout=120,
+        payload=payload,
+        timeout=(8, 120),
+        attempts=3,
     )
     if response.status_code >= 400:
         raise RuntimeError(response.text)
