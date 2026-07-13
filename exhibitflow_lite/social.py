@@ -22,6 +22,199 @@ PLATFORM_LABELS = {
     "douyin": "抖音",
     "xiaohongshu": "小红书",
 }
+SOCIAL_BINDINGS_FILE = settings.storage_dir / "social_accounts.json"
+
+
+def canonical_platform(platform: str) -> str:
+    value = str(platform or "").strip().lower()
+    if value in {"xhs", "xiaohongshu"}:
+        return "xiaohongshu"
+    if value == "douyin":
+        return "douyin"
+    raise ValueError(f"unsupported platform: {platform}")
+
+
+def load_bindings() -> dict[str, Any]:
+    if not SOCIAL_BINDINGS_FILE.exists():
+        return {}
+    try:
+        data = json.loads(SOCIAL_BINDINGS_FILE.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def save_bindings(bindings: dict[str, Any]) -> None:
+    SOCIAL_BINDINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    write_json(SOCIAL_BINDINGS_FILE, bindings)
+
+
+def public_bindings() -> dict[str, Any]:
+    rows = load_bindings()
+    return {
+        key: {
+            "platform": key,
+            "status": str(value.get("status") or "unbound"),
+            "verified": bool(value.get("verified")),
+            "verified_at": value.get("verified_at") or "",
+            "last_checked_at": value.get("last_checked_at") or "",
+            "account_name": value.get("account_name") or "",
+            "page_url": value.get("page_url") or "",
+            "reason": value.get("reason") or "",
+        }
+        for key, value in rows.items()
+        if key in PLATFORM_SCRIPTS
+    }
+
+
+def _browser_probe(platform: str) -> dict[str, Any]:
+    """Inspect an existing signed-in Chrome tab without reading cookie values."""
+    platform = canonical_platform(platform)
+    domain = "xiaohongshu.com" if platform == "xiaohongshu" else "douyin.com"
+    if platform == "douyin":
+        session_names = ["sessionid", "sessionid_ss", "sid_tt", "uid_tt", "uid_tt_ss"]
+        avatar_selectors = [
+            "img[class*='avatar']", "[class*='avatar'] img", "[class*='user-info'] img",
+            "[class*='userInfo'] img", "a[href*='/user/'] img",
+        ]
+        name_selectors = ["[class*='user-name']", "[class*='nickname']", "[class*='userInfo']"]
+    else:
+        session_names = ["web_session"]
+        avatar_selectors = [
+            "img[class*='avatar']", "[class*='avatar'] img", "[class*='user'] img",
+            "a[href*='/user/profile/'] img", "[class*='author'] img",
+        ]
+        name_selectors = ["[class*='user-name']", "[class*='username']", "[class*='nickname']"]
+    js = f"""
+(function() {{
+  function visible(el) {{
+    if (!el) return false;
+    var r = el.getBoundingClientRect();
+    var s = window.getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && s.display !== 'none' && s.visibility !== 'hidden';
+  }}
+  function clean(v) {{ return String(v || '').replace(/\\s+/g, ' ').trim(); }}
+  var cookieNames = (document.cookie || '').split(';').map(function(v) {{ return v.split('=')[0].trim(); }}).filter(Boolean);
+  var sessionNames = {json.dumps(session_names, ensure_ascii=False)};
+  var sessionSignals = sessionNames.filter(function(name) {{ return cookieNames.indexOf(name) >= 0; }});
+  var loginNodes = Array.from(document.querySelectorAll('button,a,span,div')).filter(function(el) {{
+    if (!visible(el)) return false;
+    var text = clean(el.innerText || el.textContent);
+    return text === '登录' || text === '立即登录' || text === '手机号登录';
+  }});
+  var avatarSelectors = {json.dumps(avatar_selectors, ensure_ascii=False)};
+  var avatars = [];
+  avatarSelectors.forEach(function(selector) {{
+    try {{ avatars = avatars.concat(Array.from(document.querySelectorAll(selector)).filter(visible)); }} catch (err) {{}}
+  }});
+  var accountName = '';
+  var nameSelectors = {json.dumps(name_selectors, ensure_ascii=False)};
+  for (var i = 0; i < nameSelectors.length && !accountName; i++) {{
+    try {{
+      var node = Array.from(document.querySelectorAll(nameSelectors[i])).find(visible);
+      var text = clean(node && (node.innerText || node.textContent));
+      if (text && text.length <= 60 && text !== '登录') accountName = text;
+    }} catch (err) {{}}
+  }}
+  return JSON.stringify({{
+    url: location.href,
+    title: document.title || '',
+    session_signal_count: sessionSignals.length,
+    login_button_count: loginNodes.length,
+    avatar_count: avatars.length,
+    account_name: accountName
+  }});
+}})()
+""".strip()
+    with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8", delete=False) as handle:
+        handle.write(js)
+        js_path = Path(handle.name)
+    osa = f'''
+set jsCode to read POSIX file "{js_path}" as «class utf8»
+tell application "Google Chrome"
+  if (count of windows) is 0 then return "NO_CHROME_WINDOW"
+  repeat with w in windows
+    repeat with i from 1 to count of tabs of w
+      set t to tab i of w
+      if (URL of t) contains "{domain}" then
+        return execute t javascript jsCode
+      end if
+    end repeat
+  end repeat
+  return "NO_PLATFORM_TAB"
+end tell
+'''
+    try:
+        output = subprocess.check_output(
+            ["osascript", "-e", osa],
+            text=True,
+            stderr=subprocess.STDOUT,
+            timeout=30,
+        ).strip()
+    finally:
+        js_path.unlink(missing_ok=True)
+    if output in {"NO_CHROME_WINDOW", "NO_PLATFORM_TAB"}:
+        return {"verified": False, "reason": "没有找到已打开的平台登录页", "probe": output}
+    try:
+        probe = json.loads(output)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"无法解析 Chrome 登录状态：{output[:300]}") from exc
+    verified = bool(
+        int(probe.get("session_signal_count") or 0) > 0
+        or (
+            int(probe.get("avatar_count") or 0) > 0
+            and int(probe.get("login_button_count") or 0) == 0
+        )
+    )
+    reason = "已检测到有效平台会话" if verified else "页面仍显示登录入口，或没有检测到账号会话"
+    return {"verified": verified, "reason": reason, **probe}
+
+
+def verify_browser_login(platform: str) -> dict[str, Any]:
+    platform = canonical_platform(platform)
+    checked_at = datetime.now().isoformat(timespec="seconds")
+    try:
+        probe = _browser_probe(platform)
+    except Exception as exc:
+        probe = {"verified": False, "reason": str(exc), "url": "", "account_name": ""}
+    bindings = load_bindings()
+    previous = bindings.get(platform) or {}
+    row = {
+        "platform": platform,
+        "status": "verified" if probe.get("verified") else "invalid",
+        "verified": bool(probe.get("verified")),
+        "verified_at": checked_at if probe.get("verified") else previous.get("verified_at") or "",
+        "last_checked_at": checked_at,
+        "account_name": probe.get("account_name") or previous.get("account_name") or "",
+        "page_url": probe.get("url") or "",
+        "reason": probe.get("reason") or "",
+        "detector": {
+            "session_signal_count": int(probe.get("session_signal_count") or 0),
+            "login_button_count": int(probe.get("login_button_count") or 0),
+            "avatar_count": int(probe.get("avatar_count") or 0),
+        },
+    }
+    bindings[platform] = row
+    save_bindings(bindings)
+    return row
+
+
+def clear_binding(platform: str) -> dict[str, Any]:
+    platform = canonical_platform(platform)
+    bindings = load_bindings()
+    bindings.pop(platform, None)
+    save_bindings(bindings)
+    return {"ok": True, "platform": platform, "status": "unbound"}
+
+
+def require_verified_binding(platform: str) -> dict[str, Any]:
+    result = verify_browser_login(platform)
+    if not result.get("verified"):
+        raise RuntimeError(
+            f"{PLATFORM_LABELS.get(canonical_platform(platform), platform)}账号没有通过真实登录检测："
+            f"{result.get('reason') or '请重新登录'}"
+        )
+    return result
 
 
 def python_executable() -> str:
@@ -137,6 +330,7 @@ def normalize_report(report_path: Path, action: str, platform: str, log: str, li
 
 
 def search(platform: str, keyword: str, limit: int, deep: bool = False) -> dict[str, Any]:
+    platform = canonical_platform(platform)
     if platform not in PLATFORM_SCRIPTS:
         raise ValueError(f"unsupported platform: {platform}")
     if not (settings.crawler_dir / PLATFORM_SCRIPTS[platform]).exists():
@@ -159,6 +353,9 @@ def search(platform: str, keyword: str, limit: int, deep: bool = False) -> dict[
         out = manifest_path("search", platform, keyword)
         manifest["_manifest_path"] = str(write_json(out, manifest))
         return manifest
+    # A browser tab merely being open is not account binding. Re-check the
+    # actual signed-in Chrome session immediately before every real crawl.
+    require_verified_binding(platform)
     started_at = time.time() - 1
     cmd = [
         python_executable(),
@@ -190,6 +387,7 @@ def search(platform: str, keyword: str, limit: int, deep: bool = False) -> dict[
 
 
 def download_selected(platform: str, keyword: str, urls: list[str], limit: int = 1) -> dict[str, Any]:
+    platform = canonical_platform(platform)
     if platform not in PLATFORM_SCRIPTS:
         raise ValueError(f"unsupported platform: {platform}")
     clean_urls = [url.strip() for url in urls if url and url.strip()]
@@ -223,6 +421,7 @@ def download_selected(platform: str, keyword: str, urls: list[str], limit: int =
         out = manifest_path("download", platform, keyword)
         manifest["_manifest_path"] = str(write_json(out, manifest))
         return manifest
+    require_verified_binding(platform)
     started_at = time.time() - 1
     with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as handle:
         urls_file = Path(handle.name)

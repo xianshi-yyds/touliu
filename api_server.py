@@ -1792,6 +1792,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/materials":
             self.send_json(list_materials())
             return
+        if path == "/api/social/bindings":
+            self.send_json({"ok": True, "items": social.public_bindings()})
+            return
         if path == "/api/latest":
             query = parse_qs(parsed.query)
             self.send_json(latest_manifest(action=(query.get("action") or [""])[0]))
@@ -1844,6 +1847,14 @@ class Handler(BaseHTTPRequestHandler):
                 payload = self.read_payload()
                 auth_code = require_text(payload, "auth_code", "巨量授权 auth_code")
                 self.send_json(ocean_exchange_token(auth_code))
+                return
+            if path == "/api/social/verify":
+                payload = self.read_payload()
+                self.send_json({"ok": True, "binding": social.verify_browser_login(require_text(payload, "platform", "平台"))})
+                return
+            if path == "/api/social/clear":
+                payload = self.read_payload()
+                self.send_json(social.clear_binding(require_text(payload, "platform", "平台")))
                 return
             if path == "/api/oceanengine/refresh-token":
                 payload = self.read_payload()

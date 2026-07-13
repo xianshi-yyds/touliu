@@ -1163,36 +1163,59 @@
     let latestOceanStatus = null;
     let currentHunterTaskId = sessionStorage.getItem('currentHunterTaskId') || '';
     const creatorSessionTaskIds = new Set(JSON.parse(sessionStorage.getItem('creatorSessionTaskIds') || '[]'));
-    const platformBindings = JSON.parse(localStorage.getItem('platformBindings') || '{}');
+    let platformBindings = {};
     const creatorCompletedSteps = new Set();
 
-    function persistPlatformBindings() {
-      localStorage.setItem('platformBindings', JSON.stringify(platformBindings));
-    }
+    function backendPlatform(platform) { return platform === 'xhs' ? 'xiaohongshu' : platform; }
     function platformLabel(platform) {
       return platform === 'xhs' || platform === 'xiaohongshu' ? '小红书' : '抖音';
     }
     function platformStatusText(platform) {
       const item = platformBindings[platform] || {};
-      if (item.status === 'confirmed') return `已确认登录${item.checked_at ? ` · ${item.checked_at.slice(5,16)}` : ''}`;
+      if (item.status === 'verified' && item.verified) return `已验证登录${item.verified_at ? ` · ${item.verified_at.slice(5,16)}` : ''}`;
       if (item.status === 'pending') return `已打开登录页${item.checked_at ? ` · ${item.checked_at.slice(5,16)}` : ''}`;
-      if (item.status === 'invalid') return '登录可能失效';
+      if (item.status === 'invalid') return `登录无效${item.reason ? ` · ${item.reason}` : ''}`;
       return '未绑定';
     }
     function rememberPlatformBinding(platform, status = 'pending') {
       platformBindings[platform] = {status, checked_at: new Date().toISOString()};
-      persistPlatformBindings();
       renderEmployeeAccountPanel(currentEmployeeModal, employeeModalModels[currentEmployeeModal] || employeeModalModels.hunter);
       renderHunterBindingSummary();
     }
-    function confirmPlatformLogin(platform) {
-      rememberPlatformBinding(platform, 'confirmed');
-      notify(`${platformLabel(platform)}已标记为已登录；下一次检索会用真实抓取结果校验。`);
+    async function loadPlatformBindings() {
+      try {
+        const data = await api('/api/social/bindings');
+        platformBindings = {
+          douyin: data.items?.douyin || {},
+          xhs: data.items?.xiaohongshu || {},
+        };
+        if (currentEmployeeModal === 'hunter') renderEmployeeAccountPanel('hunter', employeeModalModels.hunter);
+        renderHunterBindingSummary();
+      } catch (error) {
+        notify(`平台账号状态读取失败：${error.message}`, 'error');
+      }
     }
-    function invalidatePlatformLogin(platform) {
-      platformBindings[platform] = {status:'invalid', checked_at:new Date().toISOString()};
-      persistPlatformBindings();
-      renderHunterBindingSummary();
+    async function confirmPlatformLogin(platform) {
+      rememberPlatformBinding(platform, 'pending');
+      notify(`正在真实检测${platformLabel(platform)}浏览器登录状态…`);
+      try {
+        const data = await api('/api/social/verify', {method:'POST', body:JSON.stringify({platform:backendPlatform(platform)})});
+        platformBindings[platform] = data.binding || {};
+        renderEmployeeAccountPanel(currentEmployeeModal, employeeModalModels[currentEmployeeModal] || employeeModalModels.hunter);
+        renderHunterBindingSummary();
+        if (data.binding?.verified) notify(`${platformLabel(platform)}账号已通过真实登录检测。`);
+        else notify(`${platformLabel(platform)}未通过登录检测：${data.binding?.reason || '请完成登录后重试'}`, 'error');
+      } catch (error) {
+        platformBindings[platform] = {status:'invalid', verified:false, reason:error.message};
+        renderEmployeeAccountPanel(currentEmployeeModal, employeeModalModels[currentEmployeeModal] || employeeModalModels.hunter);
+        renderHunterBindingSummary();
+        notify(error.message, 'error');
+      }
+    }
+    async function clearPlatformBinding(platform) {
+      await api('/api/social/clear', {method:'POST', body:JSON.stringify({platform:backendPlatform(platform)})});
+      await loadPlatformBindings();
+      notify(`已解除${platformLabel(platform)}账号绑定，可重新登录其他账号。`);
     }
     function rememberCreatorTask(task) {
       if (!task?.id) return;
@@ -1287,7 +1310,7 @@
       };
       rememberPlatformBinding(platform, 'pending');
       window.open(urls[platform] || 'about:blank', '_blank', 'noopener,noreferrer,width=1100,height=820');
-      notify(`已打开${platformLabel(platform)}登录窗口。登录完成后点“我已登录”，检索成功才视为真实可用。`);
+      notify(`已打开${platformLabel(platform)}登录窗口。登录完成后返回这里点击“验证登录”。`);
     }
     function renderEmployeeAccountPanel(id, model) {
       const box = document.getElementById('figma-modal-account-area');
@@ -1295,8 +1318,9 @@
       if (id === 'hunter') {
         const row = (platform, title, desc) => {
           const status = platformStatusText(platform);
-          const cls = status.includes('已确认') ? 'succeeded' : status.includes('失效') ? 'failed' : status.includes('已打开') ? 'running' : '';
-          return `<div class="employee-bind-card-lite"><div><b>${title}</b><p>${desc}</p><span class="status ${cls}">${escapeHtml(status)}</span></div><div class="actions"><button onclick="openPlatformLogin('${platform}')">绑定</button><button onclick="confirmPlatformLogin('${platform}')">我已登录</button></div></div>`;
+          const verified = Boolean(platformBindings[platform]?.verified);
+          const cls = verified ? 'succeeded' : status.includes('无效') ? 'failed' : status.includes('已打开') ? 'running' : '';
+          return `<div class="employee-bind-card-lite"><div><b>${title}</b><p>${desc}</p><span class="status ${cls}">${escapeHtml(status)}</span></div><div class="actions"><button onclick="openPlatformLogin('${platform}')">${verified ? '切换账号' : '打开登录页'}</button><button class="${verified ? '' : 'primary'}" onclick="confirmPlatformLogin('${platform}')">验证登录</button>${verified ? `<button onclick="clearPlatformBinding('${platform}')">解除</button>` : ''}</div></div>`;
         };
         box.innerHTML = row('douyin', '抖音账号', '用于检索抖音热点和视频样本。') + row('xhs', '小红书账号', '用于检索小红书笔记和视频样本。');
         return;
@@ -1323,7 +1347,7 @@
     function renderHunterBindingSummary() {
       const card = document.querySelector('#hunter .account-bind-card');
       if (!card) return;
-      const summary = `<div class="binding-status-row"><span class="status ${platformBindings.douyin?.status === 'confirmed' ? 'succeeded' : platformBindings.douyin?.status === 'pending' ? 'running' : ''}">抖音：${escapeHtml(platformStatusText('douyin'))}</span><span class="status ${platformBindings.xhs?.status === 'confirmed' ? 'succeeded' : platformBindings.xhs?.status === 'pending' ? 'running' : ''}">小红书：${escapeHtml(platformStatusText('xhs'))}</span></div>`;
+      const summary = `<div class="binding-status-row"><span class="status ${platformBindings.douyin?.verified ? 'succeeded' : platformBindings.douyin?.status === 'pending' ? 'running' : platformBindings.douyin?.status === 'invalid' ? 'failed' : ''}">抖音：${escapeHtml(platformStatusText('douyin'))}</span><span class="status ${platformBindings.xhs?.verified ? 'succeeded' : platformBindings.xhs?.status === 'pending' ? 'running' : platformBindings.xhs?.status === 'invalid' ? 'failed' : ''}">小红书：${escapeHtml(platformStatusText('xhs'))}</span></div>`;
       if (!card.querySelector('.binding-status-row')) card.insertAdjacentHTML('beforeend', summary);
       else card.querySelector('.binding-status-row').outerHTML = summary;
     }
@@ -2672,7 +2696,7 @@
       const latestHunter = currentHunterTaskId ? items.find(t => t.id === currentHunterTaskId) : items.find(t => ['search','import-links'].includes(t.kind));
       if (latestHunter) {
         renderHunterProgress(latestHunter);
-        if (latestHunter.status === 'failed' && latestHunter.payload?.platform) invalidatePlatformLogin(latestHunter.payload.platform === 'xiaohongshu' ? 'xhs' : latestHunter.payload.platform);
+        if (latestHunter.status === 'failed' && latestHunter.payload?.platform) loadPlatformBindings();
       }
       const latestSearch = items.find(t => ['search','import-links'].includes(t.kind) && t.status === 'succeeded');
       if (latestSearch && latestSearch.id !== lastCompletedSearch) {
@@ -2988,6 +3012,7 @@
       });
     });
     refreshAll();
+    loadPlatformBindings();
     syncTtsVoices();
     chooseMaterialSource('local');
     renderHunterBindingSummary();
