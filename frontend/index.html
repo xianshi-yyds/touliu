@@ -2765,6 +2765,9 @@
         const material = task.result?.material || {};
         const searchTerms = Array.isArray(material.search_terms) ? material.search_terms.filter(Boolean) : [];
         const strategy = material.strategy === 'moneyprinter_global' ? '全局素材池' : '';
+        const termSource = material.search_term_source === 'model'
+          ? 'AI 主题检索词'
+          : (material.search_term_source === 'fallback' ? '通用兜底检索词' : '');
         const title = task.payload?.topic || task.payload?.keyword || '推广视频';
         const sampleTitle = task.payload?.sample?.title || task.payload?.sample?.desc || '未关联参考样本';
         const summary = task.result?.summary || {};
@@ -2775,6 +2778,7 @@
           : [
               `参考：${String(sampleTitle).slice(0, 60)}`,
               strategy ? `素材策略：${strategy}` : '',
+              termSource ? `检索词来源：${termSource}` : '',
               searchTerms.length ? `检索词：${searchTerms.join('、')}` : '',
             ].filter(Boolean).join(' · ');
         const preview = summary.preview_url ? `<button onclick="previewCreatorVersion(${index})">预览</button>` : '';

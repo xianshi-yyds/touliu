@@ -115,8 +115,15 @@ def generate_copy(topic: str, sample: dict[str, Any] | None = None) -> str:
         raise RuntimeError(f"Qwen copy generation failed: invalid response {json.dumps(data, ensure_ascii=False)[:800]}") from exc
 
 
-def generate_search_terms(topic: str, script: str, amount: int = 5) -> list[str]:
-    """Generate the same short English stock-video queries used by MoneyPrinter."""
+def generate_search_terms_with_meta(topic: str, script: str, amount: int = 5) -> dict[str, Any]:
+    """Generate MoneyPrinter-compatible global search terms with provenance.
+
+    The previous implementation used the OpenAI SDK with a 12-second timeout
+    and silently fell back to generic exhibition words.  Slow workspace models
+    therefore produced technically valid videos whose footage had little to do
+    with the user's subject.  Use the same bounded retry path as copy generation
+    and report whether the terms came from the model or the fallback.
+    """
     prompt = f"""
 Generate {amount} English stock-video search terms for one coherent short video.
 Return only a JSON array of strings. Each term must contain 1-3 English words.
@@ -124,24 +131,56 @@ Return only a JSON array of strings. Each term must contain 1-3 English words.
 Subject: {topic}
 Script: {script}
 """.strip()
+    error = ""
     try:
-        completion = openai_client().chat.completions.create(
-            model=settings.qwen_text_model,
-            messages=[{"role": "user", "content": prompt}],
-            timeout=12,
+        response = post_json_with_retry(
+            settings.dashscope_base_url.rstrip("/") + "/chat/completions",
+            headers={"Authorization": f"Bearer {require_key()}", "Content-Type": "application/json"},
+            payload={
+                "model": settings.qwen_text_model,
+                "messages": [{"role": "user", "content": prompt}],
+                "stream": False,
+            },
+            timeout=(8, 45),
+            attempts=3,
         )
-        raw = completion.choices[0].message.content or ""
+        if response.status_code >= 400:
+            raise RuntimeError(f"HTTP {response.status_code} {response.text[:500]}")
+        data = response.json()
+        raw = str(data["choices"][0]["message"].get("content") or "")
         match = re.search(r"\[[\s\S]*?\]", raw)
         if match:
             terms = json.loads(match.group(0))
             clean = [str(term).strip() for term in terms if str(term).strip()][:amount]
             if clean:
-                return clean
-    except Exception:
-        # Keep the MoneyPrinter material chain usable during transient LLM/network failures.
-        pass
-    fallback = ["business exhibition", "trade show crowd", "exhibition booth", "business networking", "conference venue"]
-    return fallback[:amount]
+                return {"terms": clean, "source": "model", "error": ""}
+        error = "模型返回内容不是 JSON 字符串数组"
+    except Exception as exc:
+        error = str(exc)
+    # Keep the material chain usable, but expose the fallback instead of
+    # pretending that generic terms were generated from the current topic.
+    context = f"{topic} {script}".lower()
+    category_terms: list[str] = []
+    category_rules = [
+        (("新能源", "电动车", "汽车", "充电", "automotive", "vehicle"), ["electric vehicle", "auto show", "charging station", "automotive technology"]),
+        (("食品", "餐饮", "饮料", "茶", "food", "beverage"), ["food expo", "food sampling", "beverage exhibition", "food industry"]),
+        (("机器人", "人工智能", "ai", "智能制造", "科技"), ["robot exhibition", "artificial intelligence", "technology expo", "smart manufacturing"]),
+        (("医疗", "医药", "健康", "medical", "health"), ["medical exhibition", "healthcare technology", "medical equipment", "health conference"]),
+        (("家居", "家具", "建材", "装饰"), ["furniture expo", "interior design", "building materials", "home exhibition"]),
+        (("外贸", "跨境", "进出口", "采购商"), ["international trade", "business buyers", "trade negotiation", "global commerce"]),
+    ]
+    for needles, candidates in category_rules:
+        if any(needle in context for needle in needles):
+            category_terms.extend(candidates)
+    fallback = category_terms + ["business exhibition", "trade show crowd", "exhibition booth", "business networking", "conference venue"]
+    # Preserve order while removing overlaps from multiple matched categories.
+    fallback = list(dict.fromkeys(fallback))
+    return {"terms": fallback[:amount], "source": "fallback", "error": error}
+
+
+def generate_search_terms(topic: str, script: str, amount: int = 5) -> list[str]:
+    """Backward-compatible list-only wrapper."""
+    return list(generate_search_terms_with_meta(topic, script, amount).get("terms") or [])
 
 
 def data_url(path: Path) -> str:

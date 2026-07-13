@@ -1411,7 +1411,8 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
                 # independently for every sentence here; that sentence-local
                 # strategy makes adjacent shots semantically fragmented and is
                 # not how MoneyPrinterTurbo/app/services/task.py works.
-                terms = qwen.generate_search_terms(topic, script, amount=5)
+                term_result = qwen.generate_search_terms_with_meta(topic, script, amount=5)
+                terms = list(term_result.get("terms") or [])
                 online_dir = settings.storage_dir / "online_materials" / f"moneyprint-{uuid4().hex[:10]}"
                 downloaded = stock.download_moneyprinter_materials(
                     terms,
@@ -1423,6 +1424,8 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
                 material_info.update({
                     **downloaded,
                     "strategy": "moneyprinter_global",
+                    "search_term_source": term_result.get("source") or "unknown",
+                    "search_term_error": term_result.get("error") or "",
                     "sentence_material_dirs": [],
                 })
                 material_dir = material_info["material_dir"]
