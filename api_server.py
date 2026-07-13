@@ -32,6 +32,15 @@ FRONTEND_DIR = settings.project_root / "frontend"
 TASK_DIR = settings.storage_dir / "api_tasks"
 TASKS: dict[str, dict[str, Any]] = {}
 TASK_LOCK = threading.Lock()
+RESUMABLE_TASK_KINDS = {
+    "search",
+    "import-links",
+    "download",
+    "creator-pipeline",
+    "copy",
+    "tts",
+    "render",
+}
 _DASHSCOPE_HEALTH: dict[str, Any] = {"checked_at": 0.0, "valid": False, "status": "unchecked", "checking": False}
 _DASHSCOPE_HEALTH_LOCK = threading.Lock()
 
@@ -57,9 +66,17 @@ def save_task(task: dict[str, Any]) -> None:
     write_json(task_path(task["id"]), task)
 
 
-def load_tasks() -> None:
+def load_tasks() -> list[str]:
+    """Load persisted tasks and return safe jobs that should resume.
+
+    Content-generation and retrieval jobs are safe to run again with the same
+    payload. Publishing and OceanEngine creation jobs are deliberately not
+    resumed automatically because replaying those requests could publish twice
+    or create duplicate official projects/units.
+    """
     ensure_storage()
     TASK_DIR.mkdir(parents=True, exist_ok=True)
+    pending_resume: list[str] = []
     for path in sorted(TASK_DIR.glob("*.json"), key=lambda item: item.stat().st_mtime, reverse=True):
         try:
             task = json.loads(path.read_text(encoding="utf-8"))
@@ -74,10 +91,22 @@ def load_tasks() -> None:
             )
         )
         if task.get("status") in {"queued", "running"}:
-            task["status"] = "failed"
-            task["finished_at"] = now()
-            task["error"] = "服务重启，任务在执行完成前被中断，请重新提交。"
-            save_task(task)
+            if task.get("kind") in RESUMABLE_TASK_KINDS and isinstance(task.get("payload"), dict):
+                task["status"] = "queued"
+                task["recovery_pending"] = True
+                task["recovered_at"] = now()
+                task["resume_count"] = int(task.get("resume_count") or 0) + 1
+                task.pop("started_at", None)
+                task.pop("finished_at", None)
+                task.pop("error", None)
+                task.pop("traceback", None)
+                save_task(task)
+                pending_resume.append(str(task.get("id") or ""))
+            else:
+                task["status"] = "failed"
+                task["finished_at"] = now()
+                task["error"] = "服务重启时任务仍在执行。为避免重复发布或重复创建官方资产，系统未自动重放，请人工确认后重试。"
+                save_task(task)
         elif fake_success:
             task["status"] = "failed"
             task["finished_at"] = task.get("finished_at") or now()
@@ -87,6 +116,7 @@ def load_tasks() -> None:
             task["error"] = "阿里云百炼 API Key 无效或已失效，请更新 .env 后重启服务。"
             save_task(task)
         TASKS[task["id"]] = task
+    return [task_id for task_id in pending_resume if task_id]
 
 
 SENSITIVE_KEYS = {"access_token", "token", "api_key", "secret", "password", "cookie"}
@@ -1307,20 +1337,31 @@ def run_job(task_id: str, fn: Callable[[], Any]) -> None:
             save_task(task)
 
 
-def enqueue(kind: str, payload: dict[str, Any], fn: Callable[[], Any]) -> dict[str, Any]:
-    task_id = (
+def enqueue(
+    kind: str,
+    payload: dict[str, Any],
+    fn: Callable[[], Any],
+    *,
+    existing_task_id: str = "",
+) -> dict[str, Any]:
+    task_id = existing_task_id or (
         f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}-{kind}-"
         f"{safe_stem(payload.get('keyword') or payload.get('topic') or payload.get('subject') or 'task')}-"
         f"{uuid4().hex[:6]}"
     )
-    task = {
-        "id": task_id,
-        "kind": kind,
-        "status": "queued",
-        "created_at": now(),
-        "payload": public_payload(payload),
-    }
     with TASK_LOCK:
+        previous = TASKS.get(task_id) or {}
+        task = {
+            "id": task_id,
+            "kind": kind,
+            "status": "queued",
+            "created_at": previous.get("created_at") or now(),
+            "payload": public_payload(payload),
+        }
+        if existing_task_id:
+            task["recovered_at"] = previous.get("recovered_at") or now()
+            task["resume_count"] = int(previous.get("resume_count") or 1)
+            task["recovery_pending"] = False
         TASKS[task_id] = task
         save_task(task)
     thread = threading.Thread(target=run_job, args=(task_id, fn), daemon=True)
@@ -1328,7 +1369,10 @@ def enqueue(kind: str, payload: dict[str, Any], fn: Callable[[], Any]) -> dict[s
     return task
 
 
-def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
+def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "") -> dict[str, Any]:
+    def submit(fn: Callable[[], Any]) -> dict[str, Any]:
+        return enqueue(kind, payload, fn, existing_task_id=existing_task_id)
+
     if kind == "search":
         if not public_config()["crawler_configured"]:
             raise RuntimeError("真实平台抓取器未配置。请使用“导入链接”，或先安装抓取插件。")
@@ -1338,12 +1382,12 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
         if not 1 <= limit <= 50:
             raise ValueError("检索数量必须在 1 到 50 之间")
         deep = bool(payload.get("deep"))
-        return enqueue(kind, payload, lambda: social.search(platform, keyword, limit, deep=deep))
+        return submit(lambda: social.search(platform, keyword, limit, deep=deep))
     if kind == "import-links":
         platform = payload.get("platform") or "douyin"
         keyword = require_text(payload, "keyword", "样本主题")
         links = require_text(payload, "links", "至少一个视频链接")
-        return enqueue(kind, payload, lambda: render.import_links(platform, keyword, links))
+        return submit(lambda: render.import_links(platform, keyword, links))
     if kind == "download":
         if not public_config()["crawler_configured"]:
             raise RuntimeError("下载能力未配置，请先安装抓取插件。")
@@ -1351,7 +1395,7 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
         keyword = payload.get("keyword") or ""
         urls = payload.get("urls") or []
         limit = int(payload.get("limit") or len(urls) or 1)
-        return enqueue(kind, payload, lambda: social.download_selected(platform, keyword, urls, limit=limit))
+        return submit(lambda: social.download_selected(platform, keyword, urls, limit=limit))
     if kind == "creator-pipeline":
         topic = require_text(payload, "topic", "视频需求")
         sample = payload.get("sample") or {}
@@ -1470,15 +1514,13 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
                 "cta_text": cta_text,
             }
 
-        return enqueue(kind, payload, creator_pipeline_job)
+        return submit(creator_pipeline_job)
     if kind == "copy":
         topic = str(payload.get("topic") or payload.get("keyword") or "").strip()
         sample = payload.get("sample") or {}
         if not topic and not (sample.get("title") or sample.get("desc")):
             raise ValueError("请填写主题/卖点，或先选择一个参考样本")
-        return enqueue(
-            kind,
-            payload,
+        return submit(
             lambda: {
                 "copy": final_script_with_cta(
                     qwen.generate_copy(topic, sample),
@@ -1511,7 +1553,7 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
                 "fallback_errors": fallback_errors,
                 "text": text,
             }
-        return enqueue(kind, payload, tts_job)
+        return submit(tts_job)
     if kind == "render":
         script = final_script_with_cta(
             require_text(payload, "script", "成片脚本"),
@@ -1561,19 +1603,13 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
             parsed["cta_text"] = str(payload.get("cta_text") or DEFAULT_VIDEO_CTA)
             return parsed
 
-        return enqueue(
-            kind,
-            payload,
-            render_job,
-        )
+        return submit(render_job)
     if kind == "publish":
         if not public_config()["publisher_configured"]:
             raise RuntimeError("发布器未配置，当前不能提交真实发布任务。")
         video_file = require_text(payload, "video_file", "视频文件")
         require_text(payload, "title", "发布标题")
-        return enqueue(
-            kind,
-            payload,
+        return submit(
             lambda: {
                 "log": publisher.upload_video(
                     platform=payload.get("platform") or "douyin",
@@ -1585,20 +1621,45 @@ def make_task(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
             },
         )
     if kind == "delivery-draft":
-        return enqueue(kind, payload, lambda: delivery_draft(payload))
+        return submit(lambda: delivery_draft(payload))
     if kind == "delivery-report":
-        return enqueue(kind, payload, lambda: ocean_report(payload))
+        return submit(lambda: ocean_report(payload))
     if kind == "ocean-video-upload":
-        return enqueue(kind, payload, lambda: ocean_video_upload(payload))
+        return submit(lambda: ocean_video_upload(payload))
     if kind == "ocean-image-upload":
-        return enqueue(kind, payload, lambda: ocean_image_upload(payload))
+        return submit(lambda: ocean_image_upload(payload))
     if kind == "ocean-project-create":
-        return enqueue(kind, payload, lambda: ocean_project_create(payload))
+        return submit(lambda: ocean_project_create(payload))
     if kind == "ocean-promotion-create":
-        return enqueue(kind, payload, lambda: ocean_promotion_create(payload))
+        return submit(lambda: ocean_promotion_create(payload))
     if kind == "ocean-safe-launch":
-        return enqueue(kind, payload, lambda: ocean_safe_delivery_test(payload))
+        return submit(lambda: ocean_safe_delivery_test(payload))
     raise ValueError(f"unsupported task kind: {kind}")
+
+
+def resume_pending_tasks(task_ids: list[str]) -> None:
+    """Rebuild safe background jobs from their persisted kind and payload."""
+    for task_id in task_ids:
+        with TASK_LOCK:
+            task = dict(TASKS.get(task_id) or {})
+        if not task:
+            continue
+        try:
+            make_task(
+                str(task.get("kind") or ""),
+                dict(task.get("payload") or {}),
+                existing_task_id=task_id,
+            )
+        except Exception as exc:
+            with TASK_LOCK:
+                current = TASKS.get(task_id) or task
+                current["status"] = "failed"
+                current["finished_at"] = now()
+                current["recovery_pending"] = False
+                current["error"] = f"服务重启后恢复任务失败：{exc}"
+                current["traceback"] = traceback.format_exc()
+                TASKS[task_id] = current
+                save_task(current)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -1847,7 +1908,10 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    load_tasks()
+    pending_resume = load_tasks()
+    if pending_resume:
+        print(f"Recovering {len(pending_resume)} safe background task(s) after restart")
+        resume_pending_tasks(pending_resume)
     host = settings.host
     port = settings.port
     print(f"ExhibitFlow API running at http://{host}:{port}")

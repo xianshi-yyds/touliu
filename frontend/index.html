@@ -2310,7 +2310,13 @@
     }
     function taskBusinessMessage(task) {
       if (!task) return '';
-      if (task.status !== 'failed') return taskSummary(task);
+      if (task.status !== 'failed') {
+        const summary = taskSummary(task);
+        if (Number(task.resume_count || 0) > 0 && ['queued','running'].includes(task.status)) {
+          return `服务重启后已自动恢复（第 ${Number(task.resume_count)} 次）${summary ? ` · ${summary}` : '，员工正在继续执行。'}`;
+        }
+        return summary;
+      }
       const error = String(task.error || '');
       if (/access_token无效|token.*invalid|invalid.*token/i.test(error)) return '巨量授权已失效，请重新点击“前往巨量”完成绑定后重试。';
       if (/list'?: \[\]|广告主|advertiser/i.test(error) && /为空|empty|list'?: \[\]/i.test(error)) return '当前授权账号没有可用投放广告主，请先在巨量侧开通或共享广告主。';
