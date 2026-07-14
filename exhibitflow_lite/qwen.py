@@ -72,6 +72,12 @@ def require_key() -> str:
     return settings.dashscope_api_key
 
 
+def require_deepseek_key() -> str:
+    if not settings.deepseek_api_key:
+        raise RuntimeError("Missing DEEPSEEK_API_KEY. Put it in .env or environment variables.")
+    return settings.deepseek_api_key
+
+
 def openai_client() -> OpenAI:
     return OpenAI(api_key=require_key(), base_url=settings.dashscope_base_url)
 
@@ -90,29 +96,29 @@ def generate_copy(topic: str, sample: dict[str, Any] | None = None) -> str:
 2. 面向展商/观众，不要写成泛泛广告。
 3. 输出只给成片口播文案，不要解释。
 """.strip()
-    url = settings.dashscope_base_url.rstrip("/") + "/chat/completions"
+    url = settings.deepseek_base_url.rstrip("/") + "/chat/completions"
     payload = {
-        "model": settings.qwen_text_model,
+        "model": settings.deepseek_text_model,
         "messages": [{"role": "user", "content": prompt}],
         "stream": False,
     }
     try:
         response = post_json_with_retry(
             url,
-            headers={"Authorization": f"Bearer {require_key()}", "Content-Type": "application/json"},
+            headers={"Authorization": f"Bearer {require_deepseek_key()}", "Content-Type": "application/json"},
             payload=payload,
             timeout=(8, 45),
             attempts=3,
         )
     except RuntimeError as exc:
-        raise RuntimeError(f"Qwen copy generation failed: {exc}") from exc
+        raise RuntimeError(f"DeepSeek copy generation failed: {exc}") from exc
     if response.status_code >= 400:
-        raise RuntimeError(f"Qwen copy generation failed: HTTP {response.status_code} {response.text[:800]}")
+        raise RuntimeError(f"DeepSeek copy generation failed: HTTP {response.status_code} {response.text[:800]}")
     data = response.json()
     try:
         return data["choices"][0]["message"].get("content") or ""
     except Exception as exc:
-        raise RuntimeError(f"Qwen copy generation failed: invalid response {json.dumps(data, ensure_ascii=False)[:800]}") from exc
+        raise RuntimeError(f"DeepSeek copy generation failed: invalid response {json.dumps(data, ensure_ascii=False)[:800]}") from exc
 
 
 def generate_search_terms_with_meta(topic: str, script: str, amount: int = 5) -> dict[str, Any]:
@@ -134,10 +140,10 @@ Script: {script}
     error = ""
     try:
         response = post_json_with_retry(
-            settings.dashscope_base_url.rstrip("/") + "/chat/completions",
-            headers={"Authorization": f"Bearer {require_key()}", "Content-Type": "application/json"},
+            settings.deepseek_base_url.rstrip("/") + "/chat/completions",
+            headers={"Authorization": f"Bearer {require_deepseek_key()}", "Content-Type": "application/json"},
             payload={
-                "model": settings.qwen_text_model,
+                "model": settings.deepseek_text_model,
                 "messages": [{"role": "user", "content": prompt}],
                 "stream": False,
             },

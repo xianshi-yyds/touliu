@@ -154,11 +154,13 @@ with st.sidebar:
     st.caption("抓取器/发布器是可选插件；不配置也能手动导入样本并生成成片。")
     st.write(f"可选抓取器：`{settings.crawler_dir}`")
     st.write(f"可选发布器：`{settings.sau_bin}`")
-    st.write(f"Qwen 文案：`{settings.qwen_text_model}`")
+    st.write(f"DeepSeek 文案：`{settings.deepseek_text_model}`")
     st.write(f"Qwen 视觉：`{settings.qwen_vl_model}`")
     st.write(f"TTS：`{settings.qwen_tts_model}`")
+    if not settings.deepseek_api_key:
+        st.warning("未配置 DEEPSEEK_API_KEY，文案/搜索词生成不可用。")
     if not settings.dashscope_api_key:
-        st.warning("未配置 DASHSCOPE_API_KEY，Qwen 功能不可用。")
+        st.warning("未配置 DASHSCOPE_API_KEY，视觉理解/Qwen TTS 不可用。")
 
 st.subheader("1. 检索同行样本")
 search_cols = st.columns([1.1, 1.6, 1.0, 1.2], gap="medium")
@@ -219,7 +221,7 @@ downloaded_items = download_manifest.get("items") or []
 downloaded = next((item for item in downloaded_items if item.get("download_ok") and item.get("download_path")), {})
 
 st.divider()
-st.subheader("2. Qwen 辅助")
+st.subheader("2. AI 辅助")
 qwen_cols = st.columns(3, gap="medium")
 with qwen_cols[0]:
     if st.button("基于样本生成文案", use_container_width=True, disabled=not bool(sample)):

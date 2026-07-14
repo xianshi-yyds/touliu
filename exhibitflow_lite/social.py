@@ -22,6 +22,10 @@ PLATFORM_LABELS = {
     "douyin": "抖音",
     "xiaohongshu": "小红书",
 }
+PLATFORM_LOGIN_URLS = {
+    "douyin": "https://www.douyin.com/",
+    "xiaohongshu": "https://www.xiaohongshu.com/explore",
+}
 SOCIAL_BINDINGS_FILE = settings.storage_dir / "social_accounts.json"
 
 
@@ -64,6 +68,40 @@ def public_bindings() -> dict[str, Any]:
         }
         for key, value in rows.items()
         if key in PLATFORM_SCRIPTS
+    }
+
+
+def open_local_login_page(platform: str) -> dict[str, Any]:
+    """Open the platform login page in the Chrome instance on the API host.
+
+    The social crawler and browser probe both run on the machine hosting the
+    API.  Opening the URL from frontend JavaScript would instead open the
+    visitor's browser, so this action deliberately stays server-side.
+    """
+    platform = canonical_platform(platform)
+    url = PLATFORM_LOGIN_URLS[platform]
+    if sys.platform != "darwin":
+        raise RuntimeError("本机浏览器登录只支持运行 API 的 macOS 主机")
+    try:
+        subprocess.run(
+            ["open", "-a", "Google Chrome", url],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=10,
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError("运行 API 的本机未找到 macOS open 命令") from exc
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stdout or "").strip()
+        raise RuntimeError(detail or "无法在本机打开 Google Chrome") from exc
+    return {
+        "ok": True,
+        "platform": platform,
+        "url": url,
+        "target": "api_host_google_chrome",
+        "message": "已在运行 API 服务的本机 Google Chrome 中打开登录页",
     }
 
 
@@ -374,15 +412,18 @@ def search(platform: str, keyword: str, limit: int, deep: bool = False) -> dict[
     log = run_command(cmd, settings.crawler_dir)
     manifest = normalize_report(latest_crawler_report(platform, started_at), "search", platform, log, limit)
     manifest["deep_enriched"] = bool(deep)
+    if not manifest.get("items"):
+        # A valid browser session can still return zero matches for a narrow
+        # keyword.  That is a completed search with an empty result, not a
+        # crawler/login failure.  Keep the result in the task record so the
+        # UI can show "已完成 / 0 条" and the user can choose another keyword.
+        manifest["empty_result"] = True
+        manifest["warning"] = (
+            f"{PLATFORM_LABELS.get(platform, platform)}检索已完成，但没有找到匹配视频。"
+            "请换一个更宽泛的关键词或调整筛选条件后重试。"
+        )
     out = manifest_path("search", platform, keyword)
     manifest["_manifest_path"] = str(write_json(out, manifest))
-    if not manifest.get("items"):
-        hint = (
-            "请先在 Chrome 登录抖音后重试。"
-            if platform == "douyin"
-            else "请确认 Chrome 中的小红书账号仍为登录状态，并检查筛选页是否能正常打开。"
-        )
-        raise RuntimeError(f"{PLATFORM_LABELS.get(platform, platform)}没有检索到可用视频。{hint}")
     return manifest
 
 

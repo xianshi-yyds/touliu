@@ -45,6 +45,11 @@ class Settings:
         os.getenv("EXHIBITFLOW_MATERIAL_DIR", str(PROJECT_ROOT / "materials"))
     )
     dashscope_api_key: str = os.getenv("DASHSCOPE_API_KEY", "").strip()
+    # Text generation is served by DeepSeek. Keep the legacy Qwen text field
+    # for backwards-compatible config inspection, but text calls no longer
+    # use it.
+    deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "").strip()
+    deepseek_text_model: str = os.getenv("DEEPSEEK_TEXT_MODEL", "deepseek-chat").strip()
     qwen_text_model: str = os.getenv("QWEN_TEXT_MODEL", "qwen3.6-plus").strip()
     qwen_vl_model: str = os.getenv("QWEN_VL_MODEL", "qwen3-vl-plus").strip()
     qwen_tts_model: str = os.getenv("QWEN_TTS_MODEL", "qwen3-tts-flash").strip()
@@ -52,6 +57,7 @@ class Settings:
     pixabay_api_key: str = os.getenv("PIXABAY_API_KEY", "").strip()
     render_engine: str = os.getenv("EXHIBITFLOW_RENDER_ENGINE", "internal").strip().lower()
     dashscope_base_url: str = os.getenv("DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1").strip().rstrip("/")
+    deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").strip().rstrip("/")
     dashscope_multimodal_url: str = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation"
     oceanengine_app_id: str = os.getenv("OCEANENGINE_APP_ID", "").strip()
     oceanengine_secret: str = os.getenv("OCEANENGINE_SECRET", "").strip()

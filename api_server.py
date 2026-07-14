@@ -43,6 +43,8 @@ RESUMABLE_TASK_KINDS = {
 }
 _DASHSCOPE_HEALTH: dict[str, Any] = {"checked_at": 0.0, "valid": False, "status": "unchecked", "checking": False}
 _DASHSCOPE_HEALTH_LOCK = threading.Lock()
+_DEEPSEEK_HEALTH: dict[str, Any] = {"checked_at": 0.0, "valid": False, "status": "unchecked", "checking": False}
+_DEEPSEEK_HEALTH_LOCK = threading.Lock()
 
 OCEAN_BASE_URL = "https://api.oceanengine.com"
 OCEAN_TOKEN_FILE = settings.storage_dir / "oceanengine" / "oauth.json"
@@ -83,6 +85,39 @@ def load_tasks() -> list[str]:
         except Exception:
             continue
         result = task.get("result") or {}
+        legacy_empty_search = (
+            task.get("status") == "failed"
+            and task.get("kind") == "search"
+            and "没有检索到可用视频" in str(task.get("error") or "")
+        )
+        if legacy_empty_search:
+            # Older versions treated a valid zero-match crawl as an exception,
+            # which left the UI showing a red failed task with a full progress
+            # bar.  Normalize those historical records to the same durable
+            # empty-result shape used by the current crawler.
+            payload = task.get("payload") if isinstance(task.get("payload"), dict) else {}
+            platform = str(payload.get("platform") or "douyin")
+            label = social.PLATFORM_LABELS.get(platform, platform)
+            keyword = str(payload.get("keyword") or "")
+            task["status"] = "succeeded"
+            task["finished_at"] = task.get("finished_at") or now()
+            task["result"] = {
+                "action": "search",
+                "source": "legacy_empty_result",
+                "platform": platform,
+                "platform_label": label,
+                "query": keyword,
+                "requested_limit": int(payload.get("limit") or 0),
+                "count": 0,
+                "actual_count": 0,
+                "items": [],
+                "empty_result": True,
+                "warning": f"{label}检索已完成，但没有找到匹配视频。请换一个更宽泛的关键词或调整筛选条件后重试。",
+            }
+            task.pop("error", None)
+            task.pop("traceback", None)
+            save_task(task)
+            result = task["result"]
         fake_success = (
             task.get("status") == "succeeded"
             and (
@@ -232,9 +267,48 @@ def dashscope_health() -> dict[str, Any]:
         return {key: value for key, value in _DASHSCOPE_HEALTH.items() if key != "checked_at"}
 
 
+def _probe_deepseek_health() -> None:
+    global _DEEPSEEK_HEALTH
+    try:
+        response = requests_post_no_proxy(
+            settings.deepseek_base_url.rstrip("/") + "/chat/completions",
+            headers={"Authorization": f"Bearer {settings.deepseek_api_key}", "Content-Type": "application/json"},
+            json={
+                "model": settings.deepseek_text_model,
+                "messages": [{"role": "user", "content": "ping"}],
+                "stream": False,
+                "max_tokens": 1,
+            },
+            timeout=(3, 8),
+        )
+        valid = response.status_code == 200
+        status = "ready" if valid else ("invalid_key" if response.status_code == 401 else f"http_{response.status_code}")
+    except requests.RequestException as exc:
+        valid = False
+        status = f"unreachable:{exc.__class__.__name__}"
+    with _DEEPSEEK_HEALTH_LOCK:
+        _DEEPSEEK_HEALTH = {"checked_at": time.time(), "valid": valid, "status": status, "checking": False}
+
+
+def deepseek_health() -> dict[str, Any]:
+    """Return cached DeepSeek text-model health without blocking page APIs."""
+    global _DEEPSEEK_HEALTH
+    if not settings.deepseek_api_key:
+        return {"valid": False, "status": "missing", "checking": False}
+    with _DEEPSEEK_HEALTH_LOCK:
+        stale = time.time() - float(_DEEPSEEK_HEALTH.get("checked_at") or 0) >= 300
+        if stale and not _DEEPSEEK_HEALTH.get("checking"):
+            _DEEPSEEK_HEALTH["checking"] = True
+            if _DEEPSEEK_HEALTH.get("status") == "unchecked":
+                _DEEPSEEK_HEALTH["status"] = "checking"
+            threading.Thread(target=_probe_deepseek_health, daemon=True, name="deepseek-health").start()
+        return {key: value for key, value in _DEEPSEEK_HEALTH.items() if key != "checked_at"}
+
+
 def public_config() -> dict[str, Any]:
     materials = render.media_files(settings.default_material_dir)
-    ai_health = dashscope_health()
+    dashscope_status = dashscope_health()
+    text_health = deepseek_health()
     return {
         "project_root": str(settings.project_root),
         "storage_dir": str(settings.storage_dir),
@@ -242,12 +316,18 @@ def public_config() -> dict[str, Any]:
         "crawler_configured": any((settings.crawler_dir / name).exists() for name in social.PLATFORM_SCRIPTS.values()),
         "publisher_configured": publisher.sau_available(),
         "render_engine": settings.render_engine,
+        "text_llm_provider": "deepseek",
+        "text_llm_model": settings.deepseek_text_model,
+        "deepseek_key_present": bool(settings.deepseek_api_key),
+        "deepseek_configured": bool(text_health.get("valid")),
+        "deepseek_status": text_health.get("status"),
+        # Kept for clients that still display the legacy Qwen text setting.
         "qwen_text_model": settings.qwen_text_model,
         "qwen_vl_model": settings.qwen_vl_model,
         "qwen_tts_model": settings.qwen_tts_model,
         "dashscope_key_present": bool(settings.dashscope_api_key),
-        "dashscope_configured": bool(ai_health.get("valid")),
-        "dashscope_status": ai_health.get("status"),
+        "dashscope_configured": bool(dashscope_status.get("valid")),
+        "dashscope_status": dashscope_status.get("status"),
         "material_count": len(materials),
         "moneyprint_stock_configured": bool(settings.pexels_api_key),
         "pixabay_stock_configured": bool(settings.pixabay_api_key),
@@ -1411,7 +1491,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
 
         def creator_pipeline_job() -> dict[str, Any]:
             # 兼容前端的 manual_script 和直接 API 调用的 script。
-            # 之前这里只读取 script，导致用户已经填写手动文案时仍然调用 Qwen，
+            # 之前这里只读取 script，导致用户已经填写手动文案时仍然调用 DeepSeek，
             # 也会让手动文案链路误报为模型生成失败。
             manual_script = str(payload.get("script") or payload.get("manual_script") or "").strip()
             script = final_script_with_cta(manual_script or qwen.generate_copy(topic, sample), cta_text)
@@ -1859,6 +1939,10 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/oceanengine/refresh-token":
                 payload = self.read_payload()
                 self.send_json(ocean_refresh_token(str(payload.get("refresh_token") or "")))
+                return
+            if path == "/api/social/open-login":
+                payload = self.read_payload()
+                self.send_json(social.open_local_login_page(require_text(payload, "platform", "平台")))
                 return
             if path == "/api/oceanengine/advertisers":
                 self.send_json(ocean_advertisers(self.read_payload()))

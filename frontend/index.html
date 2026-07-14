@@ -132,7 +132,7 @@
     .staff-avatar img { width:96px; height:96px; object-fit:contain; display:block; filter:drop-shadow(0 12px 16px rgba(0,0,0,.12)); }
     .staff-info { min-width:0; display:flex; flex-direction:column; justify-content:center; position:relative; }
     .staff-status { position:absolute; top:0; right:0; height:24px; display:inline-flex; align-items:center; gap:4px; padding:0 9px; border-radius:7px; background:#e9e5db; color:#8a7c64; font-size:12px; font-weight:800; }
-    .staff-status::before { content:''; width:14px; height:14px; display:inline-block; background:url('/assets/figma-digital-employees/meh.svg') center/contain no-repeat; }
+    .staff-status::before { content:''; width:14px; height:14px; display:inline-block; background:url('assets/figma-digital-employees/meh.svg') center/contain no-repeat; }
     .staff-name { font-size:18px; font-weight:900; margin:0 0 8px; color:#17191f; }
     .staff-space { color:#7d7f85; font-size:13px; font-weight:650; margin-bottom:8px; }
     .staff-tag { width:max-content; max-width:100%; height:24px; display:inline-flex; align-items:center; gap:6px; padding:0 10px; border-radius:999px; background:#fff; color:#333842; font-size:12px; border:1px solid #ecebea; }
@@ -909,11 +909,11 @@
 <body>
   <div id="toast" class="toast"></div>
   <aside class="figma-sidebar" aria-label="展会导航">
-    <div class="figma-side-brand"><img src="/assets/figma-sync/brand-wanyou.png" alt="万有展会版"></div>
-    <button class="figma-nav active" data-nav="expo" onclick="showSection('overview'); backToExhibitionList(); setFigmaNav('expo')"><img src="/assets/figma-sync/expo-list.svg" alt="">展会列表</button>
-    <button class="figma-nav" data-nav="staff" onclick="openExhibition(currentExhibitionId || '新能源'); setFigmaNav('staff')"><img src="/assets/figma-sync/employee.svg" alt="">数字员工</button>
-    <button class="figma-nav muted" onclick="notify('用量明细后续接入')"><img src="/assets/figma-sync/usage-line.svg" alt="">用量明细</button>
-    <button class="figma-nav muted" onclick="notify('空间详情后续接入')"><img src="/assets/figma-sync/space.svg" alt="">空间详情</button>
+    <div class="figma-side-brand"><img src="assets/figma-sync/brand-wanyou.png" alt="万有展会版"></div>
+    <button class="figma-nav active" data-nav="expo" onclick="showSection('overview'); backToExhibitionList(); setFigmaNav('expo')"><img src="assets/figma-sync/expo-list.svg" alt="">展会列表</button>
+    <button class="figma-nav" data-nav="staff" onclick="openExhibition(currentExhibitionId || '新能源'); setFigmaNav('staff')"><img src="assets/figma-sync/employee.svg" alt="">数字员工</button>
+    <button class="figma-nav muted" onclick="notify('用量明细后续接入')"><img src="assets/figma-sync/usage-line.svg" alt="">用量明细</button>
+    <button class="figma-nav muted" onclick="notify('空间详情后续接入')"><img src="assets/figma-sync/space.svg" alt="">空间详情</button>
     <div class="figma-side-spacer"></div>
     <div class="figma-usage-card"><span>积分用量</span><b>2.3k / 4k</b><i><em></em></i></div>
   </aside>
@@ -935,28 +935,28 @@
       </div>
       <div class="expo-list figma-expo-list">
         <div class="expo-card figma-expo-card" onclick="openExhibition('新能源')">
-          <img class="expo-thumb" src="/assets/figma-sync/expo-thumb.png" alt="展会封面">
+          <img class="expo-thumb" src="assets/figma-sync/expo-thumb.png" alt="展会封面">
           <div class="expo-copy"><span class="figma-status neutral">已开始</span><h2>上海国际汽配展(APES)</h2><p>上海国家展会中心</p><small>2026-08-05 至 2026-08-07</small></div>
           <div class="expo-divider"></div>
-          <div class="expo-meta figma-expo-meta"><span><img src="/assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="/assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="/assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
+          <div class="expo-meta figma-expo-meta"><span><img src="assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
         </div>
         <div class="expo-card figma-expo-card" onclick="openExhibition('数字人')">
-          <img class="expo-thumb" src="/assets/figma-sync/expo-thumb.png" alt="展会封面">
+          <img class="expo-thumb" src="assets/figma-sync/expo-thumb.png" alt="展会封面">
           <div class="expo-copy"><span class="figma-status soon">即将开始</span><h2>上海国际汽配展(APES)</h2><p>上海国家展会中心</p><small>2026-08-05 至 2026-08-07</small></div>
           <div class="expo-divider"></div>
-          <div class="expo-meta figma-expo-meta"><span><img src="/assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="/assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="/assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
+          <div class="expo-meta figma-expo-meta"><span><img src="assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
         </div>
         <div class="expo-card figma-expo-card" onclick="openExhibition('新能源')">
-          <img class="expo-thumb" src="/assets/figma-sync/expo-thumb.png" alt="展会封面">
+          <img class="expo-thumb" src="assets/figma-sync/expo-thumb.png" alt="展会封面">
           <div class="expo-copy"><span class="figma-status ended">已结束</span><h2>上海国际汽配展(APES)</h2><p>上海国家展会中心</p><small>2026-08-05 至 2026-08-07</small></div>
           <div class="expo-divider"></div>
-          <div class="expo-meta figma-expo-meta"><span><img src="/assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="/assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="/assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
+          <div class="expo-meta figma-expo-meta"><span><img src="assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
         </div>
         <div class="expo-card figma-expo-card" onclick="openExhibition('数字人')">
-          <img class="expo-thumb" src="/assets/figma-sync/expo-thumb.png" alt="展会封面">
+          <img class="expo-thumb" src="assets/figma-sync/expo-thumb.png" alt="展会封面">
           <div class="expo-copy"><span class="figma-status ended">已结束</span><h2>上海国际汽配展(APES)</h2><p>上海国家展会中心</p><small>2026-08-05 至 2026-08-07</small></div>
           <div class="expo-divider"></div>
-          <div class="expo-meta figma-expo-meta"><span><img src="/assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="/assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="/assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
+          <div class="expo-meta figma-expo-meta"><span><img src="assets/figma-sync/icon-message.svg" alt=""> <b>3000次</b><small>对话</small></span><span><img src="assets/figma-sync/icon-user.svg" alt=""> <b>2位</b><small>数字员工</small></span><span><img src="assets/figma-sync/icon-search.svg" alt=""> <b>41条</b><small>线索</small></span></div>
         </div>
       </div>
     </div>
@@ -969,15 +969,15 @@
       </div>
       <div class="employee-board figma-employee-board">
         <div class="employee-tile figma-staff-card" data-staff-card="hunter" onclick="openEmployeeDetail('hunter')">
-          <img class="figma-staff-avatar" src="/assets/figma-sync/employee-blue-crop.png" alt="找爆款员工">
+          <img class="figma-staff-avatar" src="assets/figma-sync/employee-blue-crop.png" alt="找爆款员工">
           <div class="figma-staff-copy"><span class="figma-work-status" id="hunter-status">工作中</span><h2>找爆款员工</h2><p class="staff-space-name">杭州国际数字人展会</p><span class="figma-role-pill">🔎 爆款运营</span><div class="figma-card-line"></div><div class="figma-bound-row">抖音/小红书：待绑定</div></div>
         </div>
         <div class="employee-tile figma-staff-card" data-staff-card="creator" onclick="openEmployeeDetail('creator')">
-          <img class="figma-staff-avatar" src="/assets/figma-sync/employee-green-crop.png" alt="生视频员工">
+          <img class="figma-staff-avatar" src="assets/figma-sync/employee-green-crop.png" alt="生视频员工">
           <div class="figma-staff-copy"><span class="figma-work-status" id="creator-status">工作中</span><h2>生视频员工</h2><p class="staff-space-name">杭州国际数字人展会</p><span class="figma-role-pill">🎬 视频运营</span><div class="figma-card-line"></div><div class="figma-bound-row">素材库：本地 / MoneyPrinter</div></div>
         </div>
         <div class="employee-tile figma-staff-card" data-staff-card="buyer" onclick="openEmployeeDetail('buyer')">
-          <img class="figma-staff-avatar" src="/assets/figma-sync/employee-blue-crop.png" alt="投放员工">
+          <img class="figma-staff-avatar" src="assets/figma-sync/employee-blue-crop.png" alt="投放员工">
           <div class="figma-staff-copy"><span class="figma-work-status" id="buyer-status">工作中</span><h2>投放员工</h2><p class="staff-space-name">杭州国际数字人展会</p><span class="figma-role-pill">📈 巨量投放</span><div class="figma-card-line"></div><div class="figma-bound-row">巨量账号：待授权</div></div>
         </div>
       </div>
@@ -1013,8 +1013,7 @@
       <div class="step-mode-note"><b>单步执行：</b>先提交检索任务，完成后才进入样本画廊；点击样本按钮后才跳到生视频员工。</div>
       <div id="hunter-order" class="workorder-strip"></div>
       <section class="stage-panel active" data-hunter-stage="config">
-        <div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>先配置找爆款员工</div><p class="stage-help">账号绑定写在员工详情里。真实抓取时需要绑定抖音或小红书账号；没有抓取器时可导入已有视频链接。</p></div><span class="status">待开始</span></div>
-        <div class="account-bind-card"><div><b>平台账号绑定</b><p>抖音/小红书账号用于获取封面、标题和互动数据。</p></div><div class="actions"><button onclick="openPlatformLogin('douyin')">绑定抖音</button><button onclick="openPlatformLogin('xhs')">绑定小红书</button></div></div>
+        <div class="stage-head"><div><div class="stage-title"><span class="stage-num">01</span>配置本次抓取任务</div><p class="stage-help">平台账号统一在数字员工详情中绑定，本页只配置平台、关键词和数量；没有抓取器时可导入已有视频链接。</p></div><span class="status">待开始</span></div>
         <div id="crawler-notice" class="notice"></div>
         <div class="single-column-form">
           <div class="grid two"><div><label>检索平台</label><select id="search-platform"><option value="douyin">抖音</option><option value="xiaohongshu">小红书</option></select></div><div><label>需要数量</label><input id="search-limit" type="number" min="1" max="50" value="12"></div></div>
@@ -1024,7 +1023,7 @@
           <details><summary style="cursor:pointer;font-weight:850">没有抓取器时，导入已有视频链接</summary><div class="card soft" style="margin-top:10px"><label>每行一个抖音/小红书链接</label><textarea id="manual-links" placeholder="https://www.douyin.com/video/...&#10;https://www.xiaohongshu.com/explore/..."></textarea><div class="actions"><button onclick="importLinks()">导入给找爆款员工</button></div></div></details>
         </div>
       </section>
-      <section class="stage-panel" data-hunter-stage="working"><div class="working-panel"><div class="working-dot"></div><h2>找爆款员工正在检索</h2><p>员工会在后台检索、去重、计算互动分并补全封面；完成后自动进入样本画廊。</p><div class="hunter-progress-meter"><div class="hunter-progress-bar"><i id="hunter-progress-fill"></i></div><div class="hunter-progress-text" id="hunter-progress-text">任务已提交，正在等待后台开始...</div></div><div class="work-console" id="hunter-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>后台执行日志</span></div><span class="status running">工作中</span></div><div class="work-progress"><span class="done"></span><span class="done"></span><span></span><span></span></div><div class="work-summary">任务已提交。你可以留在本页等待，也可以返回展会。</div><div class="activity-list" id="hunter-activity"></div></div></div></section>
+      <section class="stage-panel" data-hunter-stage="working"><div class="working-panel"><div class="working-dot"></div><h2 id="hunter-working-title">找爆款员工正在检索</h2><p id="hunter-working-description">员工会在后台检索、去重、计算互动分并补全封面；完成后自动进入样本画廊。</p><div class="hunter-progress-meter"><div class="hunter-progress-bar"><i id="hunter-progress-fill"></i></div><div class="hunter-progress-text" id="hunter-progress-text">任务已提交，正在等待后台开始...</div></div><div class="work-console" id="hunter-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>后台执行日志</span></div><span id="hunter-work-status" class="status running">工作中</span></div><div class="work-progress"><span class="done"></span><span class="done"></span><span></span><span></span></div><div class="work-summary" id="hunter-work-summary">任务已提交。你可以留在本页等待，也可以返回展会。</div><div class="activity-list" id="hunter-activity"></div></div></div></section>
       <section class="stage-panel" data-hunter-stage="results"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择一个参考样本</div><p class="stage-help">点击样本卡片的「设为参考并进入生视频员工」后，才会跳到下一位员工；不会在未确认时自动切页。</p></div><button onclick="setHunterStage('config')">重新检索</button></div><div class="result-gallery-wrap"><div class="gallery" id="gallery"></div></div></section>
       <section class="stage-panel" data-hunter-stage="handoff"><div class="working-panel"><h2>样本已交给生视频员工</h2><p>下一步由生视频员工基于参考样本生成口播、配音、素材和成片。</p><button class="primary" onclick="openEmployeeDetail('creator')">进入生视频员工</button></div></section>
     </div>
@@ -1033,7 +1032,7 @@
 
       <section id="creator" class="section">
   <div class="shell">
-    <div class="employee-page-head"><div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>生视频员工详情</span></div><h1>生视频员工</h1><p>像给同事交代任务一样，先确认口播，再选择素材来源，员工在后台完成配音、字幕和成片。</p></div><div class="employee-head-actions"><span class="status blue">输出：最终成片</span><button class="primary" onclick="setCreatorTab('create')">创建视频任务</button></div></div>
+    <div class="employee-page-head"><div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>生视频员工详情</span></div><h1>生视频员工</h1><p>像给同事交代任务一样，先确认口播，再选择素材来源，员工在后台完成配音、字幕和成片。</p></div><div class="employee-head-actions"><span class="status blue">输出：最终成片</span><button class="primary" onclick="startNewCreatorTask()">创建视频任务</button></div></div>
     <div class="creator-entry creator-page active" data-creator-page="menu">
       <div class="process-home">
         <div class="process-home-head"><div><h2>视频生成进程与历史记录</h2><p>正在生成的视频会实时显示执行状态；历史成片可预览、恢复参数并再次生成。</p></div><button onclick="loadTasks()">刷新进程</button></div>
@@ -1105,7 +1104,7 @@
         <button class="figma-modal-close" onclick="closeEmployeeDetail()" aria-label="关闭">×</button>
       </div>
       <div class="figma-modal-body">
-        <div class="figma-modal-hero"><div class="figma-modal-hero-inner"><span class="figma-modal-badge" id="figma-modal-badge">⚙</span><img id="figma-modal-avatar" src="/assets/figma-sync/employee-modal-cow-clean.png" alt="数字员工"></div></div>
+        <div class="figma-modal-hero"><div class="figma-modal-hero-inner"><span class="figma-modal-badge" id="figma-modal-badge">⚙</span><img id="figma-modal-avatar" src="assets/figma-sync/employee-modal-cow-clean.png" alt="数字员工"></div></div>
         <div class="figma-info-stack">
           <div class="figma-info-box">
             <h3>数字员工信息</h3>
@@ -1130,14 +1129,27 @@
   <script>
     // 前端可独立部署：通过 ?api= 或 window.EXHIBITFLOW_API_BASE 指向后端。
     const queryApiBase = new URLSearchParams(window.location.search).get('api');
-    const API_BASE = (queryApiBase || window.EXHIBITFLOW_API_BASE || '').replace(/\/$/, '');
+    // 同一份前端既支持本地根路径，也支持通过 Nginx/SSH 转发挂载到
+    // https://<host>/exhibitflow/。挂载模式下默认把 API 指向同域的
+    // /exhibitflow-api，避免依赖用户手动拼接 ?api= 参数。
+    const mountedApiBase = window.location.pathname.startsWith('/exhibitflow/') ? '/exhibitflow-api' : '';
+    const API_BASE = (queryApiBase || window.EXHIBITFLOW_API_BASE || mountedApiBase).replace(/\/$/, '');
     const apiPath = path => /^https?:\/\//i.test(path) ? path : `${API_BASE}${path}`;
     const assetPath = path => /^https?:\/\//i.test(path || '') ? path : `${API_BASE}${path || ''}`;
     const api = (path, options = {}) => fetch(apiPath(path), {
       headers: { 'Content-Type': 'application/json' },
       ...options
     }).then(async r => {
-      const data = await r.json();
+      const raw = await r.text();
+      let data = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch (_) {
+        const looksLikeHtml = /<html|<head|<body|<!doctype/i.test(raw);
+        throw new Error(looksLikeHtml
+          ? `服务端返回了网页而不是 API 数据（HTTP ${r.status}）。请检查服务器连接或刷新页面。`
+          : `API 返回了无法解析的数据（HTTP ${r.status}）。`);
+      }
       if (!r.ok) throw new Error(data.error || r.statusText);
       return data;
     });
@@ -1163,6 +1175,9 @@
     let latestOceanStatus = null;
     let currentHunterTaskId = sessionStorage.getItem('currentHunterTaskId') || '';
     const creatorSessionTaskIds = new Set(JSON.parse(sessionStorage.getItem('creatorSessionTaskIds') || '[]'));
+    // 只让当前这次创作流程驱动步骤和结果回填；历史记录仍然全部来自后端展示。
+    // 这样重新进入员工或点击“创建视频任务”时，不会被旧任务强行跳到第 2/3 步。
+    const creatorWorkflowTaskIds = new Set();
     let platformBindings = {};
     const creatorCompletedSteps = new Set();
 
@@ -1220,10 +1235,11 @@
     function rememberCreatorTask(task) {
       if (!task?.id) return;
       creatorSessionTaskIds.add(task.id);
+      creatorWorkflowTaskIds.add(task.id);
       sessionStorage.setItem('creatorSessionTaskIds', JSON.stringify(Array.from(creatorSessionTaskIds)));
     }
     function isCreatorSessionTask(task) {
-      return Boolean(task?.id && creatorSessionTaskIds.has(task.id));
+      return Boolean(task?.id && creatorWorkflowTaskIds.has(task.id));
     }
 
     let currentExhibitionId = '新能源';
@@ -1281,9 +1297,9 @@
     let latestHunterHistoryTasks = [];
     let currentEmployeeModal = 'hunter';
     const employeeModalModels = {
-      hunter: {title:'找爆款员工详情', name:'Jerome Bell', role:'爆款运营', state:'工作中', accountType:'抖音 / 小红书', accountState:'未登录', accountName:'未登录', accountId:'未登录', badge:'🔎', avatar:'/assets/figma-sync/employee-modal-cow-clean.png'},
-      creator: {title:'生视频员工详情', name:'小金', role:'视频运营', state:'工作中', accountType:'素材库 / TTS', accountState:'已配置', accountName:'本地素材 + MoneyPrinter', accountId:'Edge / Qwen TTS', badge:'🎬', avatar:'/assets/figma-sync/employee-modal-cow-clean.png'},
-      buyer: {title:'投放员工详情', name:'投放员', role:'巨量投放', state:'待授权', accountType:'巨量引擎 Marketing API', accountState:'未授权', accountName:'未绑定广告主', accountId:'未获取', badge:'📈', avatar:'/assets/figma-sync/employee-modal-cow-clean.png'},
+      hunter: {title:'找爆款员工详情', name:'Jerome Bell', role:'爆款运营', state:'工作中', accountType:'抖音 / 小红书', accountState:'未登录', accountName:'未登录', accountId:'未登录', badge:'🔎', avatar:'assets/figma-sync/employee-modal-cow-clean.png'},
+      creator: {title:'生视频员工详情', name:'小金', role:'视频运营', state:'工作中', accountType:'素材库 / TTS', accountState:'已配置', accountName:'本地素材 + MoneyPrinter', accountId:'Edge / Qwen TTS', badge:'🎬', avatar:'assets/figma-sync/employee-modal-cow-clean.png'},
+      buyer: {title:'投放员工详情', name:'投放员', role:'巨量投放', state:'待授权', accountType:'巨量引擎 Marketing API', accountState:'未授权', accountName:'未绑定广告主', accountId:'未获取', badge:'📈', avatar:'assets/figma-sync/employee-modal-cow-clean.png'},
     };
     function openEmployeeDetail(id) {
       currentEmployeeModal = id || 'hunter';
@@ -1303,14 +1319,17 @@
     }
     function closeEmployeeDetail() { document.getElementById('figma-employee-modal')?.classList.remove('active'); }
     function enterEmployeeFromModal() { closeEmployeeDetail(); openEmployee(currentEmployeeModal); }
-    function openPlatformLogin(platform) {
-      const urls = {
-        douyin:'https://www.douyin.com/',
-        xhs:'https://www.xiaohongshu.com/explore',
-      };
-      rememberPlatformBinding(platform, 'pending');
-      window.open(urls[platform] || 'about:blank', '_blank', 'noopener,noreferrer,width=1100,height=820');
-      notify(`已打开${platformLabel(platform)}登录窗口。登录完成后返回这里点击“验证登录”。`);
+    async function openPlatformLogin(platform) {
+      try {
+        await api('/api/social/open-login', {method:'POST', body:JSON.stringify({platform:backendPlatform(platform)})});
+        rememberPlatformBinding(platform, 'pending');
+        notify(`已在运行服务的本机 Chrome 中打开${platformLabel(platform)}登录页。登录完成后返回这里点击“验证登录”。`);
+      } catch (error) {
+        platformBindings[platform] = {status:'invalid', verified:false, reason:error.message};
+        renderEmployeeAccountPanel(currentEmployeeModal, employeeModalModels[currentEmployeeModal] || employeeModalModels.hunter);
+        renderHunterBindingSummary();
+        notify(`无法在本机打开${platformLabel(platform)}登录页：${error.message}`, 'error');
+      }
     }
     function renderEmployeeAccountPanel(id, model) {
       const box = document.getElementById('figma-modal-account-area');
@@ -1320,7 +1339,7 @@
           const status = platformStatusText(platform);
           const verified = Boolean(platformBindings[platform]?.verified);
           const cls = verified ? 'succeeded' : status.includes('无效') ? 'failed' : status.includes('已打开') ? 'running' : '';
-          return `<div class="employee-bind-card-lite"><div><b>${title}</b><p>${desc}</p><span class="status ${cls}">${escapeHtml(status)}</span></div><div class="actions"><button onclick="openPlatformLogin('${platform}')">${verified ? '切换账号' : '打开登录页'}</button><button class="${verified ? '' : 'primary'}" onclick="confirmPlatformLogin('${platform}')">验证登录</button>${verified ? `<button onclick="clearPlatformBinding('${platform}')">解除</button>` : ''}</div></div>`;
+          return `<div class="employee-bind-card-lite"><div><b>${title}</b><p>${desc}</p><span class="status ${cls}">${escapeHtml(status)}</span></div><div class="actions"><button onclick="openPlatformLogin('${platform}')">${verified ? '切换账号' : '在本机打开登录页'}</button><button class="${verified ? '' : 'primary'}" onclick="confirmPlatformLogin('${platform}')">验证登录</button>${verified ? `<button onclick="clearPlatformBinding('${platform}')">解除</button>` : ''}</div></div>`;
         };
         box.innerHTML = row('douyin', '抖音账号', '用于检索抖音热点和视频样本。') + row('xhs', '小红书账号', '用于检索小红书笔记和视频样本。');
         return;
@@ -1463,6 +1482,70 @@
       if (next === 'history') loadTasks();
       if (scroll) window.scrollTo({top:0, behavior:'smooth'});
     }
+    function setCreatorStatus(id, text, className = 'status') {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+      el.className = className;
+    }
+    function resetCreatorWorkflow() {
+      creatorWorkflowTaskIds.clear();
+      creatorSessionTaskIds.clear();
+      sessionStorage.setItem('creatorSessionTaskIds', '[]');
+      lastCompletedCopy = '';
+      lastCompletedTts = '';
+      lastCompletedRender = '';
+      lastCompletedPipeline = '';
+      latestAudioPath = '';
+      latestAudioText = '';
+      creatorCompletedSteps.clear();
+
+      ['copy-topic','brief-subject','brief-audience','brief-selling','brief-tone','final-copy','competitor-dir','highlight-words','batch-copy-list'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      const cta = document.getElementById('video-cta');
+      if (cta) cta.value = '点击下方链接，立即报名吧';
+      const materialDir = document.getElementById('material-dir');
+      if (materialDir) materialDir.value = appConfig.material_dir || materialDir.value || '';
+      const ttsService = document.getElementById('tts-service');
+      if (ttsService) ttsService.value = 'edge';
+      syncTtsVoices();
+      chooseMaterialSource('local');
+      chooseCaptionTemplate('viral');
+
+      setCreatorStatus('creator-brief-status', '待确认');
+      setCreatorStatus('creator-copy-status', '等待文案');
+      setCreatorStatus('creator-material-status', '待配置');
+      setCreatorStatus('creator-output-status', '等待生成');
+      document.querySelectorAll('.creator-step').forEach(el => {
+        el.classList.toggle('active', el.dataset.flowStep === 'brief');
+        el.classList.remove('done');
+      });
+      document.querySelectorAll('.flow-stage').forEach(el => el.classList.toggle('active', el.dataset.stage === 'brief'));
+
+      const ttsPreview = document.getElementById('tts-preview');
+      if (ttsPreview) {
+        ttsPreview.innerHTML = '';
+        ttsPreview.classList.add('hidden');
+      }
+      const renderPreview = document.getElementById('render-preview');
+      if (renderPreview) {
+        renderPreview.className = 'result-empty';
+        renderPreview.innerHTML = '成片任务完成后会出现在这里，并自动同步给投放员工。';
+      }
+      const toast = document.getElementById('toast');
+      if (toast) {
+        clearTimeout(window.__toastTimer);
+        toast.className = 'toast';
+      }
+    }
+    function startNewCreatorTask() {
+      resetCreatorWorkflow();
+      setCreatorTab('create', false);
+      focusCreatorStep('brief');
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
     function saveCreatorBrief() {
       if (!ensureFields([['brief-subject','推广主题'], ['brief-selling','核心卖点']])) return;
       const summary = [
@@ -1600,7 +1683,17 @@
     async function createTask(kind, payload, stay = true) {
       try {
         const task = await api(`/api/tasks/${kind}`, { method:'POST', body: JSON.stringify(payload) });
-        notify('任务已提交，员工正在后台处理。');
+        if (task?.id && ['copy','tts','render','creator-pipeline'].includes(kind)) rememberCreatorTask(task);
+        if (task?.id && ['search','import-links'].includes(kind)) {
+          // Persist the server task id as soon as POST returns.  The user can
+          // leave this page before the follow-up loadTasks() request finishes;
+          // the process board will still reopen this exact task later.
+          currentHunterTaskId = task.id;
+          sessionStorage.setItem('currentHunterTaskId', currentHunterTaskId);
+        }
+        notify(['search','import-links','download','copy','tts','render','creator-pipeline'].includes(kind)
+          ? '任务已提交；即使返回其他页面，员工也会在服务端后台继续执行，稍后可在员工进程页查看状态。'
+          : '任务已提交，员工正在后台处理。');
         if (task?.id) startTaskPolling(task.id, kind);
         await loadTasks();
         return task;
@@ -2133,10 +2226,12 @@
       document.getElementById('delivery-end').value ||= afterSevenDays.toISOString().slice(0, 10);
       await loadOceanStatus();
       runOceanGuide();
+      const textLlmReady = Boolean(cfg.deepseek_key_present);
+      const qwenReady = Boolean(cfg.dashscope_key_present || cfg.dashscope_configured);
       document.getElementById('kpis').innerHTML = [
         ['找爆款', cfg.crawler_configured ? '抓取器已配置' : '需导入链接'],
         ['成片引擎', cfg.render_engine],
-        ['AI/TTS', cfg.dashscope_configured ? 'Qwen 已配置' : '需配置 Key'],
+        ['AI/TTS', textLlmReady ? `DeepSeek 文案${qwenReady ? ' / Qwen 视觉与 TTS' : ''}` : '需配置 DeepSeek Key'],
         ['发布器', cfg.publisher_configured ? '已配置' : '未配置'],
       ].map(([k,v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('');
       document.getElementById('system-pill').textContent = cfg.ffmpeg_configured ? '系统可用' : '缺 FFmpeg';
@@ -2224,10 +2319,15 @@
         const keyword = task.payload?.keyword || task.result?.keyword || '未命名抓取任务';
         const platform = platformLabel(task.payload?.platform || 'douyin');
         const canOpen = task.status === 'succeeded' && (task.result?.items || []).length;
-        const statusClass = task.status === 'succeeded' ? 'succeeded' : task.status === 'failed' ? 'failed' : 'running';
+        const empty = isEmptyHunterTask(task);
+        const statusClass = empty ? 'queued' : task.status === 'succeeded' ? 'succeeded' : task.status === 'failed' ? 'failed' : 'running';
+        const statusLabel = empty ? '已完成·0条' : taskStateText(task.status);
+        const summary = empty
+          ? '检索流程已执行完毕，但没有匹配样本；换一个更宽泛的关键词即可重新检索。'
+          : `${platform} · ${task.created_at || ''} · ${taskKindLabel(task.kind)} · ${count} 条样本`;
         return `<div class="creator-job-card">
-          <div><b>${index + 1}. ${escapeHtml(keyword)}</b><p>${escapeHtml(platform)} · ${escapeHtml(task.created_at || '')} · ${escapeHtml(taskKindLabel(task.kind))} · ${count} 条样本</p></div>
-          <div class="actions"><span class="status ${statusClass}">${escapeHtml(taskStateText(task.status))}</span>${canOpen ? `<button onclick="openHunterHistoryResult(${index})">查看样本</button>` : `<button onclick="retryTask(${latestTaskItems.indexOf(task)})">重新执行</button>`}</div>
+          <div><b>${index + 1}. ${escapeHtml(keyword)}</b><p>${escapeHtml(summary)}</p></div>
+          <div class="actions"><span class="status ${statusClass}">${escapeHtml(statusLabel)}</span>${canOpen ? `<button onclick="openHunterHistoryResult(${index})">查看样本</button>` : `<button onclick="retryTask(${latestTaskItems.indexOf(task)})">重新执行</button>`}</div>
         </div>`;
       }).join('');
     }
@@ -2243,13 +2343,23 @@
         const keyword = task.payload?.keyword || task.result?.keyword || '未命名抓取任务';
         const count = task.result?.count || task.result?.items?.length || 0;
         const running = ['queued','running'].includes(task.status);
+        const empty = isEmptyHunterTask(task);
         const description = running
-          ? '员工正在后台检索、去重、计算互动分并补全封面。'
+          ? `${task.status === 'queued' ? '任务已排队，' : ''}员工正在服务器后台检索、去重、计算互动分并补全封面；离开页面不会中断。`
+          : empty
+            ? '检索流程已执行完毕，但没有找到匹配视频；换一个更宽泛的关键词后可重新执行。'
           : task.status === 'succeeded'
             ? `已产出 ${count} 个参考样本，点击进入推荐样本画廊。`
             : '任务执行未完成，点击查看后可重新提交。';
-        return `<button class="process-item" onclick="openHunterProcessTask(${index})"><div><b>${index + 1}. ${escapeHtml(keyword)}</b><p>${escapeHtml(description)}</p><div class="process-meta"><span class="status ${escapeAttr(task.status || '')}">${escapeHtml(taskStateText(task.status))}</span><span>${escapeHtml(platformLabel(task.payload?.platform || 'douyin'))}</span><span>${escapeHtml(task.created_at || '')}</span></div></div><span class="process-item-action">${task.status === 'succeeded' && count ? '查看样本 →' : '查看进程 →'}</span></button>`;
+        const statusClass = empty ? 'queued' : task.status || '';
+        const statusLabel = empty ? '已完成·0条' : taskStateText(task.status);
+        return `<button class="process-item" onclick="openHunterProcessTask(${index})"><div><b>${index + 1}. ${escapeHtml(keyword)}</b><p>${escapeHtml(description)}</p><div class="process-meta"><span class="status ${escapeAttr(statusClass)}">${escapeHtml(statusLabel)}</span><span>${escapeHtml(platformLabel(task.payload?.platform || 'douyin'))}</span><span>${escapeHtml(task.created_at || '')}</span></div></div><span class="process-item-action">${task.status === 'succeeded' && count ? '查看样本 →' : '查看进程 →'}</span></button>`;
       }).join('')}</div>`;
+    }
+    function isEmptyHunterTask(task) {
+      if (!task || !['search','import-links'].includes(task.kind)) return false;
+      return Boolean(task.result?.empty_result)
+        || /没有检索到可用视频|没有找到匹配视频/.test(String(task.error || ''));
     }
     function openHunterProcessTask(index) {
       const task = latestHunterHistoryTasks[index];
@@ -2261,7 +2371,11 @@
         return;
       }
       setHunterPage('task', false);
-      setHunterStage(['queued','running'].includes(task.status) ? 'working' : 'config');
+      // Terminal tasks also open the status panel, so re-entry never looks
+      // like a brand-new task.  A new task can still be created from the
+      // header button or the panel's retry/config controls.
+      setHunterStage(['queued','running'].includes(task.status) || isEmptyHunterTask(task) ? 'working' : 'config');
+      renderHunterProgress(task);
     }
     function renderBuyerProcessBoard(items = []) {
       const box = document.getElementById('buyer-process-overview');
@@ -2342,6 +2456,7 @@
         return summary;
       }
       const error = String(task.error || '');
+      if (isEmptyHunterTask(task)) return '检索流程已完成，但没有找到匹配视频；请换一个更宽泛的关键词后重试。';
       if (/access_token无效|token.*invalid|invalid.*token/i.test(error)) return '巨量授权已失效，请重新点击“前往巨量”完成绑定后重试。';
       if (/list'?: \[\]|广告主|advertiser/i.test(error) && /为空|empty|list'?: \[\]/i.test(error)) return '当前授权账号没有可用投放广告主，请先在巨量侧开通或共享广告主。';
       if (/频率超限|rate|限流|too many/i.test(error)) return '巨量接口当前限流，请稍后在任务中心重试。';
@@ -2349,13 +2464,14 @@
       if (/视频上传失败|video upload|素材|material/i.test(error)) return '视频素材上传失败，请检查文件大小、格式和巨量素材权限。';
       if (/Read timed out|连接失败|网络连接失败|handshake|DNS|nodename/i.test(error)) return 'AI 或配音服务网络连接超时。任务已停止，不会继续卡在“生成中”；请检查 VPN/网络后直接重试。';
       if (/所有配音服务均失败/i.test(error)) return 'Edge TTS 和 Qwen TTS 都未能生成语音，请检查网络与模型服务后重试。';
+      if (/DeepSeek|deepseek/i.test(error)) return 'DeepSeek 文案模型调用失败，请检查 DEEPSEEK_API_KEY、模型名称和网络后重试。';
       if (/DashScope|qwen|百炼|TTS|tts|voice/i.test(error)) return 'AI 或配音服务调用失败，请检查模型 Key、模型名称、音色和网络后重试。';
       if (/FFmpeg|ffmpeg|moviepy|render/i.test(error)) return '视频合成失败，请检查素材、FFmpeg 和字幕/配音文件是否可用。';
       if (error && error.length < 180 && !/Traceback|File "|RuntimeError|Exception/i.test(error)) return error;
       return '任务执行失败，已收起技术细节；请展开查看原因，修正后重试。';
     }
     function updateCreatorPipelineStatus(items = []) {
-      const task = items.find(item => item.kind === 'creator-pipeline');
+      const task = items.find(item => isCreatorSessionTask(item) && item.kind === 'creator-pipeline');
       if (!task) return;
       const status = document.getElementById('creator-output-status');
       if (!status) return;
@@ -2615,11 +2731,49 @@
       const fill = document.getElementById('hunter-progress-fill');
       const text = document.getElementById('hunter-progress-text');
       if (!fill || !text) return;
-      if (!task) { fill.style.width = '0%'; text.textContent = '等待检索任务。'; return; }
-      const progress = task.status === 'succeeded' ? 100 : task.status === 'failed' ? 100 : task.status === 'running' ? 58 : 22;
+      const title = document.getElementById('hunter-working-title');
+      const description = document.getElementById('hunter-working-description');
+      const statusEl = document.getElementById('hunter-work-status');
+      const summaryEl = document.getElementById('hunter-work-summary');
+      if (!task) {
+        fill.style.width = '0%';
+        text.textContent = '等待检索任务。';
+        if (title) title.textContent = '找爆款员工等待任务';
+        if (description) description.textContent = '点击创建抓取任务后，员工会在服务器后台执行；返回本页即可继续查看。';
+        if (statusEl) { statusEl.textContent = '等待开始'; statusEl.className = 'status'; }
+        if (summaryEl) summaryEl.textContent = '尚未提交抓取任务。';
+        return;
+      }
+      const empty = isEmptyHunterTask(task);
+      const terminalEmpty = empty && task.status === 'failed';
+      const progress = task.status === 'succeeded' || terminalEmpty ? 100 : task.status === 'failed' ? 100 : task.status === 'running' ? 58 : 22;
       fill.style.width = `${progress}%`;
       const suffix = taskBusinessMessage(task) || taskSummary(task) || '员工正在后台执行。';
-      text.textContent = `${taskStateText(task.status)} · ${suffix}`;
+      const state = terminalEmpty ? '已完成' : taskStateText(task.status);
+      text.textContent = `${state} · ${suffix}`;
+      if (title) {
+        title.textContent = task.status === 'queued'
+          ? '找爆款员工正在排队'
+          : task.status === 'running'
+            ? '找爆款员工正在检索'
+            : task.status === 'succeeded'
+              ? (empty ? '找爆款员工检索完成' : '找爆款员工已完成检索')
+              : (terminalEmpty ? '找爆款员工检索完成' : '找爆款员工任务需处理');
+      }
+      if (description) {
+        description.textContent = task.status === 'queued' || task.status === 'running'
+          ? '员工会在服务器后台检索、去重、计算互动分并补全封面；离开页面不会中断，稍后重新进入即可查看。'
+          : empty
+            ? '平台检索流程已执行完毕，但没有返回匹配视频。请换一个更宽泛的关键词或调整筛选条件后重试。'
+            : task.status === 'succeeded'
+              ? '检索已完成，参考样本已同步到样本画廊。'
+              : '任务已经停止，不会继续卡在“检索中”；请根据下方原因修正后重试。';
+      }
+      if (statusEl) {
+        statusEl.textContent = state;
+        statusEl.className = `status ${terminalEmpty ? 'queued' : task.status || ''}`;
+      }
+      if (summaryEl) summaryEl.textContent = suffix;
     }
     function renderTaskList(items) {
       latestTaskItems = items;
@@ -2663,7 +2817,7 @@
       box.innerHTML = `<div class="task-center-grid">${groupHtml}</div>`;
     }
     function hydrateLatestResults(items) {
-      const latestCopy = items.find(t => t.kind === 'copy' && t.status === 'succeeded' && t.result?.copy);
+      const latestCopy = items.find(t => isCreatorSessionTask(t) && t.kind === 'copy' && t.status === 'succeeded' && t.result?.copy);
       if (latestCopy && latestCopy.id !== lastCompletedCopy) {
         lastCompletedCopy = latestCopy.id;
         document.getElementById('final-copy').value = latestCopy.result.copy;
@@ -2673,7 +2827,7 @@
         maybeFocusCreatorStep('copy');
         if (hasHydratedTasks) notify('生视频员工已生成口播稿。');
       }
-      const latestCopyRunning = items.find(t => t.kind === 'copy' && ['queued','running'].includes(t.status));
+      const latestCopyRunning = items.find(t => isCreatorSessionTask(t) && t.kind === 'copy' && ['queued','running'].includes(t.status));
       if (latestCopyRunning) {
         const statusEl = document.getElementById('creator-copy-status');
         if (statusEl) {
@@ -2681,7 +2835,7 @@
           statusEl.className = 'status running';
         }
       }
-      const latestCopyFailed = items.find(t => t.kind === 'copy' && t.status === 'failed');
+      const latestCopyFailed = items.find(t => isCreatorSessionTask(t) && t.kind === 'copy' && t.status === 'failed');
       if (latestCopyFailed && latestCopyFailed.id !== lastCompletedCopy && hasHydratedTasks) {
         lastCompletedCopy = latestCopyFailed.id;
         const statusEl = document.getElementById('creator-copy-status');
@@ -2705,7 +2859,7 @@
         else loadLatest();
         if (hunterRequested || (latestSearch.id === currentHunterTaskId && isHunterWorkflowOpen())) maybeSetHunterStage('results');
       }
-      const latestTts = items.find(t => t.kind === 'tts' && t.status === 'succeeded' && t.result?.preview_url);
+      const latestTts = items.find(t => isCreatorSessionTask(t) && t.kind === 'tts' && t.status === 'succeeded' && t.result?.preview_url);
       if (latestTts) {
         latestAudioPath = latestTts.result.audio_path || '';
         latestAudioText = latestTts.result.text || '';
@@ -2981,7 +3135,10 @@
     }
     function taskSummary(task) {
       if (!task.result) return '';
-      if (task.kind === 'search' || task.kind === 'import-links') return `找到了 ${task.result.count || 0} 条参考样本`;
+      if (task.kind === 'search' || task.kind === 'import-links') {
+        if (task.result.empty_result) return task.result.warning || '检索完成，但没有找到匹配视频；请换关键词重试。';
+        return `找到了 ${task.result.count || 0} 条参考样本`;
+      }
       if (task.kind === 'copy') return '口播稿已回填到生视频员工面板';
       if (task.kind === 'tts') return `语音已生成，音色：${task.result.voice || ''}${task.result.fallback_used ? `（已自动切换到 ${task.result.service}）` : ''}`;
       if (task.kind === 'render') return task.result.summary?.final_video ? '成片已生成，可在生视频员工面板预览' : '成片任务已完成';

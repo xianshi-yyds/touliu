@@ -396,14 +396,26 @@ tell application "Google Chrome"
   end repeat
   if targetTab is missing value then
     set targetTab to make new tab at end of tabs of window 1 with properties {{URL:"https://www.douyin.com/jingxuan"}}
-    delay 6
+    delay 2
   end if
   set URL of targetTab to "{search_url}"
-  delay 6
+  -- Douyin renders the result grid asynchronously. A fixed sleep can read
+  -- the empty DOM while the visible browser is still loading the cards.
+  delay 2
+  repeat 14 times
+    set anchorProbe to execute targetTab javascript "(() => {{ const anchors = Array.from(document.links).filter(a => (a.href || '').includes('/video/')).length; return (location.href.includes('/search/') && anchors > 0) ? 'ready' : 'waiting'; }})()"
+    if anchorProbe is "ready" then exit repeat
+    delay 1
+  end repeat
   execute targetTab javascript "(() => {{ function clean(v) {{ return String(v || '').replace(/\\\\s+/g, ' ').trim(); }} function visible(el) {{ const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; }} function fire(el) {{ const r = el.getBoundingClientRect(); const x = r.left + r.width / 2; const y = r.top + r.height / 2; const target = document.elementFromPoint(x, y) || el; ['pointerdown','mousedown','mouseup','click'].forEach(type => target.dispatchEvent(new MouseEvent(type, {{ bubbles: true, cancelable: true, view: window, clientX: x, clientY: y }}))); }} const nodes = Array.from(document.querySelectorAll('*')).filter(el => visible(el) && clean(el.innerText || el.textContent) === '筛选'); nodes.sort((a,b)=>a.getBoundingClientRect().width-b.getBoundingClientRect().width); const node = nodes[0]; if (node) fire(node); return node ? 'filter-open' : 'filter-missing'; }})()"
   delay 1
   execute targetTab javascript "(() => {{ function clean(v) {{ return String(v || '').replace(/\\\\s+/g, ' ').trim(); }} function visible(el) {{ const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; }} function fire(el) {{ const r = el.getBoundingClientRect(); const x = r.left + r.width / 2; const y = r.top + r.height / 2; const target = document.elementFromPoint(x, y) || el; ['pointerdown','mousedown','mouseup','click'].forEach(type => target.dispatchEvent(new MouseEvent(type, {{ bubbles: true, cancelable: true, view: window, clientX: x, clientY: y }}))); }} const panels = Array.from(document.querySelectorAll('*')).filter(el => visible(el) && clean(el.innerText || el.textContent).includes('排序依据') && clean(el.innerText || el.textContent).includes('发布时间') && clean(el.innerText || el.textContent).includes('最多点赞') && clean(el.innerText || el.textContent).includes('半年内')); panels.sort((a,b)=>(a.getBoundingClientRect().width*a.getBoundingClientRect().height)-(b.getBoundingClientRect().width*b.getBoundingClientRect().height)); const panel = panels[0] || document.body; function clickText(text) {{ const nodes = Array.from(panel.querySelectorAll('*')).filter(el => visible(el) && clean(el.innerText || el.textContent) === text); nodes.sort((a,b)=>(a.getBoundingClientRect().width*a.getBoundingClientRect().height)-(b.getBoundingClientRect().width*b.getBoundingClientRect().height)); const node = nodes[0]; if (node) fire(node); return !!node; }} clickText('最多点赞'); clickText('半年内'); return 'filters-set'; }})()"
-  delay 4
+  delay 2
+  repeat 10 times
+    set filteredProbe to execute targetTab javascript "(() => {{ const anchors = Array.from(document.links).filter(a => (a.href || '').includes('/video/')).length; return anchors > 0 ? 'ready' : 'waiting'; }})()"
+    if filteredProbe is "ready" then exit repeat
+    delay 1
+  end repeat
   set resultText to execute targetTab javascript jsCode
   return resultText
 end tell

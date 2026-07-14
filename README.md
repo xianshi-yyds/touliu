@@ -7,7 +7,7 @@
 
 - 手动导入抖音/小红书链接作为参考样本
 - 上传本地参考视频/图片
-- Qwen 文案生成和视频理解
+- DeepSeek 文案生成、Qwen 视频理解
 - 内部轻量成片引擎：素材目录 + 文案 -> 竖屏视频
 - 本地 storage 管理：候选清单、上传样本、TTS、渲染结果
 - SaaS 版前端 + 后台任务 API：前端只负责交互，检索/AI/成片/发布/投放都通过接口异步执行
@@ -41,6 +41,16 @@ MoneyPrinter 在线素材链路使用 Pexels，需要额外配置：
 
 ```env
 PEXELS_API_KEY=your_pexels_api_key
+```
+
+文本口播稿和在线搜索词使用 DeepSeek 的 OpenAI 兼容接口；视频理解和 Qwen TTS
+仍使用 DashScope。真实 API Key 只放在本机 `.env`，不要提交到仓库：
+
+```env
+DEEPSEEK_API_KEY=your_deepseek_api_key
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
+DEEPSEEK_TEXT_MODEL=deepseek-chat
+DASHSCOPE_API_KEY=your_dashscope_api_key
 ```
 
 生视频员工支持两种素材来源：
@@ -101,7 +111,7 @@ cd exhibitflow-lite
 后端默认地址：
 
 ```text
-http://127.0.0.1:8501
+http://127.0.0.1:8610
 ```
 
 开发时也可以把前端作为独立静态站点启动。前端不执行检索、模型调用或成片逻辑，
@@ -114,7 +124,7 @@ http://127.0.0.1:8501
 前端单独部署时打开：
 
 ```text
-http://127.0.0.1:5173/?api=http://127.0.0.1:8501
+http://127.0.0.1:5173/?api=http://127.0.0.1:8610
 ```
 
 生产部署时可把 `frontend/` 放到 Nginx、对象存储或任意静态托管，

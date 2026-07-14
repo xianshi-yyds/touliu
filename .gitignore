@@ -1,9 +1,11 @@
 .env
+.DS_Store
 .grok/
 __pycache__/
 *.py[cod]
 .venv/
 build/
 *.egg-info/
+test-results/
 storage/*
 !storage/.gitkeep
