@@ -30,8 +30,11 @@ from exhibitflow_lite.storage import ensure_storage, latest_manifest, safe_stem,
 
 FRONTEND_DIR = settings.project_root / "frontend"
 TASK_DIR = settings.storage_dir / "api_tasks"
+ARTIFACT_DIR = settings.storage_dir / "artifacts"
+HANDOFF_DIR = settings.storage_dir / "handoffs"
 TASKS: dict[str, dict[str, Any]] = {}
 TASK_LOCK = threading.Lock()
+RECORD_LOCK = threading.Lock()
 RESUMABLE_TASK_KINDS = {
     "search",
     "import-links",
@@ -48,6 +51,9 @@ _DEEPSEEK_HEALTH_LOCK = threading.Lock()
 
 OCEAN_BASE_URL = "https://api.oceanengine.com"
 OCEAN_TOKEN_FILE = settings.storage_dir / "oceanengine" / "oauth.json"
+
+EMPLOYEE_IDS = {"hunter", "creator", "buyer"}
+ARTIFACT_TYPES = {"sample_pack", "video_package", "delivery_plan", "delivery_report"}
 
 
 
@@ -66,6 +72,130 @@ def task_path(task_id: str) -> Path:
 def save_task(task: dict[str, Any]) -> None:
     TASK_DIR.mkdir(parents=True, exist_ok=True)
     write_json(task_path(task["id"]), task)
+
+
+def record_path(directory: Path, record_id: str) -> Path:
+    clean_id = safe_stem(record_id)
+    if clean_id != record_id:
+        raise ValueError("记录 ID 格式不正确")
+    return directory / f"{clean_id}.json"
+
+
+def load_record(directory: Path, record_id: str) -> dict[str, Any] | None:
+    path = record_path(directory, record_id)
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def save_record(directory: Path, record: dict[str, Any]) -> dict[str, Any]:
+    directory.mkdir(parents=True, exist_ok=True)
+    write_json(record_path(directory, str(record["id"])), record)
+    return record
+
+
+def list_records(directory: Path, filters: dict[str, str] | None = None, limit: int = 200) -> list[dict[str, Any]]:
+    filters = {key: value for key, value in (filters or {}).items() if value}
+    if not directory.exists():
+        return []
+    items: list[dict[str, Any]] = []
+    paths = sorted(directory.glob("*.json"), key=lambda item: item.stat().st_mtime, reverse=True)
+    for path in paths:
+        try:
+            item = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(item, dict):
+            continue
+        if any(str(item.get(key) or "") != value for key, value in filters.items()):
+            continue
+        items.append(item)
+        if len(items) >= limit:
+            break
+    return items
+
+
+def require_employee(value: Any, label: str = "员工") -> str:
+    employee = str(value or "").strip().lower()
+    if employee not in EMPLOYEE_IDS:
+        raise ValueError(f"{label}必须是 hunter、creator 或 buyer")
+    return employee
+
+
+def create_artifact(payload: dict[str, Any]) -> dict[str, Any]:
+    employee = require_employee(payload.get("employee"), "成果所属员工")
+    artifact_type = str(payload.get("type") or "").strip().lower()
+    if artifact_type not in ARTIFACT_TYPES:
+        raise ValueError("成果类型必须是 sample_pack、video_package、delivery_plan 或 delivery_report")
+    title = require_text(payload, "title", "成果名称")
+    created_at = now()
+    artifact_id = f"artifact-{datetime.now().strftime('%Y%m%d%H%M%S%f')}-{uuid4().hex[:6]}"
+    record = {
+        "id": artifact_id,
+        "type": artifact_type,
+        "employee": employee,
+        "expo_id": str(payload.get("expo_id") or "").strip(),
+        "title": title,
+        "summary": str(payload.get("summary") or "").strip(),
+        "status": str(payload.get("status") or "ready").strip().lower(),
+        "version": max(1, int(payload.get("version") or 1)),
+        "source_task_id": str(payload.get("source_task_id") or "").strip(),
+        "source_artifact_ids": [str(item) for item in (payload.get("source_artifact_ids") or []) if str(item).strip()],
+        "data": public_payload(payload.get("data") or {}),
+        "created_at": created_at,
+        "updated_at": created_at,
+    }
+    with RECORD_LOCK:
+        return save_record(ARTIFACT_DIR, record)
+
+
+def create_handoff(payload: dict[str, Any]) -> dict[str, Any]:
+    artifact_id = require_text(payload, "artifact_id", "待投递成果")
+    with RECORD_LOCK:
+        artifact = load_record(ARTIFACT_DIR, artifact_id)
+        if not artifact:
+            raise ValueError("待投递成果不存在")
+        from_employee = require_employee(payload.get("from_employee") or artifact.get("employee"), "发送员工")
+        to_employee = require_employee(payload.get("to_employee"), "接收员工")
+        if from_employee == to_employee:
+            raise ValueError("不能把成果投递给同一名员工")
+        created_at = now()
+        handoff = {
+            "id": f"handoff-{datetime.now().strftime('%Y%m%d%H%M%S%f')}-{uuid4().hex[:6]}",
+            "artifact_id": artifact_id,
+            "artifact_type": artifact.get("type") or "",
+            "artifact_title": artifact.get("title") or "",
+            "from_employee": from_employee,
+            "to_employee": to_employee,
+            "expo_id": str(payload.get("expo_id") or artifact.get("expo_id") or "").strip(),
+            "instruction": str(payload.get("instruction") or "").strip(),
+            "status": "pending",
+            "created_at": created_at,
+            "updated_at": created_at,
+        }
+        return save_record(HANDOFF_DIR, handoff)
+
+
+def update_handoff(handoff_id: str, action: str) -> dict[str, Any]:
+    if action not in {"accept", "reject"}:
+        raise ValueError("不支持的投递操作")
+    with RECORD_LOCK:
+        handoff = load_record(HANDOFF_DIR, handoff_id)
+        if not handoff:
+            raise ValueError("投递记录不存在")
+        if handoff.get("status") not in {"pending", action + "ed"}:
+            raise ValueError("该投递已经处理")
+        timestamp = now()
+        handoff["status"] = "accepted" if action == "accept" else "rejected"
+        handoff[f"{action}ed_at"] = timestamp
+        handoff["updated_at"] = timestamp
+        save_record(HANDOFF_DIR, handoff)
+        artifact = load_record(ARTIFACT_DIR, str(handoff.get("artifact_id") or ""))
+    return {"ok": True, "handoff": handoff, "artifact": artifact or {}}
 
 
 def load_tasks() -> list[str]:
@@ -1264,17 +1394,22 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
     convert_id = str(payload.get("convert_id") or saved.get("default_convert_id") or "").strip()
     budget = str(payload.get("budget") or "300").strip()
     video_file = str(payload.get("video_file") or payload.get("video_id") or "").strip()
+    # A local project/unit draft can be built before OAuth or platform review
+    # finishes. Account authorization and audit approval are publish gates,
+    # not prerequisites for recording the operator's strategy draft.
     required_state = {
-        "advertiser_id": advertiser_id,
-        "access_token": access_token,
         "landing_url": landing_url,
         "video_file": video_file,
         "budget": budget,
     }
     missing = [name for name, value in required_state.items() if not value]
+    video_audit = str(payload.get("video_audit") or "").strip().lower()
+    landing_audit = str(payload.get("landing_audit") or "").strip().lower()
     checks = [
         {"key": "auth", "label": "巨量广告主授权", "ok": bool(advertiser_id and access_token)},
         {"key": "landing", "label": "落地页 / 留资页", "ok": bool(landing_url)},
+        {"key": "video_audit", "label": "视频审核通过", "ok": not video_audit or video_audit == "passed"},
+        {"key": "landing_audit", "label": "落地页审核通过", "ok": not landing_audit or landing_audit == "passed"},
         {"key": "convert", "label": "转化目标自动匹配", "ok": bool(convert_id or saved.get("delivery_asset_verified"))},
         {"key": "video", "label": "投放视频", "ok": bool(video_file)},
         {"key": "budget", "label": "日预算", "ok": bool(budget)},
@@ -1288,6 +1423,13 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
     unit_id = str(payload.get("unit_id") or payload.get("promotion_id") or "").strip()
     video_id = str(payload.get("video_id") or "").strip()
     configuration_complete = not missing
+    publish_ready = bool(
+        configuration_complete
+        and advertiser_id
+        and access_token
+        and (not video_audit or video_audit == "passed")
+        and (not landing_audit or landing_audit == "passed")
+    )
     official_created = bool(project_id and unit_id and video_id)
     official_model = {
         "model": "project_with_units",
@@ -1313,6 +1455,7 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
         "ok": configuration_complete,
         "status": "official_created" if official_created else ("draft_ready" if configuration_complete else "needs_config"),
         "configuration_complete": configuration_complete,
+        "publish_ready": publish_ready,
         "official_created": official_created,
         "missing": missing,
         "checks": checks,
@@ -1331,12 +1474,26 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
             "video_id": video_id,
             "video_file": video_file,
             "goal": payload.get("goal") or "lead",
+            "regions": payload.get("regions") or "",
+            "age": payload.get("age") or "",
+            "schedule": payload.get("schedule") or "",
+            "audience_package": payload.get("audience_package") or "",
+            "bid_range": payload.get("bid_range") or "",
+            "cta": payload.get("cta") or "",
+            "cover_title": payload.get("cover_title") or "",
+            "video_audit": video_audit,
+            "landing_audit": landing_audit,
         },
+        "workbench": public_payload(payload.get("workbench") or {}),
         "dashboard": build_delivery_dashboard(payload.get("dashboard")),
         "recommendation": (
             "官方项目和单元已创建，可按单元回流数据后汇总项目。"
             if official_created
-            else "本地参数检查已通过，但尚未创建官方项目/单元；下一步执行关闭状态的官方安全草稿。"
+            else (
+                "项目和单元草稿已保存；账号与审核门禁全部通过后，可以创建关闭状态的官方安全草稿。"
+                if not publish_ready
+                else "本地参数检查已通过；下一步可以执行关闭状态的官方安全草稿。"
+            )
         ),
         "next_steps": [
             "检查广告主授权",
@@ -1417,6 +1574,25 @@ def run_job(task_id: str, fn: Callable[[], Any]) -> None:
             save_task(task)
 
 
+def employee_for_task(kind: str) -> str:
+    if kind in {"search", "import-links", "download"}:
+        return "hunter"
+    if kind in {"copy", "tts", "render", "creator-pipeline"}:
+        return "creator"
+    if kind in {
+        "publish",
+        "delivery-draft",
+        "delivery-report",
+        "ocean-video-upload",
+        "ocean-image-upload",
+        "ocean-project-create",
+        "ocean-promotion-create",
+        "ocean-safe-launch",
+    }:
+        return "buyer"
+    return ""
+
+
 def enqueue(
     kind: str,
     payload: dict[str, Any],
@@ -1434,6 +1610,9 @@ def enqueue(
         task = {
             "id": task_id,
             "kind": kind,
+            "employee": employee_for_task(kind),
+            "expo_id": str(payload.get("expo_id") or "").strip(),
+            "source_artifact_ids": [str(item) for item in (payload.get("source_artifact_ids") or []) if str(item).strip()],
             "status": "queued",
             "created_at": previous.get("created_at") or now(),
             "payload": public_payload(payload),
@@ -1879,6 +2058,28 @@ class Handler(BaseHTTPRequestHandler):
             query = parse_qs(parsed.query)
             self.send_json(latest_manifest(action=(query.get("action") or [""])[0]))
             return
+        if path == "/api/artifacts":
+            query = parse_qs(parsed.query)
+            filters = {
+                "employee": (query.get("employee") or [""])[0],
+                "type": (query.get("type") or [""])[0],
+                "status": (query.get("status") or [""])[0],
+                "expo_id": (query.get("expo_id") or [""])[0],
+            }
+            items = list_records(ARTIFACT_DIR, filters)
+            self.send_json({"count": len(items), "items": items})
+            return
+        if path == "/api/handoffs":
+            query = parse_qs(parsed.query)
+            filters = {
+                "from_employee": (query.get("from_employee") or [""])[0],
+                "to_employee": (query.get("to_employee") or [""])[0],
+                "status": (query.get("status") or [""])[0],
+                "expo_id": (query.get("expo_id") or [""])[0],
+            }
+            items = list_records(HANDOFF_DIR, filters)
+            self.send_json({"count": len(items), "items": items})
+            return
         if path == "/api/oceanengine/status":
             self.send_json({"ok": True, **ocean_config_public()})
             return
@@ -1989,6 +2190,17 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"ok": True, "name": filename, "path": str(target), "size": target.stat().st_size}, status=201)
                 return
             payload = self.read_payload()
+            if path == "/api/artifacts":
+                self.send_json(create_artifact(payload), status=201)
+                return
+            if path == "/api/handoffs":
+                self.send_json(create_handoff(payload), status=201)
+                return
+            handoff_match = re.fullmatch(r"/api/handoffs/([^/]+)/(accept|reject)", path)
+            if handoff_match:
+                handoff_id = unquote(handoff_match.group(1))
+                self.send_json(update_handoff(handoff_id, handoff_match.group(2)))
+                return
             if path.startswith("/api/tasks/"):
                 kind = path.rsplit("/", 1)[-1]
                 self.send_json(make_task(kind, payload), status=202)
