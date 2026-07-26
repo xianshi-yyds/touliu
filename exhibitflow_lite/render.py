@@ -666,6 +666,29 @@ def caption_sentence_timeline(timeline: list[dict[str, Any]], max_clause_chars: 
     return output
 
 
+# Caption colour schemes (body fill, outline) — keyed to match the editor's
+# swatch grid so a chosen colour burns identically to the live preview.
+CAPTION_COLOR_SCHEMES: dict[str, tuple[str, str]] = {
+    "white": ("#ffffff", "#14161b"),
+    "yellow": ("#ffd400", "#3a2e00"),
+    "green": ("#4ade80", "#0f2e18"),
+    "cyan": ("#22d3ee", "#06262d"),
+    "blue": ("#5b8cff", "#0a1a44"),
+    "pink": ("#ff8fc7", "#3d0f28"),
+    "red": ("#ff5a5a", "#3a0b0b"),
+    "orange": ("#ff9d3c", "#3a2200"),
+    "purple": ("#b388ff", "#22103f"),
+    "mint": ("#7ef0d0", "#0c332a"),
+    "lime": ("#c6ff4d", "#243300"),
+    "sky": ("#8fd3ff", "#08283d"),
+    "rose": ("#ff6b9d", "#3d0f24"),
+    "gold": ("#f5c451", "#3a2a00"),
+    "teal": ("#2dd4bf", "#08302b"),
+    "coral": ("#ff7a6b", "#3a1109"),
+    "black": ("#1a1a1a", "#ffffff"),
+}
+
+
 def render_caption_card(
     text: str,
     output: Path,
@@ -677,11 +700,22 @@ def render_caption_card(
     max_chars_per_line: int = 9,
     font_type: str = "template",
     alignment: str = "center",
+    fill_override: str = "",
+    stroke_override: str = "",
 ) -> Path:
     template = dict(CAPTION_TEMPLATES.get(template_name) or CAPTION_TEMPLATES["viral"])
     selected_font = CAPTION_FONT_TYPES.get(font_type) or CAPTION_FONT_TYPES["template"]
     if selected_font.get("font"):
         template["font"] = selected_font["font"]
+    # An explicit colour scheme recolours body + highlight with a matching
+    # outline, so any font/effect preset can be combined with any colour.
+    if fill_override:
+        template["fill"] = fill_override
+        template["accent"] = fill_override
+        if stroke_override:
+            template["stroke"] = stroke_override
+            template["accent_stroke"] = stroke_override
+            template["shadow"] = stroke_override
     font_scale = max(0.70, min(1.50, float(font_scale or 1.0)))
     # Horizontal alignment mirrors the caption editor's 对齐 control. The safe
     # margin keeps left/right text clear of the 9:16 edge, matching preview.
@@ -816,6 +850,8 @@ def _make_caption_clip(
     max_chars_per_line: int = 9,
     font_type: str = "template",
     alignment: str = "center",
+    fill_override: str = "",
+    stroke_override: str = "",
 ) -> Path:
     """Render one transparent caption clip for the selected animation."""
     cards_dir = run_dir / "caption_cards"
@@ -831,6 +867,8 @@ def _make_caption_clip(
         max_chars_per_line=max_chars_per_line,
         font_type=font_type,
         alignment=alignment,
+        fill_override=fill_override,
+        stroke_override=stroke_override,
     )
     clip = clips_dir / f"caption-{index:03d}.mov"
     clip.parent.mkdir(parents=True, exist_ok=True)
@@ -867,6 +905,8 @@ def _make_caption_clip(
             max_chars_per_line=max_chars_per_line,
             font_type=font_type,
             alignment=alignment,
+            fill_override=fill_override,
+            stroke_override=stroke_override,
         )
     intro = clips_dir / f"caption-{index:03d}-intro.mov"
     run(
@@ -1184,10 +1224,12 @@ def make_caption_overlay(
     max_chars_per_line: int = 9,
     font_type: str = "template",
     alignment: str = "center",
+    fill_override: str = "",
+    stroke_override: str = "",
 ) -> Path:
     clips: list[Path] = []
     for index, item in enumerate(timeline, start=1):
-        clip = _make_caption_clip(item, run_dir, template_name, highlight_words, animation, index, font_scale, vertical_position, max_chars_per_line, font_type, alignment)
+        clip = _make_caption_clip(item, run_dir, template_name, highlight_words, animation, index, font_scale, vertical_position, max_chars_per_line, font_type, alignment, fill_override, stroke_override)
         clips.append(clip)
     list_file = run_dir / "caption-concat.txt"
     list_file.write_text("\n".join(f"file '{str(path).replace(chr(39), chr(39) + chr(92) + chr(39) + chr(39))}'" for path in clips) + "\n", encoding="utf-8")
@@ -1489,6 +1531,7 @@ def render_caption_variant(
     caption_max_chars: int | None = None,
     caption_font_type: str = "template",
     caption_alignment: str = "center",
+    caption_color: str = "default",
 ) -> dict[str, Any]:
     """Apply one selected caption style to an existing generated video.
 
@@ -1511,6 +1554,8 @@ def render_caption_variant(
     max_chars_per_line = max(6, min(14, int(caption_max_chars or round(9 / font_scale))))
     font_type = caption_font_type if caption_font_type in CAPTION_FONT_TYPES else "template"
     alignment = caption_alignment if caption_alignment in {"left", "center", "right"} else "center"
+    color_key = str(caption_color or "default")
+    fill_override, stroke_override = CAPTION_COLOR_SCHEMES.get(color_key, ("", ""))
     selected_highlights = [str(word).strip() for word in (highlight_words or []) if str(word).strip()]
     total_duration = duration(audio) or duration(source) or max(
         (float(item.get("end") or 0) for item in timeline),
@@ -1562,6 +1607,8 @@ def render_caption_variant(
             max_chars_per_line=max_chars_per_line,
             font_type=font_type,
             alignment=alignment,
+            fill_override=fill_override,
+            stroke_override=stroke_override,
         )
         caption_sfx = make_caption_sfx(normalized_timeline, run_dir, total_duration) if caption_sfx_enabled else None
         final = burn_caption_overlay(source, audio, caption_overlay, run_dir / "final.mp4", total_duration, sfx=caption_sfx)
@@ -1580,6 +1627,7 @@ def render_caption_variant(
         "caption_font_type": font_type,
         "caption_font_label": CAPTION_FONT_TYPES[font_type]["label"],
         "caption_alignment": alignment,
+        "caption_color": color_key,
         "highlight_words": selected_highlights,
         "caption_timeline": normalized_timeline,
         "duration_seconds": total_duration,

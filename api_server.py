@@ -2777,6 +2777,9 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
         caption_alignment = str(payload.get("caption_alignment") or "center").strip().lower()
         if caption_alignment not in {"left", "center", "right"}:
             caption_alignment = "center"
+        caption_color = str(payload.get("caption_color") or "default").strip().lower()
+        if caption_color != "default" and caption_color not in render.CAPTION_COLOR_SCHEMES:
+            caption_color = "default"
         raw_highlights = payload.get("highlight_words") or []
         if isinstance(raw_highlights, str):
             raw_highlights = re.split(r"[，,、\n]+", raw_highlights)
@@ -2815,6 +2818,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
                 caption_max_chars=caption_max_chars,
                 caption_font_type=caption_font_type,
                 caption_alignment=caption_alignment,
+                caption_color=caption_color,
             )
             manifest["video_project_id"] = video_project_id
             manifest["parent_render_task_id"] = str(payload.get("parent_task_id") or source_task_id)
