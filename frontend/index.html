@@ -1365,9 +1365,20 @@
     #creator-studio-editor #render-preview { background:linear-gradient(180deg,#181820,#101017); border:1px solid rgba(255,255,255,.08); border-radius:18px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,.5); color:#e8e9f0; }
     #creator-studio-editor #render-preview.result-empty { min-height:420px; display:grid; place-items:center; color:#8a8d9c; }
     .cap-editor { display:grid; grid-template-columns:76px minmax(180px,240px) minmax(300px,1fr) minmax(300px,360px); grid-template-rows:1fr auto; min-height:560px; }
+    /* 三栏：左文案 / 中视频 / 右字体样式 */
+    .cap-editor-3 { grid-template-columns:minmax(230px,300px) minmax(320px,1fr) minmax(300px,360px); }
     .cap-editor > .cap-footer { grid-column:1/-1; }
-    @media (max-width:1080px){ .cap-editor { grid-template-columns:64px minmax(150px,200px) 1fr; } .cap-editor .cap-controls { grid-column:1/-1; grid-row:2; } .cap-editor > .cap-footer { grid-row:3; } }
-    /* 左竖排工具栏 */
+    @media (max-width:1080px){ .cap-editor-3 { grid-template-columns:minmax(200px,260px) 1fr; } .cap-editor .cap-controls { grid-column:1/-1; grid-row:2; } .cap-editor > .cap-footer { grid-row:3; } }
+    /* 左：文案列 */
+    .cap-copy { display:flex; flex-direction:column; gap:8px; padding:16px 14px; border-right:1px solid rgba(255,255,255,.06); min-height:0; }
+    .cap-copy-text { flex:0 0 auto; min-height:150px; background:#111119; border:1px solid rgba(255,255,255,.09); color:#e9eaf1; border-radius:10px; padding:11px; font-size:13px; line-height:1.85; font-family:inherit; resize:vertical; }
+    .cap-copy-text:focus { outline:none; border-color:var(--violet-2); box-shadow:0 0 0 3px var(--violet-soft); }
+    .cap-copy-meta { display:flex; justify-content:space-between; color:#8a8d9c; font-size:11.5px; font-weight:700; }
+    .cap-copy-voice { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); color:#c9beff; border-radius:9px; padding:9px; font-size:12.5px; font-weight:800; cursor:pointer; }
+    .cap-copy-voice:hover { background:var(--violet-soft); border-color:var(--violet-2); }
+    .cap-lines-head { margin-top:6px; color:#7c7f8e; font-size:11px; font-weight:900; letter-spacing:.3px; }
+    .cap-copy .cap-lines { border-right:none; padding:6px 0 0; max-height:none; flex:1 1 auto; min-height:60px; }
+    /* 左竖排工具栏（保留样式，当前布局未使用） */
     .cap-rail { display:flex; flex-direction:column; gap:2px; padding:14px 8px; border-right:1px solid rgba(255,255,255,.06); background:rgba(255,255,255,.015); }
     .cap-rail-item { display:flex; flex-direction:column; align-items:center; gap:4px; padding:11px 4px; border:none; background:none; color:#7f8290; font-size:11px; font-weight:800; border-radius:11px; cursor:pointer; }
     .cap-rail-item i { font-style:normal; font-size:18px; line-height:1; }
@@ -1433,8 +1444,6 @@
     <button class="figma-nav active" data-nav="expo" onclick="showSection('overview'); backToExhibitionList(); setFigmaNav('expo')"><img src="assets/figma-sync/expo-list.svg" alt="">展会列表</button>
     <button class="figma-nav" data-nav="staff" onclick="showEmployeeOverview(); setFigmaNav('staff')"><img src="assets/figma-sync/employee.svg" alt="">数字员工</button>
     <button class="figma-nav" data-nav="materials" onclick="showMaterialLibrary(); setFigmaNav('materials')"><img src="assets/figma-sync/space.svg" alt="">素材库</button>
-    <button class="figma-nav muted" onclick="notify('用量明细后续接入')"><img src="assets/figma-sync/usage-line.svg" alt="">用量明细</button>
-    <button class="figma-nav muted" onclick="notify('空间详情后续接入')"><img src="assets/figma-sync/space.svg" alt="">空间详情</button>
     <div class="expo-context-nav" aria-label="当前展会功能">
       <button class="figma-nav context-root" data-context-nav="employees" onclick="openExpoWorkspace('employees')"><img src="assets/figma-sync/employee.svg" alt="">数字员工</button>
       <button class="figma-nav context-group" data-context-group="service" onclick="toggleExpoContextGroup('service')"><svg class="context-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14h3v5H5a1 1 0 0 1-1-1v-4Zm16 0h-3v5h2a1 1 0 0 0 1-1v-4ZM17 19c0 1.1-.9 2-2 2h-3"/></svg><b>AI 客服</b><svg class="context-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
@@ -1601,7 +1610,7 @@
       <section id="creator" class="section">
   <div class="shell">
     <div class="employee-page-head"><div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>生视频员工详情</span></div><h1>生视频员工</h1><p>可以从零创作，也可以接收样本包、参考链接或已有素材，独立完成脚本、配音、字幕和成片。</p></div><div class="employee-head-actions"><span class="status blue">岗位：视频创作</span><button class="primary" onclick="startNewCreatorTask()">新建视频任务</button></div></div>
-    <div class="employee-tabbar" data-employee-tabs="creator"><button class="active" data-employee-tab="tasks" onclick="switchEmployeeWorkspace('creator','tasks')">任务</button><button data-employee-tab="outcomes" onclick="switchEmployeeWorkspace('creator','outcomes')">成果</button><button data-employee-tab="inbox" onclick="switchEmployeeWorkspace('creator','inbox')">收件箱 <span id="creator-inbox-count">0</span></button><button data-employee-tab="settings" onclick="switchEmployeeWorkspace('creator','settings')">素材与服务</button></div>
+    <div class="employee-tabbar" data-employee-tabs="creator"><button class="active" data-employee-tab="tasks" onclick="switchEmployeeWorkspace('creator','tasks')">任务</button><button data-employee-tab="outcomes" onclick="switchEmployeeWorkspace('creator','outcomes')">成果</button></div><span id="creator-inbox-count" style="display:none">0</span>
     <div class="creator-entry creator-page active" data-creator-page="menu">
       <div id="creator-studio-compose" class="creator-studio-shell cs-shell">
         <div class="cs-topbar">
@@ -1609,7 +1618,7 @@
           <div class="cs-topbar-actions"><button onclick="loadTasks()">⟳ 刷新记录</button><button onclick="setCreatorTab('history')">查看全部历史</button></div>
         </div>
         <div class="cs-two">
-          <aside class="cs-composer">
+          <div class="cs-composer">
             <div class="cs-composer-scroll">
               <!-- 1. 展会信息（替代参考的“添加商品”） -->
               <div class="cs-block">
@@ -1625,17 +1634,17 @@
 
               <!-- 2. 素材内容 -->
               <div class="cs-block">
-                <div class="cs-block-head"><h3>素材内容</h3><div class="cs-block-tools"><span id="creator-studio-material-status" class="status" style="display:none"></span><button class="cs-linkbtn" onclick="clearStudioClips()">🗑 清空</button></div></div>
-                <p class="cs-hint">所有素材总时长需超过 10s，不超过 10min。按点击顺序拼接成片画面。</p>
-                <div class="cs-source-toggle">
-                  <button class="active" data-studio-source="local" onclick="selectCreatorStudioMaterial('local')">本地素材库</button>
-                  <button data-studio-source="upload" onclick="selectCreatorStudioMaterial('upload')">＋ 上传</button>
-                  <button data-studio-source="pexels" onclick="selectCreatorStudioMaterial('pexels')">在线素材</button>
+                <div class="cs-block-head"><h3>素材来源</h3><div class="cs-block-tools"><button class="cs-linkbtn" onclick="showMaterialLibrary('creator')">↗ 去素材库上传</button><button class="cs-linkbtn" onclick="clearStudioClips()">🗑 清空</button></div></div>
+                <p class="cs-hint">选择走本地素材库（你上传的素材）还是 MoneyPrinter 在线素材。</p>
+                <div class="cs-source-toggle cs-source-binary">
+                  <button class="active" data-studio-source="local" onclick="selectCreatorStudioMaterial('local')">📁 本地素材库</button>
+                  <button data-studio-source="pexels" onclick="selectCreatorStudioMaterial('pexels')">🌐 MoneyPrinter 在线</button>
                 </div>
+                <p class="cs-hint" style="margin:10px 0 8px">勾选要用的片段（按点击顺序拼接）；总时长需 10s~10min。</p>
                 <div id="cs-material-grid" class="cs-material-grid">
                   <div class="cs-add-tile" onclick="showMaterialLibrary('creator')">＋</div>
                 </div>
-                <div id="cs-material-online" class="cs-hint" style="display:none;margin-top:10px">已切换到 MoneyPrinter 在线素材：生成时按脚本主题自动搜索通用补充素材，不写入素材库。</div>
+                <div id="cs-material-online" class="cs-hint" style="display:none;margin-top:10px">MoneyPrinter 在线素材：生成时按脚本主题自动搜索通用补充素材，无需手动挑选，不写入你的素材库。</div>
                 <div id="cs-material-total" class="cs-material-total">未选择素材片段</div>
                 <div id="creator-studio-material-summary" class="creator-material-summary" style="display:none"></div>
               </div>
@@ -1669,9 +1678,9 @@
               </div>
             </div>
             <div class="cs-cta-bar"><button class="btn-violet" id="cs-generate-btn" onclick="startCreatorStudioPipeline()">立即生成</button></div>
-          </aside>
+          </div>
 
-          <aside class="cs-status">
+          <div class="cs-status">
             <div class="cs-status-head">
               <div style="display:flex;align-items:center"><h3>生成记录</h3><span id="cs-running-count" class="cs-count-chip" style="display:none"></span></div>
               <input id="cs-task-search" class="cs-search" placeholder="🔍 任务搜索" oninput="filterStudioJobs(this.value)">
@@ -1681,7 +1690,7 @@
               <div><span class="cs-record-label">历史项目</span><div id="creator-studio-history" class="creator-studio-history"><div class="result-empty">暂无视频项目。</div></div></div>
             </div>
             <div class="cs-disclaimer">⚠ 内容由 AI 生成，仅供参考。使用时请严格遵守相关法律规定对内容进行标识，并仅在授权范围内使用。</div>
-          </aside>
+          </div>
         </div>
       </div>
       <div id="creator-studio-editor" class="creator-studio-editor hidden">
@@ -3941,12 +3950,18 @@
       captionPreviewState.editorTarget = Number(valueOf('copy-length') || summary.target_duration_seconds || 30);
       captionPreviewState.hasBase = hasBase;
       captionPreviewState.canEdit = canEdit;
-      const railItems = [['basic','✦','基础',false],['music','♪','音乐',true],['voice','🎙','配音',false],['fx','✨','花字',true],['image','🖼','图片',true],['sticker','▣','前后贴',true]];
-      const statusText = canEdit && hasBase ? '样式与配音实时预览，确认后「保存修改」生成最终成片。' : '当前版本为只读预览，不能覆盖已保存的视频创作包。';
+      const statusText = canEdit && hasBase ? '文案 / 字体样式实时预览，确认后「保存修改」生成最终成片。' : '当前版本为只读预览，不能覆盖已保存的视频创作包。';
       setCreatorStudioMode('editor');
-      box.innerHTML = `<div class="cap-editor">
-        <div class="cap-rail" id="cap-tool-rail">${railItems.map(([t,ic,lb,soon]) => `<button class="cap-rail-item${t==='basic'?' active':''}${soon?' soon':''}" data-tool="${t}" onclick="setCaptionTool('${t}')"><i>${ic}</i><span>${lb}</span></button>`).join('')}</div>
-        <aside class="cap-lines" id="cap-line-list"></aside>
+      box.innerHTML = `<div class="cap-editor cap-editor-3">
+        <div class="cap-copy">
+          <h3 class="cap-panel-title">文案</h3>
+          <p class="cap-panel-sub">配音员朗读的内容，改完可重新生成语音。</p>
+          <textarea id="creator-editor-script" class="cap-copy-text" oninput="syncCreatorEditorScript(this.value)">${escapeHtml(captionPreviewState.editorScript || '')}</textarea>
+          <div class="cap-copy-meta"><span>目标 约 ${captionPreviewState.editorTarget || 30} 秒</span><span id="creator-editor-script-count">${countVoiceoverCharacters(captionPreviewState.editorScript || '')} 字</span></div>
+          <button class="cap-copy-voice" onclick="regenerateCreatorEditorVoice()">🎙 重新生成语音</button>
+          <div class="cap-lines-head">逐句字幕（点击定位）</div>
+          <div class="cap-lines" id="cap-line-list"></div>
+        </div>
         <div class="cap-stage">
           <div id="caption-preview-root" class="caption-preview-root style-${escapeAttr(template)} font-${escapeAttr(fontType)}" style="--caption-scale:${captionPreviewState.fontScale / 100};--caption-bottom:${captionPreviewState.verticalPosition};--caption-side:${captionSidePadding(captionPreviewState.fontScale)}%;--caption-align:${captionPreviewState.alignment}">
             <div class="caption-preview-stage">
@@ -3964,7 +3979,7 @@
           </div>
           <p class="caption-preview-note">${canEdit && hasBase ? '实时字幕预览：视频基底和配音不变，样式切换不会重新生成素材。' : (summary.saved_to_video_package || summary.editable_captions === false ? '该版本已保存到视频创作包，只读预览；如需修改请恢复参数生成新版本。' : '历史版本成片预览；正在用已保存的基底和配音恢复字幕编辑。')}</p>
         </div>
-        <aside class="cap-controls" id="cap-controls-panel"></aside>
+        <div class="cap-controls" id="cap-controls-panel"></div>
         <div class="cap-footer">
           <span id="caption-preview-status" class="caption-preview-status">${statusText}</span>
           <button class="cap-cancel" onclick="setCreatorStudioMode('compose')">取消</button>
@@ -3973,7 +3988,8 @@
       </div>`;
       chooseCaptionTemplate(template);
       renderCaptionLineList();
-      renderCaptionToolPanel('basic');
+      const controlsPanel = document.getElementById('cap-controls-panel');
+      if (controlsPanel) controlsPanel.innerHTML = captionBasicPanelHtml();
       const video = document.getElementById('caption-preview-video');
       if (video) {
         video.addEventListener('timeupdate', updateCaptionPreview);
@@ -4816,10 +4832,10 @@
         ['AI/TTS', textLlmReady ? `Qwen ${cfg.text_llm_model || 'qwen3.6-plus'} 文案${qwenReady ? ' / Qwen 视觉与 TTS' : ''}` : '需配置 Qwen Key'],
         ['发布器', cfg.publisher_configured ? '已配置' : '未配置'],
       ].map(([k,v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('');
-      document.getElementById('system-pill').textContent = cfg.ffmpeg_configured ? '系统可用' : '缺 FFmpeg';
-      document.getElementById('system-pill').className = `status ${cfg.ffmpeg_configured ? 'succeeded' : 'failed'}`;
-      document.getElementById('material-count').textContent = `素材 ${cfg.material_count || 0} 个`;
-      document.getElementById('local-source-count').textContent = `素材 ${cfg.material_count || 0} 个`;
+      const setText = (id, txt, cls) => { const el = document.getElementById(id); if (el) { el.textContent = txt; if (cls != null) el.className = cls; } };
+      setText('system-pill', cfg.ffmpeg_configured ? '系统可用' : '缺 FFmpeg', `status ${cfg.ffmpeg_configured ? 'succeeded' : 'failed'}`);
+      setText('material-count', `素材 ${cfg.material_count || 0} 个`);
+      setText('local-source-count', `素材 ${cfg.material_count || 0} 个`);
       const moneyStatus = document.getElementById('moneyprint-source-status');
       if (moneyStatus) moneyStatus.textContent = cfg.moneyprint_stock_configured ? '已配置，可直接使用' : '需要配置 PEXELS_API_KEY';
       refreshSearchProviderChoices();
