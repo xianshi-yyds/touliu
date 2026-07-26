@@ -1,0 +1,19 @@
+[Unit]
+Description=ExhibitFlow Lite Frontend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=exhibitflow
+Group=exhibitflow
+WorkingDirectory=/opt/exhibitflow-lite
+ExecStart=/opt/exhibitflow-lite/.venv/bin/python -u /opt/exhibitflow-lite/frontend/serve_frontend.py --port 5173
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+StandardOutput=append:/opt/exhibitflow-lite/storage/logs/frontend-server.log
+StandardError=append:/opt/exhibitflow-lite/storage/logs/frontend-server.log
+
+[Install]
+WantedBy=multi-user.target

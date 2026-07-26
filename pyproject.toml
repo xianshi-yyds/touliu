@@ -11,6 +11,16 @@ dependencies = [
   "edge-tts>=6.1",
 ]
 
+[project.optional-dependencies]
+# PyCaps is kept optional because its browser/Pictex renderers are still alpha.
+# The default renderer remains available on small hosts, while installing this
+# extra enables the real character-level Chromium export used by the
+# ``pycaps_hype`` template.
+caption-preview = [
+  "pycaps @ git+https://github.com/francozanardi/pycaps.git",
+  "playwright>=1.40",
+]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 

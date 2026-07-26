@@ -92,7 +92,7 @@ def main() -> None:
         summary["copy"] = {"status": "succeeded", "characters": len(copy_text)}
 
         tts_task = wait_task(
-            create_task("tts", {"text": copy_text, "voice": "Cherry"}),
+            create_task("tts", {"text": copy_text, "voice": "Serena"}),
             180,
         )
         audio_path = tts_task["result"]["audio_path"]

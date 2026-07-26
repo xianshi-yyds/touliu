@@ -1,5 +1,7 @@
 # ExhibitFlow Lite
 
+多平台投放扩展说明见 [`docs/platform-integrations.md`](docs/platform-integrations.md)。当前已保留抖音巨量链路，新增小红书 Rnote 公开检索和视频号腾讯广告创意只读适配器。
+
 真正可迁移的轻量版展会短视频工作台。默认不依赖父目录里的
 `MoneyPrinterTurbo`、`new_video_download` 或 `social-auto-upload`。
 
@@ -7,7 +9,7 @@
 
 - 手动导入抖音/小红书链接作为参考样本
 - 上传本地参考视频/图片
-- DeepSeek 文案生成、Qwen 视频理解
+- Qwen 文案生成、Qwen 视频理解
 - 内部轻量成片引擎：素材目录 + 文案 -> 竖屏视频
 - 本地 storage 管理：候选清单、上传样本、TTS、渲染结果
 - SaaS 版前端 + 后台任务 API：前端只负责交互，检索/AI/成片/发布/投放都通过接口异步执行
@@ -29,6 +31,16 @@ SAU_BIN=./vendor/social_auto_upload/.venv/bin/sau
 EXHIBITFLOW_RENDER_ENGINE=moneyprinter
 ```
 
+如果服务器不适合运行依赖 macOS Chrome 登录态的本地抓取器，可以配置 TikHub 的服务端抖音公共检索：
+
+```env
+TIKHUB_API_KEY=your_tikhub_api_key
+TIKHUB_BASE_URL=https://api.tikhub.dev
+SOCIAL_SEARCH_PROVIDER=auto
+```
+
+`auto` 模式下，抖音优先使用 TikHub，未配置 Key 时回退本地抓取器；小红书仍使用现有本地适配器。TikHub 专用搜索接口按请求计费，分页越多费用越高。
+
 默认保持：
 
 ```env
@@ -43,14 +55,16 @@ MoneyPrinter 在线素材链路使用 Pexels，需要额外配置：
 PEXELS_API_KEY=your_pexels_api_key
 ```
 
-文本口播稿和在线搜索词使用 DeepSeek 的 OpenAI 兼容接口；视频理解和 Qwen TTS
-仍使用 DashScope。真实 API Key 只放在本机 `.env`，不要提交到仓库：
+文本口播稿和在线搜索词使用阿里云百炼 Qwen 的 OpenAI 兼容接口；视频理解和
+Qwen TTS 使用 DashScope。真实 API Key 只放在本机 `.env`，不要提交到仓库：
 
 ```env
-DEEPSEEK_API_KEY=your_deepseek_api_key
-DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
-DEEPSEEK_TEXT_MODEL=deepseek-chat
+TEXT_LLM_API_KEY=your_dashscope_api_key
+TEXT_LLM_BASE_URL=https://ws-7s8hh8dksjtq6j2u.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+TEXT_LLM_MODEL=qwen3.6-plus
 DASHSCOPE_API_KEY=your_dashscope_api_key
+QWEN_TTS_MODEL=qwen3-tts-flash
+QWEN_TTS_VOICE=Serena
 ```
 
 生视频员工支持两种素材来源：
@@ -138,16 +152,21 @@ http://127.0.0.1:5173/?api=http://127.0.0.1:8610
 
 技术日志默认收在“后台任务 → 查看技术详情”，员工主页只显示业务状态、进度和成果。
 
-### 字幕模板
+### 字幕模板与最后一步预览
 
-成片页支持四套硬字幕模板，字幕会直接烧录进视频，不依赖平台软字幕：
+成片生成时会同时保存一份“带配音、无字幕”的预览基底、字幕时间轴和默认成片。成片页先用 CSS/DOM 叠加层实时预览，点击不同字体样式或动画不会重新搜索素材、生成配音或重做视频；确认后才提交 `caption-style` 后处理任务，把最终选择硬烧进可投放成片。
+
+当前支持四套 FFmpeg/Pillow 视觉模板，以及一套真实 PyCaps 字幕模板：
 
 - `viral`：爆款强调，圆润粗体、黑色厚描边、橙黄重点词，接近短视频参考样式。
 - `business`：专业展会，白字深色描边、蓝色业务重点词。
 - `minimal`：极简商务，半透明底板、绿色重点词。
 - `energetic`：活力招展，橙色大字、红色描边和强调下划线。
+- `pycaps_hype`：PyCaps 动态高亮，字符按时间轴逐字进入，当前字放大并高亮。
 
-可手动填写重点词；留空时自动识别“专业买家、人流量、展位、招商、报名”等转化词。Edge TTS 会记录真实词级时间戳，字幕按语音时间切换；其他音频采用时长加权兜底。
+字幕动画可独立选择：弹入、上滑、淡入、打字机。可手动填写重点词；留空时自动识别“专业买家、人流量、展位、招商、报名”等转化词。Edge TTS 会记录真实词级时间戳，字幕按语音时间切换；其他音频采用句子级时间轴兜底。
+
+浏览器预览层和最终成片都使用独立的字幕基底；安装 `caption-preview` 依赖后，选择 `pycaps_hype` 会调用真实 PyCaps/Chromium 渲染，未安装时其他四套模板仍走原有回退链路。历史记录中只要没有保存到视频创作包，就会显示“预览/编辑字幕”；保存视频创作包后，该版本的字幕编辑状态会持久化锁定。
 
 接口形态：
 
@@ -164,6 +183,7 @@ POST /api/tasks/download
 POST /api/tasks/copy
 POST /api/tasks/tts
 POST /api/tasks/render
+POST /api/tasks/caption-style
 POST /api/tasks/publish
 POST /api/tasks/delivery-draft
 POST /api/tasks/ocean-safe-launch

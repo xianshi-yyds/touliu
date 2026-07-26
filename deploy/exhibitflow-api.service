@@ -1,0 +1,22 @@
+[Unit]
+Description=ExhibitFlow Lite API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=exhibitflow
+Group=exhibitflow
+WorkingDirectory=/opt/exhibitflow-lite
+EnvironmentFile=/opt/exhibitflow-lite/.env
+Environment=EXHIBITFLOW_HOST=127.0.0.1
+Environment=EXHIBITFLOW_PORT=8501
+ExecStart=/opt/exhibitflow-lite/.venv/bin/python -u /opt/exhibitflow-lite/api_server.py
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+StandardOutput=append:/opt/exhibitflow-lite/storage/logs/api-server.log
+StandardError=append:/opt/exhibitflow-lite/storage/logs/api-server.log
+
+[Install]
+WantedBy=multi-user.target

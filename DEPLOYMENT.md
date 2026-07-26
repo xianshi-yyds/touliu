@@ -40,18 +40,36 @@ cd exhibitflow-lite
 编辑 `.env`，至少选择一个文本模型配置：
 
 ```dotenv
-# DeepSeek 文本模型
-DEEPSEEK_API_KEY=你的DeepSeek_KEY
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-chat
+# Qwen 文本模型（OpenAI-compatible）
+TEXT_LLM_API_KEY=你的百炼_KEY
+TEXT_LLM_BASE_URL=https://ws-7s8hh8dksjtq6j2u.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+TEXT_LLM_MODEL=qwen3.6-plus
+TEXT_LLM_ENABLE_THINKING=false
 
 # Qwen 视觉 / Qwen TTS（按需）
 DASHSCOPE_API_KEY=你的百炼_KEY
 QWEN_VL_MODEL=qwen3-vl-plus
-QWEN_TTS_MODEL=你的可用Qwen_TTS模型
+QWEN_TTS_MODEL=qwen3-tts-flash
+QWEN_TTS_VOICE=Serena
 ```
 
 没有填写在线模型 Key 时，仍可以启动页面并使用本地素材链路；文案、视觉理解或 Qwen TTS 请求会提示配置缺失。
+
+### PyCaps 字幕渲染（可选增强）
+
+选择前端的“PyCaps 动态高亮”模板时，服务会用 Chromium 将字符级字幕和动画渲染成最终成片；普通模板仍保留原有 Pillow/FFmpeg 回退链路。安装方式：
+
+```bash
+./scripts/install-pycaps.sh
+```
+
+PyCaps 需要额外的 Chromium 和 Linux 图形库。Amazon Linux 2023 可补充：
+
+```bash
+sudo dnf install -y libxcb libX11 libXcomposite libXdamage libXext libXfixes libXrandr libgbm libdrm pango cairo atk at-spi2-atk cups-libs gtk3 nss alsa-lib
+```
+
+历史成片会保留无字幕基底、配音和字幕时间轴。只要没有“保存到视频创作包”，就可以从历史记录重新打开字幕预览并更换字体/动画；保存后该版本会锁定。
 
 ### 启动
 
@@ -131,6 +149,18 @@ copy .env.example .env
 
 真实 Cookie 文件不会打包。请根据 `vendor/social_crawler/cookie.example.txt` 在目标机器重新登录或重新配置，不要复制旧 Cookie。
 
+### TikHub 服务端抖音检索
+
+新服务器不适合运行依赖 macOS `osascript` 的本地浏览器抓取器时，可以改用 TikHub 的公共抖音检索 API。它不依赖用户浏览器登录，任务由 ExhibitFlow API 在服务器端执行：
+
+```env
+TIKHUB_API_KEY=你的 TikHub API Key
+TIKHUB_BASE_URL=https://api.tikhub.dev
+SOCIAL_SEARCH_PROVIDER=auto
+```
+
+`auto` 模式会优先使用 TikHub 检索抖音；如果配置 `RNOTE_API_KEY`，小红书会优先使用 Rnote 的公开笔记/视频检索，未配置时再回退本地适配器。两个托管检索接口都按请求计费，余额不足时任务会明确失败，不会伪造空结果。视频号投放与腾讯广告创意只读链路见 [`docs/platform-integrations.md`](docs/platform-integrations.md)。
+
 ## 5. 数据和账号迁移
 
 - `.env` 需要在目标电脑重新创建，不能从发布包中恢复。
@@ -190,3 +220,44 @@ find . -name '.env' -o -name 'cookie.txt' -o -name '*.pem' -o -name '*.key'
 ```
 
 发布包中不应出现真实 `.env`、Cookie、证书私钥或 API Key。若需要长期部署，建议把密钥放在目标机器的环境变量或密钥管理服务中，而不是提交到 Git 或写进压缩包。
+
+## 9. EC2 长期部署
+
+生产部署建议把 API 和前端放在同一台服务器上，不再依赖本机反向 SSH 隧道：
+
+- API 监听 `127.0.0.1:8501`，由 `systemd` 守护；
+- 前端监听 `127.0.0.1:5173`，由 `systemd` 守护；
+- Nginx 暴露 `/exhibitflow/` 和 `/exhibitflow-api/`；
+- FFmpeg 和中文字体必须安装在服务器上；
+- 域名 A 记录指向服务器的固定公网 IP 后，再用 Certbot 签发 HTTPS。
+
+仓库中的 `deploy/` 目录提供了 systemd/Nginx 模板。实际部署时将服务用户、项目路径和域名替换为目标环境值，并确保云安全组放行 TCP 80/443。
+
+巨量引擎回调继续使用：
+
+```text
+https://xianshi.icu/exhibitflow-api/api/oceanengine/callback
+```
+
+### 与旧服务器隔离的子域名部署
+
+如果根域名还承载旧服务器上的生图或其他项目，不要让根域名同时配置两个不同服务器的 A 记录。推荐保留：
+
+```text
+xianshi.icu           -> 旧服务器
+www.xianshi.icu       -> 旧服务器
+employee.xianshi.icu  -> 数字员工新服务器
+```
+
+新服务器使用 `deploy/nginx-exhibitflow-subdomain.conf`：根路径反代前端
+5173，`/api/` 反代 API 8501。生产环境回调地址改为：
+
+```text
+https://employee.xianshi.icu/api/oceanengine/callback
+```
+
+并在巨量开放平台应用后台登记完全相同的地址。这样旧服务器的根域名和
+其他项目不受影响，数字员工的代码、任务、素材、渲染和模型服务全部在
+新服务器内运行。
+
+抖音/小红书抓取脚本目前的浏览器绑定实现依赖 macOS `osascript` 和 Chrome。API、渲染、TTS、投放回调可以直接在 Linux/EC2 运行；如果要把“登录绑定后再抓取”也完全放到 Linux，需要另外接入 Playwright/远程浏览器会话，不能只复制 macOS 的浏览器登录流程。

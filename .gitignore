@@ -9,3 +9,8 @@ build/
 test-results/
 storage/*
 !storage/.gitkeep
+# 临时下载 / 渲染产物：大体积媒体不入库（已跟踪的示例素材不受影响）
+*.mp4
+*.mov
+lQbPJx*
+lQbPKd*

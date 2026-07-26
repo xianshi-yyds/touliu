@@ -154,11 +154,11 @@ with st.sidebar:
     st.caption("抓取器/发布器是可选插件；不配置也能手动导入样本并生成成片。")
     st.write(f"可选抓取器：`{settings.crawler_dir}`")
     st.write(f"可选发布器：`{settings.sau_bin}`")
-    st.write(f"DeepSeek 文案：`{settings.deepseek_text_model}`")
+    st.write(f"Qwen 文案：`{settings.text_llm_model}`")
     st.write(f"Qwen 视觉：`{settings.qwen_vl_model}`")
     st.write(f"TTS：`{settings.qwen_tts_model}`")
-    if not settings.deepseek_api_key:
-        st.warning("未配置 DEEPSEEK_API_KEY，文案/搜索词生成不可用。")
+    if not settings.text_llm_api_key:
+        st.warning("未配置 TEXT_LLM_API_KEY 或 DASHSCOPE_API_KEY，文案/搜索词生成不可用。")
     if not settings.dashscope_api_key:
         st.warning("未配置 DASHSCOPE_API_KEY，视觉理解/Qwen TTS 不可用。")
 

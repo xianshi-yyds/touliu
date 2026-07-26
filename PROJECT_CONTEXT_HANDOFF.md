@@ -30,6 +30,12 @@ ExhibitFlow Lite 是一个面向展会运营的轻量 SaaS 工作台。产品主
 - 生视频员工：根据主题、卖点、参考样本和素材来源生成文案、配音、字幕和最终视频。
 - 投放员工：绑定巨量引擎 Marketing API，选择产出视频，创建官方项目和投放单元，并回流投放数据。
 
+当前公开部署的巨量 OAuth 回调地址为：
+
+`https://xianshi.icu/exhibitflow-api/api/oceanengine/callback`
+
+回调地址必须指向这个 API 路径，不能只填 `http://localhost:8501` 或网站根地址；巨量开放平台应用后台也必须逐字符登记同一个地址。
+
 产品原则：
 
 - 前端尽量轻量、清晰、SaaS 化，参考 Figma 的展会列表、数字员工和详情页层级。
@@ -57,6 +63,7 @@ ExhibitFlow Lite 是一个面向展会运营的轻量 SaaS 工作台。产品主
 可选能力：
 
 - vendor/social_crawler：真实抖音/小红书抓取适配。
+- TikHub：可选的服务端抖音公共检索适配，配置 `TIKHUB_API_KEY` 后 `SOCIAL_SEARCH_PROVIDER=auto` 会优先使用，无需访客浏览器登录。
 - vendor/money_pipeline：外部 MoneyPrinterTurbo 完整链路适配。
 - vendor/social_auto_upload：社交平台发布适配。
 - Pexels/Pixabay 在线素材：需要对应 API Key 和网络环境。
@@ -166,6 +173,8 @@ exhibitflow-lite/
 - 当前 API 的 MoneyPrinter/Pexels 逻辑偏全局：先根据整篇主题和口播生成搜索词，再建立覆盖整段视频时长的素材池，不是每一句单独搜索一个素材。
 - 历史记录要保存文案、音色、素材来源、字幕样式、参考样本、生成结果和失败信息。
 - 批量生产要作为独立后端任务，不能阻塞前端请求；前端只显示任务列表和每条进度。
+- 成片生成会同时保存无字幕视频基底（带配音）、字幕时间轴和默认成片；成片页使用 CSS/DOM 叠加层实时预览字体样式与动画，用户确认后再提交 `caption-style` 后处理任务，只重做字幕层，不重复生成素材和配音。
+- 当前可切换字幕样式为爆款强调、专业展会、极简商务、活力招展和真实 PyCaps 动态高亮；动画为弹入、上滑、淡入、打字机。历史记录接口会为旧 manifest 尝试补建 `preview_base_video`，只要原始基底和配音文件仍在项目存储内，生成完成后也可重新打开字幕编辑；保存到视频创作包后持久化锁定。原始临时文件已经过期的历史测试记录只能只读查看。
 
 ### 4.3 投放员工
 
@@ -232,6 +241,7 @@ exhibitflow-lite/
 - POST /api/tasks/copy
 - POST /api/tasks/tts
 - POST /api/tasks/render
+- POST /api/tasks/caption-style
 - POST /api/tasks/creator-pipeline
 - POST /api/tasks/publish
 - POST /api/tasks/delivery-draft
@@ -267,11 +277,11 @@ exhibitflow-lite/
 
 主要变量名：
 
-- DEEPSEEK_API_KEY：文本 LLM。
-- DEEPSEEK_BASE_URL：默认 https://api.deepseek.com/v1。
-- DEEPSEEK_TEXT_MODEL：当前目标为 deepseek-chat。
+- TEXT_LLM_API_KEY：文本 LLM；未配置时回退 DASHSCOPE_API_KEY。
+- TEXT_LLM_BASE_URL：当前为阿里云百炼兼容接口。
+- TEXT_LLM_MODEL：当前为 qwen3.6-plus。
 - DASHSCOPE_API_KEY：Qwen 视觉/TTS 等能力。
-- QWEN_TEXT_MODEL、QWEN_VL_MODEL、QWEN_TTS_MODEL：Qwen 模型名。
+- QWEN_TEXT_MODEL、QWEN_VL_MODEL、QWEN_TTS_MODEL、QWEN_TTS_VOICE：Qwen 模型和默认音色。
 - PEXELS_API_KEY、PIXABAY_API_KEY：在线素材搜索。
 - EXHIBITFLOW_RENDER_ENGINE：internal 或 moneyprinter。
 - EXHIBITFLOW_MATERIAL_DIR：默认 ./materials。
@@ -382,7 +392,7 @@ ssh -f -N -T -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliv
 
 - 公开前端和 API 最近一次检查已经恢复：公网前端返回 HTTP 200，公网 health 返回 ok=true。
 - 本地当前曾使用 API 8501、前端 5173；项目默认文档仍保留 API 8610 的可迁移默认值。
-- 文本 LLM 目标配置是 DeepSeek；真实可用性以 /api/health 和任务日志为准。
+- 文本 LLM 目标配置是 Qwen qwen3.6-plus；真实可用性以 /api/health 和任务日志为准。
 - Qwen 视觉/TTS 依赖 DashScope 网络和额度；健康检查可能显示 ReadTimeout/unreachable，不代表代码一定错误。
 - publisher_configured=false 时，不要声称已经完成真实社交发布。
 - crawler_configured=true 只代表适配器或脚本存在，不等于浏览器登录、Cookie、网络和抓取链路都已验证。
