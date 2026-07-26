@@ -17,13 +17,17 @@ EDGE_VOICES = {
 }
 
 DEFAULT_EDGE_VOICE = "zh-CN-XiaoxiaoNeural"
-DEFAULT_QWEN_VOICE = "Cherry"
+DEFAULT_QWEN_VOICE = "Serena"
 
 
 def synthesize(text: str, service: str, voice: str, output_name: str) -> Path:
     service = (service or "qwen").strip().lower()
     if service == "qwen":
-        return qwen.synthesize_speech(text, voice=voice or "Cherry", output_name=output_name)
+        return qwen.synthesize_speech(
+            text,
+            voice=voice or settings.qwen_tts_voice or DEFAULT_QWEN_VOICE,
+            output_name=output_name,
+        )
     if service != "edge":
         raise ValueError(f"不支持的 TTS 服务：{service}")
     try:
@@ -126,7 +130,7 @@ def concat_segments(segments: list[Path], output_name: str, text: str = "", voic
     combined_words: list[dict[str, object]] = []
     segment_ranges: list[dict[str, object]] = []
     offset = 0.0
-    for segment in segments:
+    for segment_index, segment in enumerate(segments):
         timing = segment.with_suffix(".words.json")
         if timing.is_file():
             try:
@@ -138,6 +142,11 @@ def concat_segments(segments: list[Path], output_name: str, text: str = "", voic
                     "text": word.get("text") or "",
                     "start": round(float(word.get("start") or 0) + offset, 4),
                     "duration": round(float(word.get("duration") or 0), 4),
+                    # Time boundaries from some TTS providers are rounded at
+                    # sentence edges. Keep the source segment as the primary
+                    # association so a final character cannot drift into the
+                    # next subtitle block.
+                    "segment_index": segment_index,
                 })
         probe = subprocess.run(
             ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", str(segment)],

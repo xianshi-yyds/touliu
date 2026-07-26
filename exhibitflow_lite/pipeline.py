@@ -22,9 +22,12 @@ def render_video(
     script: str = "",
     audio_file: str = "",
     caption_template: str = "viral",
+    caption_animation: str = "pop",
     highlight_words: list[str] | None = None,
     cta_text: str = "",
     sentence_material_dirs: list[str] | None = None,
+    render_captions: bool = True,
+    material_files: list[str] | None = None,
 ) -> str:
     if settings.render_engine != "moneyprinter":
         manifest = render_lite_video(
@@ -34,9 +37,12 @@ def render_video(
             audio_file=audio_file,
             name=name,
             caption_template=caption_template,
+            caption_animation=caption_animation,
             highlight_words=highlight_words,
             cta_text=cta_text,
             sentence_material_dirs=sentence_material_dirs,
+            render_captions=render_captions,
+            material_files=material_files,
         )
         return "__SUMMARY_JSON__" + __import__("json").dumps(manifest, ensure_ascii=False)
 

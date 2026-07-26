@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import mimetypes
@@ -23,18 +24,22 @@ from uuid import uuid4
 
 import requests
 
-from exhibitflow_lite import pipeline, publisher, qwen, render, social, stock, tts
+from exhibitflow_lite import avatar, pipeline, platforms, publisher, qwen, render, social, stock, tencent_ads, tts
 from exhibitflow_lite.config import settings
-from exhibitflow_lite.storage import ensure_storage, latest_manifest, safe_stem, write_json
+from exhibitflow_lite.storage import ensure_storage, latest_manifest, manifest_path, safe_stem, write_json
 
 
 FRONTEND_DIR = settings.project_root / "frontend"
 TASK_DIR = settings.storage_dir / "api_tasks"
 ARTIFACT_DIR = settings.storage_dir / "artifacts"
 HANDOFF_DIR = settings.storage_dir / "handoffs"
+BROWSER_WORKER_DIR = settings.storage_dir / "browser_workers"
+MATERIAL_INDEX_FILE = settings.storage_dir / "material_index.json"
+MATERIAL_THUMB_DIR = settings.storage_dir / "material_thumbs"
 TASKS: dict[str, dict[str, Any]] = {}
 TASK_LOCK = threading.Lock()
 RECORD_LOCK = threading.Lock()
+BROWSER_WORKER_LOCK = threading.Lock()
 RESUMABLE_TASK_KINDS = {
     "search",
     "import-links",
@@ -43,11 +48,12 @@ RESUMABLE_TASK_KINDS = {
     "copy",
     "tts",
     "render",
+    "caption-style",
 }
 _DASHSCOPE_HEALTH: dict[str, Any] = {"checked_at": 0.0, "valid": False, "status": "unchecked", "checking": False}
 _DASHSCOPE_HEALTH_LOCK = threading.Lock()
-_DEEPSEEK_HEALTH: dict[str, Any] = {"checked_at": 0.0, "valid": False, "status": "unchecked", "checking": False}
-_DEEPSEEK_HEALTH_LOCK = threading.Lock()
+_TEXT_LLM_HEALTH: dict[str, Any] = {"checked_at": 0.0, "valid": False, "status": "unchecked", "checking": False}
+_TEXT_LLM_HEALTH_LOCK = threading.Lock()
 
 OCEAN_BASE_URL = "https://api.oceanengine.com"
 OCEAN_TOKEN_FILE = settings.storage_dir / "oceanengine" / "oauth.json"
@@ -66,7 +72,20 @@ def now() -> str:
 
 
 def task_path(task_id: str) -> Path:
-    return TASK_DIR / f"{task_id}.json"
+    """Return a portable task filename.
+
+    Task IDs historically included the full user-facing task title.  On
+    macOS that can fit in a filename while the same UTF-8 name can exceed
+    Linux/ext4's 255-byte component limit.  Keep short IDs backward
+    compatible and use a deterministic hash for long IDs so migrated task
+    history remains readable on every filesystem.
+    """
+    value = str(task_id or "")
+    direct = TASK_DIR / f"{value}.json"
+    if len(value.encode("utf-8")) <= 180:
+        return direct
+    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
+    return TASK_DIR / f"task-{digest}.json"
 
 
 def save_task(task: dict[str, Any]) -> None:
@@ -150,7 +169,14 @@ def create_artifact(payload: dict[str, Any]) -> dict[str, Any]:
         "updated_at": created_at,
     }
     with RECORD_LOCK:
-        return save_record(ARTIFACT_DIR, record)
+        saved = save_record(ARTIFACT_DIR, record)
+    if artifact_type == "video_package" and record["source_task_id"]:
+        mark_task_saved_to_video_package(record["source_task_id"], record["id"])
+        data = record.get("data") if isinstance(record.get("data"), dict) else {}
+        parent_task_id = str(data.get("parent_render_task_id") or "").strip()
+        if parent_task_id and parent_task_id != record["source_task_id"]:
+            mark_task_saved_to_video_package(parent_task_id, record["id"])
+    return saved
 
 
 def create_handoff(payload: dict[str, Any]) -> dict[str, Any]:
@@ -256,7 +282,25 @@ def load_tasks() -> list[str]:
             )
         )
         if task.get("status") in {"queued", "running"}:
-            if task.get("kind") in RESUMABLE_TASK_KINDS and isinstance(task.get("payload"), dict):
+            task_payload = task.get("payload") if isinstance(task.get("payload"), dict) else {}
+            if (
+                task.get("kind") == "search"
+                and task_payload.get("execution") == "browser_extension"
+            ):
+                # The target browser, not the API process, owns this job. Do
+                # not replay it on the server after a restart; leave it in a
+                # durable queue for the extension to claim again.
+                task["status"] = "queued"
+                task["recovery_pending"] = True
+                task["recovered_at"] = now()
+                task["resume_count"] = int(task.get("resume_count") or 0) + 1
+                task.pop("started_at", None)
+                task.pop("finished_at", None)
+                task.pop("error", None)
+                task.pop("traceback", None)
+                task.pop("worker_id", None)
+                save_task(task)
+            elif task.get("kind") in RESUMABLE_TASK_KINDS and isinstance(task.get("payload"), dict):
                 task["status"] = "queued"
                 task["recovery_pending"] = True
                 task["recovered_at"] = now()
@@ -298,6 +342,169 @@ def public_payload(value: Any) -> Any:
     return value
 
 
+def browser_worker_path(worker_id: str) -> Path:
+    digest = hashlib.sha256(str(worker_id).encode("utf-8")).hexdigest()
+    return BROWSER_WORKER_DIR / f"{digest}.json"
+
+
+def load_browser_worker(worker_id: str) -> dict[str, Any]:
+    path = browser_worker_path(worker_id)
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def save_browser_worker(worker: dict[str, Any]) -> None:
+    BROWSER_WORKER_DIR.mkdir(parents=True, exist_ok=True)
+    write_json(browser_worker_path(str(worker.get("worker_id") or "")), worker)
+
+
+def browser_worker_public(worker: dict[str, Any]) -> dict[str, Any]:
+    last_seen = str(worker.get("last_seen_at") or "")
+    online = False
+    if last_seen:
+        try:
+            online = (datetime.now() - datetime.fromisoformat(last_seen)).total_seconds() <= 30
+        except ValueError:
+            online = False
+    return {
+        "worker_id": str(worker.get("worker_id") or ""),
+        "name": str(worker.get("name") or "目标浏览器")[:80],
+        "browser": str(worker.get("browser") or "Chrome"),
+        "platform": str(worker.get("platform") or "douyin"),
+        "status": "online" if online else "offline",
+        "online": online,
+        "first_seen_at": worker.get("first_seen_at") or "",
+        "last_seen_at": last_seen,
+        "last_task_id": worker.get("last_task_id") or "",
+        "extension_version": worker.get("extension_version") or "",
+    }
+
+
+def register_browser_worker(payload: dict[str, Any]) -> dict[str, Any]:
+    worker_id = require_text(payload, "worker_id", "目标浏览器标识")
+    if len(worker_id) > 200:
+        raise ValueError("目标浏览器标识过长")
+    timestamp = now()
+    with BROWSER_WORKER_LOCK:
+        previous = load_browser_worker(worker_id)
+        worker = {
+            "worker_id": worker_id,
+            "name": str(payload.get("name") or previous.get("name") or "目标浏览器")[:80],
+            "browser": str(payload.get("browser") or previous.get("browser") or "Chrome")[:40],
+            "platform": str(payload.get("platform") or previous.get("platform") or "douyin")[:40],
+            "first_seen_at": previous.get("first_seen_at") or timestamp,
+            "last_seen_at": timestamp,
+            "last_task_id": previous.get("last_task_id") or "",
+            "extension_version": str(payload.get("extension_version") or previous.get("extension_version") or "")[:40],
+        }
+        save_browser_worker(worker)
+    return {"ok": True, "worker": browser_worker_public(worker)}
+
+
+def claim_browser_worker_task(payload: dict[str, Any]) -> dict[str, Any]:
+    worker_id = require_text(payload, "worker_id", "目标浏览器标识")
+    register_browser_worker(payload)
+    requested_task_id = str(payload.get("task_id") or "").strip()
+    claimed: dict[str, Any] | None = None
+    with TASK_LOCK:
+        candidates = [TASKS.get(requested_task_id)] if requested_task_id else list(TASKS.values())
+        for task in candidates:
+            if not task or task.get("kind") != "search" or task.get("status") != "queued":
+                continue
+            task_payload = task.get("payload") if isinstance(task.get("payload"), dict) else {}
+            if task_payload.get("execution") != "browser_extension":
+                continue
+            if str(task_payload.get("worker_id") or "") != worker_id:
+                continue
+            task["status"] = "running"
+            task["executor"] = "browser_extension"
+            task["started_at"] = now()
+            task["worker_id"] = worker_id
+            save_task(task)
+            claimed = dict(task)
+            break
+    if not claimed:
+        return {"ok": True, "claimed": False, "worker": browser_worker_public(load_browser_worker(worker_id))}
+    with BROWSER_WORKER_LOCK:
+        worker = load_browser_worker(worker_id)
+        worker["last_seen_at"] = now()
+        worker["last_task_id"] = claimed["id"]
+        save_browser_worker(worker)
+    return {"ok": True, "claimed": True, "task": claimed, "worker": browser_worker_public(worker)}
+
+
+def finish_browser_worker_task(payload: dict[str, Any]) -> dict[str, Any]:
+    task_id = require_text(payload, "task_id", "浏览器任务 ID")
+    worker_id = require_text(payload, "worker_id", "目标浏览器标识")
+    requested_status = str(payload.get("status") or "succeeded").strip().lower()
+    if requested_status not in {"succeeded", "failed"}:
+        raise ValueError("浏览器任务状态必须是 succeeded 或 failed")
+    with TASK_LOCK:
+        task = TASKS.get(task_id)
+        if not task:
+            raise ValueError("浏览器任务不存在")
+        assigned_worker = str(task.get("worker_id") or (task.get("payload") or {}).get("worker_id") or "")
+        if assigned_worker and assigned_worker != worker_id:
+            raise ValueError("该任务不属于当前目标浏览器")
+        if task.get("status") not in {"queued", "running"}:
+            return task
+        if requested_status == "failed":
+            task["status"] = "failed"
+            task["finished_at"] = now()
+            task["error"] = str(payload.get("error") or "目标浏览器抓取失败")[:1200]
+            task["worker_id"] = worker_id
+            task.pop("traceback", None)
+            save_task(task)
+        else:
+            task_payload = task.get("payload") if isinstance(task.get("payload"), dict) else {}
+            platform = social.canonical_platform(str(task_payload.get("platform") or "douyin"))
+            keyword = str(task_payload.get("keyword") or "")
+            limit = max(1, min(int(task_payload.get("limit") or 10), 50))
+            raw_result = payload.get("result") if isinstance(payload.get("result"), dict) else {}
+            items = social.normalize_items(list(raw_result.get("items") or []), platform, limit)
+            result = {
+                "created_at": now(),
+                "action": "search",
+                "source": "browser_extension",
+                "provider": "local_browser",
+                "platform": platform,
+                "platform_label": social.PLATFORM_LABELS.get(platform, platform),
+                "query": keyword,
+                "requested_limit": limit,
+                "count": len(items),
+                "actual_count": len(items),
+                "items": items,
+                "keyword_stats": raw_result.get("keyword_stats") or [],
+                "log": str(raw_result.get("log") or "目标浏览器扩展已完成抓取")[:4000],
+                "worker_id": worker_id,
+                "empty_result": not items,
+            }
+            out = manifest_path("search", platform, keyword)
+            result["_manifest_path"] = str(write_json(out, result))
+            if not items:
+                result["warning"] = (
+                    f"{social.PLATFORM_LABELS.get(platform, platform)}检索已完成，但没有找到匹配视频。"
+                    "请确认当前浏览器已经登录并换一个更宽泛的关键词。"
+                )
+            task["status"] = "succeeded"
+            task["finished_at"] = now()
+            task["result"] = result
+            task["worker_id"] = worker_id
+            task.pop("error", None)
+            task.pop("traceback", None)
+            save_task(task)
+        finished = dict(task)
+    with BROWSER_WORKER_LOCK:
+        worker = load_browser_worker(worker_id)
+        worker["last_seen_at"] = now()
+        worker["last_task_id"] = task_id
+        save_browser_worker(worker)
+    return finished
+
+
 def require_text(payload: dict[str, Any], key: str, label: str) -> str:
     value = str(payload.get(key) or "").strip()
     if not value:
@@ -306,6 +513,24 @@ def require_text(payload: dict[str, Any], key: str, label: str) -> str:
 
 
 DEFAULT_VIDEO_CTA = "点击下方链接，立即报名吧"
+VOICEOVER_CHARS_PER_SECOND = 3.8
+
+
+def normalize_target_duration(value: Any, default: int = 30) -> int:
+    try:
+        seconds = int(float(value or default))
+    except (TypeError, ValueError):
+        seconds = default
+    return max(10, min(120, seconds))
+
+
+def voiceover_stats(text: str) -> dict[str, Any]:
+    """Return stable metadata shared by the copy UI and generation history."""
+    characters = len(re.findall(r"[\u4e00-\u9fffA-Za-z0-9]", str(text or "")))
+    return {
+        "character_count": characters,
+        "estimated_duration_seconds": round(characters / VOICEOVER_CHARS_PER_SECOND, 1) if characters else 0,
+    }
 
 
 def final_script_with_cta(script: str, cta_text: str = DEFAULT_VIDEO_CTA) -> str:
@@ -325,12 +550,248 @@ def final_script_with_cta(script: str, cta_text: str = DEFAULT_VIDEO_CTA) -> str
     return f"{clean_script.rstrip()}\n\n{clean_cta}。"
 
 
+def synthesize_script_resilient(
+    text: str,
+    *,
+    service: str,
+    voice: str,
+    output_stem: str,
+) -> tuple[Path, str, str, list[dict[str, Any]], list[str]]:
+    """Synthesize a script in sentence-sized segments and join its timings.
+
+    Full-stop sentences remain intact; long sentences are split by commas by
+    ``render.split_sentences``. This gives TTS providers real punctuation at
+    every intended pause and lets the renderer map captions/materials to the
+    same segment boundaries.
+    """
+    speech_segments = render.split_sentences(text)
+    active_service = str(service or "qwen").strip().lower()
+    active_voice = str(voice or tts.DEFAULT_QWEN_VOICE)
+    stem = safe_stem(output_stem)
+    sentence_audio: list[Path] = []
+    attempts: list[dict[str, Any]] = []
+    for index, sentence in enumerate(speech_segments, start=1):
+        audio_part, used_service, used_voice, errors = tts.synthesize_resilient(
+            sentence,
+            service=active_service,
+            voice=active_voice,
+            output_name=f"{stem}-part-{index:02d}.mp3",
+        )
+        sentence_audio.append(audio_part)
+        attempts.append({
+            "sentence": index,
+            "text": sentence,
+            "requested_service": active_service,
+            "used_service": used_service,
+            "used_voice": used_voice,
+            "fallback_errors": errors,
+        })
+        active_service = used_service
+        active_voice = used_voice
+    audio = tts.concat_segments(
+        sentence_audio,
+        output_name=f"{stem}.mp3",
+        text=text,
+        voice=active_voice,
+    )
+    return audio, active_service, active_voice, attempts, speech_segments
+
+
 def media_url(path: str | Path) -> str:
     candidate = Path(path).expanduser().resolve()
     root = settings.project_root.resolve()
     if candidate != root and root not in candidate.parents:
         return ""
     return f"/media/{quote(str(candidate.relative_to(root)))}"
+
+
+def project_file(value: str | Path, label: str) -> Path:
+    """Resolve a media path while keeping post-processing inside this app."""
+    candidate = Path(value).expanduser().resolve()
+    root = settings.project_root.resolve()
+    if candidate != root and root not in candidate.parents:
+        raise ValueError(f"{label}必须位于 ExhibitFlow 项目目录内")
+    if not candidate.is_file():
+        raise FileNotFoundError(f"{label}不存在：{candidate}")
+    return candidate
+
+
+def decorate_render_summary(summary: dict[str, Any]) -> dict[str, Any]:
+    """Add browser-safe URLs without removing server-side paths from manifests."""
+    for path_key, url_key in (
+        ("final_video", "preview_url"),
+        ("preview_base_video", "preview_base_url"),
+        ("base_video", "base_video_url"),
+        ("combined_video", "combined_video_url"),
+        ("audio_file", "audio_url"),
+        ("subtitle_vtt", "subtitle_preview_url"),
+        ("subtitle", "subtitle_url"),
+    ):
+        value = str(summary.get(path_key) or "")
+        if value:
+            url = media_url(value)
+            if url:
+                summary[url_key] = url
+    # A caption-only variant has a final video; a newly generated base render
+    # has a preview-base video. Keep the generic preview URL stable for old UI.
+    if not summary.get("preview_url") and summary.get("preview_base_url"):
+        summary["preview_url"] = summary["preview_base_url"]
+    return summary
+
+
+CREATOR_RENDER_TASK_KINDS = {"creator-pipeline", "render", "caption-style"}
+
+
+def _video_package_for_task(task_id: str, summary: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    """Find the video package that should lock a generated caption record.
+
+    New artifacts carry ``source_task_id``.  The second comparison keeps old
+    packages created before that field existed compatible by matching their
+    stored final-video path.
+    """
+    task_id = str(task_id or "").strip()
+    summary = summary or {}
+    final_video = str(summary.get("final_video") or "").strip()
+    for artifact in list_records(ARTIFACT_DIR, {"type": "video_package"}, limit=500):
+        if task_id and str(artifact.get("source_task_id") or "").strip() == task_id:
+            return artifact
+        data = artifact.get("data") if isinstance(artifact.get("data"), dict) else {}
+        if task_id and str(data.get("parent_render_task_id") or "").strip() == task_id:
+            return artifact
+        stored_video = str(data.get("video_file") or "").strip()
+        if final_video and stored_video and stored_video == final_video:
+            return artifact
+    return None
+
+
+def _ensure_history_preview_base(summary: dict[str, Any]) -> dict[str, Any]:
+    """Backfill the clean preview base for manifests created by older builds."""
+    if not isinstance(summary, dict):
+        return summary
+    preview = Path(str(summary.get("preview_base_video") or "")).expanduser() if summary.get("preview_base_video") else None
+    if preview and preview.is_file():
+        return summary
+    source_value = str(summary.get("base_video") or summary.get("combined_video") or "").strip()
+    audio_value = str(summary.get("audio_file") or "").strip()
+    if not source_value or not audio_value:
+        return summary
+    source = Path(source_value).expanduser()
+    audio = Path(audio_value).expanduser()
+    if not source.is_file() or not audio.is_file():
+        return summary
+    run_dir = Path(str(summary.get("run_dir") or source.parent)).expanduser()
+    target = run_dir / "preview-base.mp4"
+    if target.resolve() == source.resolve():
+        target = run_dir / "preview-base-repaired.mp4"
+    if not target.is_file():
+        try:
+            total = float(summary.get("duration_seconds") or 0) or render.duration(audio) or render.duration(source) or 1.0
+            render.mux_preview_video(source, audio, target, total)
+        except Exception:
+            return summary
+    if target.is_file():
+        summary["preview_base_video"] = str(target)
+    return summary
+
+
+def _attach_progress_eta(client_task: dict[str, Any]) -> None:
+    """Derive an ETA for the delivery workbench progress card.
+
+    A progress-derived projection (elapsed / percent) tracks a slow render more
+    honestly than the static budget once the bar has moved; the budget only
+    seeds the estimate while progress is still near zero.
+    """
+    if client_task.get("status") != "running":
+        return
+    started = client_task.get("started_at")
+    total = int(client_task.get("estimated_total_seconds") or 0)
+    if not started:
+        return
+    try:
+        elapsed = (datetime.now() - datetime.fromisoformat(str(started))).total_seconds()
+    except (TypeError, ValueError):
+        return
+    progress = int(client_task.get("progress") or 0)
+    if progress >= 18:
+        remaining = max(0.0, elapsed / (progress / 100.0) - elapsed)
+    elif total:
+        remaining = max(0.0, total - elapsed)
+    else:
+        return
+    client_task["elapsed_seconds"] = int(max(0.0, elapsed))
+    client_task["estimated_remaining_seconds"] = int(remaining)
+
+
+def decorate_task_for_client(task: dict[str, Any]) -> dict[str, Any]:
+    """Expose durable caption-editability state for current and old tasks."""
+    client_task = copy.deepcopy(task)
+    _attach_progress_eta(client_task)
+    if client_task.get("kind") not in CREATOR_RENDER_TASK_KINDS:
+        return client_task
+    result = client_task.get("result") if isinstance(client_task.get("result"), dict) else {}
+    summary = result.get("summary") if isinstance(result.get("summary"), dict) else {}
+    if summary:
+        # A few early creator records kept the audio/script beside the result
+        # wrapper instead of inside the render manifest.  Promote those fields
+        # before repairing the preview base so they become editable as well.
+        if not summary.get("audio_file") and result.get("audio_path"):
+            summary["audio_file"] = result.get("audio_path")
+        if not summary.get("script") and result.get("copy"):
+            summary["script"] = result.get("copy")
+        if not summary.get("caption_template"):
+            summary["caption_template"] = (client_task.get("payload") or {}).get("caption_template") or "viral"
+        if not summary.get("caption_animation"):
+            summary["caption_animation"] = (client_task.get("payload") or {}).get("caption_animation") or "pop"
+        if not summary.get("caption_timeline") and summary.get("script") and summary.get("audio_file"):
+            try:
+                audio_path = Path(str(summary["audio_file"])).expanduser()
+                raw_highlights = (client_task.get("payload") or {}).get("highlight_words") or []
+                if isinstance(raw_highlights, str):
+                    raw_highlights = re.split(r"[，,、\n]+", raw_highlights)
+                summary["caption_timeline"] = render.caption_timeline(
+                    str(summary["script"]),
+                    float(summary.get("duration_seconds") or render.duration(audio_path) or 1.0),
+                    audio_path,
+                    cta_text=str((client_task.get("payload") or {}).get("cta_text") or DEFAULT_VIDEO_CTA),
+                    highlight_words=raw_highlights,
+                )
+            except Exception:
+                pass
+        _ensure_history_preview_base(summary)
+        decorate_render_summary(summary)
+        result["summary"] = summary
+        client_task["result"] = result
+    package = _video_package_for_task(str(client_task.get("id") or ""), summary)
+    saved = bool(package)
+    has_edit_source = bool(
+        summary
+        and summary.get("caption_timeline")
+        and summary.get("audio_file")
+        and summary.get("preview_base_video")
+        and Path(str(summary.get("preview_base_video"))).is_file()
+    )
+    client_task["saved_to_video_package"] = saved
+    client_task["saved_artifact_id"] = str(package.get("id") or "") if package else ""
+    client_task["editable_captions"] = bool(client_task.get("status") == "succeeded" and has_edit_source and not saved)
+    client_task["caption_editable"] = client_task["editable_captions"]
+    return client_task
+
+
+def mark_task_saved_to_video_package(task_id: str, artifact_id: str) -> None:
+    """Persist the lock immediately after a video package is created."""
+    task_id = str(task_id or "").strip()
+    if not task_id:
+        return
+    with TASK_LOCK:
+        task = TASKS.get(task_id)
+        if not task:
+            return
+        task["saved_to_video_package"] = True
+        task["saved_artifact_id"] = str(artifact_id or "")
+        task["editable_captions"] = False
+        task["caption_editable"] = False
+        task["updated_at"] = now()
+        save_task(task)
 
 
 def parse_render_result(log: str) -> dict[str, Any]:
@@ -342,12 +803,7 @@ def parse_render_result(log: str) -> dict[str, Any]:
         summary = json.loads(raw)
     except json.JSONDecodeError:
         return {"log": log}
-    final_video = str(summary.get("final_video") or "")
-    if final_video:
-        summary["preview_url"] = media_url(final_video)
-    subtitle_vtt = str(summary.get("subtitle_vtt") or "")
-    if subtitle_vtt:
-        summary["subtitle_preview_url"] = media_url(subtitle_vtt)
+    decorate_render_summary(summary)
     return {"summary": summary, "log": log[:4000]}
 
 
@@ -397,16 +853,17 @@ def dashscope_health() -> dict[str, Any]:
         return {key: value for key, value in _DASHSCOPE_HEALTH.items() if key != "checked_at"}
 
 
-def _probe_deepseek_health() -> None:
-    global _DEEPSEEK_HEALTH
+def _probe_text_llm_health() -> None:
+    global _TEXT_LLM_HEALTH
     try:
         response = requests_post_no_proxy(
-            settings.deepseek_base_url.rstrip("/") + "/chat/completions",
-            headers={"Authorization": f"Bearer {settings.deepseek_api_key}", "Content-Type": "application/json"},
+            settings.text_llm_base_url.rstrip("/") + "/chat/completions",
+            headers={"Authorization": f"Bearer {settings.text_llm_api_key}", "Content-Type": "application/json"},
             json={
-                "model": settings.deepseek_text_model,
+                "model": settings.text_llm_model,
                 "messages": [{"role": "user", "content": "ping"}],
                 "stream": False,
+                "enable_thinking": settings.text_llm_enable_thinking,
                 "max_tokens": 1,
             },
             timeout=(3, 8),
@@ -416,42 +873,67 @@ def _probe_deepseek_health() -> None:
     except requests.RequestException as exc:
         valid = False
         status = f"unreachable:{exc.__class__.__name__}"
-    with _DEEPSEEK_HEALTH_LOCK:
-        _DEEPSEEK_HEALTH = {"checked_at": time.time(), "valid": valid, "status": status, "checking": False}
+    with _TEXT_LLM_HEALTH_LOCK:
+        _TEXT_LLM_HEALTH = {"checked_at": time.time(), "valid": valid, "status": status, "checking": False}
+
+
+def text_llm_health() -> dict[str, Any]:
+    """Return cached Qwen text-model health without blocking page APIs."""
+    global _TEXT_LLM_HEALTH
+    if not settings.text_llm_api_key:
+        return {"valid": False, "status": "missing", "checking": False}
+    with _TEXT_LLM_HEALTH_LOCK:
+        stale = time.time() - float(_TEXT_LLM_HEALTH.get("checked_at") or 0) >= 300
+        if stale and not _TEXT_LLM_HEALTH.get("checking"):
+            _TEXT_LLM_HEALTH["checking"] = True
+            if _TEXT_LLM_HEALTH.get("status") == "unchecked":
+                _TEXT_LLM_HEALTH["status"] = "checking"
+            threading.Thread(target=_probe_text_llm_health, daemon=True, name="text-llm-health").start()
+        return {key: value for key, value in _TEXT_LLM_HEALTH.items() if key != "checked_at"}
 
 
 def deepseek_health() -> dict[str, Any]:
-    """Return cached DeepSeek text-model health without blocking page APIs."""
-    global _DEEPSEEK_HEALTH
-    if not settings.deepseek_api_key:
-        return {"valid": False, "status": "missing", "checking": False}
-    with _DEEPSEEK_HEALTH_LOCK:
-        stale = time.time() - float(_DEEPSEEK_HEALTH.get("checked_at") or 0) >= 300
-        if stale and not _DEEPSEEK_HEALTH.get("checking"):
-            _DEEPSEEK_HEALTH["checking"] = True
-            if _DEEPSEEK_HEALTH.get("status") == "unchecked":
-                _DEEPSEEK_HEALTH["status"] = "checking"
-            threading.Thread(target=_probe_deepseek_health, daemon=True, name="deepseek-health").start()
-        return {key: value for key, value in _DEEPSEEK_HEALTH.items() if key != "checked_at"}
+    """Backward-compatible alias for integrations using the old function name."""
+    return text_llm_health()
 
 
 def public_config() -> dict[str, Any]:
     materials = render.media_files(settings.default_material_dir)
     dashscope_status = dashscope_health()
-    text_health = deepseek_health()
+    text_health = text_llm_health()
+    ocean_status = ocean_config_public()
     return {
         "project_root": str(settings.project_root),
         "storage_dir": str(settings.storage_dir),
         "material_dir": str(settings.default_material_dir),
-        "crawler_configured": any((settings.crawler_dir / name).exists() for name in social.PLATFORM_SCRIPTS.values()),
+        "crawler_configured": social.search_available(),
+        "social_search": social.public_search_config(),
         "publisher_configured": publisher.sau_available(),
+        "avatar": avatar.avatar_status(),
         "render_engine": settings.render_engine,
-        "text_llm_provider": "deepseek",
-        "text_llm_model": settings.deepseek_text_model,
-        "deepseek_key_present": bool(settings.deepseek_api_key),
+        "caption_templates": {
+            key: {
+                "label": str(value.get("label") or key),
+                "font": str(value.get("font") or ""),
+            }
+            for key, value in render.CAPTION_TEMPLATES.items()
+        },
+        "caption_animations": {
+            key: {
+                "label": str(value.get("label") or key),
+                "description": str(value.get("description") or ""),
+            }
+            for key, value in render.CAPTION_ANIMATIONS.items()
+        },
+        "text_llm_provider": "qwen",
+        "text_llm_model": settings.text_llm_model,
+        "text_llm_key_present": bool(settings.text_llm_api_key),
+        "text_llm_configured": bool(text_health.get("valid")),
+        "text_llm_status": text_health.get("status"),
+        # Legacy aliases retained for older clients.
+        "deepseek_key_present": bool(settings.text_llm_api_key),
         "deepseek_configured": bool(text_health.get("valid")),
         "deepseek_status": text_health.get("status"),
-        # Kept for clients that still display the legacy Qwen text setting.
         "qwen_text_model": settings.qwen_text_model,
         "qwen_vl_model": settings.qwen_vl_model,
         "qwen_tts_model": settings.qwen_tts_model,
@@ -462,26 +944,221 @@ def public_config() -> dict[str, Any]:
         "moneyprint_stock_configured": bool(settings.pexels_api_key),
         "pixabay_stock_configured": bool(settings.pixabay_api_key),
         "ffmpeg_configured": bool(shutil.which("ffmpeg") and shutil.which("ffprobe")),
-        "oceanengine": ocean_config_public(),
+        "oceanengine": ocean_status,
+        "tencent_ads": tencent_ads.public_status(),
+        "platforms": platforms.public_capabilities(ocean_status),
     }
 
 
-def list_materials() -> dict[str, Any]:
+def _load_material_index() -> dict[str, Any]:
+    try:
+        if MATERIAL_INDEX_FILE.exists():
+            raw = json.loads(MATERIAL_INDEX_FILE.read_text(encoding="utf-8"))
+            return raw if isinstance(raw, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        pass
+    return {}
+
+
+def _save_material_index(items: dict[str, Any]) -> None:
+    MATERIAL_INDEX_FILE.parent.mkdir(parents=True, exist_ok=True)
+    MATERIAL_INDEX_FILE.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def infer_material_tags(filename: str) -> list[str]:
+    """A small, deterministic first-pass classifier for the material library.
+
+    Users can overwrite these labels from the UI later.  Keeping this on the
+    server makes the library usable before a multimodal tagging service is
+    configured.
+    """
+    name = filename.lower()
+    groups = {
+        "汽车": ("汽车", "车展", "新能源", "电车", "充电", "car", "auto", "ev", "vehicle"),
+        "食品": ("食品", "餐饮", "美食", "零食", "饮料", "咖啡", "food", "restaurant", "drink"),
+        "科技": ("ai", "人工智能", "机器人", "芯片", "软件", "科技", "digital", "tech"),
+    }
+    tags = [label for label, words in groups.items() if any(word in name for word in words)]
+    return tags or ["待识别"]
+
+
+MATERIAL_VIDEO_EXTS = {".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi"}
+
+
+def _ensure_material_thumb(path: Path, signature: str) -> str:
+    """Return a media URL for a cached first-frame thumbnail of a video clip."""
+    MATERIAL_THUMB_DIR.mkdir(parents=True, exist_ok=True)
+    digest = hashlib.sha256(f"{path.name}:{signature}".encode("utf-8")).hexdigest()[:16]
+    thumb = MATERIAL_THUMB_DIR / f"{digest}.jpg"
+    if not thumb.is_file():
+        base = [render.ffmpeg_bin(), "-y"]
+        scale = ["-frames:v", "1", "-vf", "scale=320:-2", str(thumb)]
+        try:
+            # Grab a representative frame ~1s in; fall back to the very first
+            # frame for clips shorter than the seek point.
+            render.run(base + ["-ss", "1", "-i", str(path)] + scale)
+        except Exception:
+            try:
+                render.run(base + ["-i", str(path)] + scale)
+            except Exception:
+                return ""
+    return media_url(thumb) if thumb.is_file() else ""
+
+
+def _material_media_meta(path: Path, meta: dict[str, Any]) -> dict[str, Any]:
+    """Resolve cached {kind, duration, thumbnail_url} for a material file.
+
+    ffprobe/ffmpeg run only once per (name, mtime, size) signature; results are
+    stashed on the passed-in index entry so the picker grid stays instant.
+    """
+    is_video = path.suffix.lower() in MATERIAL_VIDEO_EXTS
+    stat = path.stat()
+    signature = f"{int(stat.st_mtime)}:{stat.st_size}"
+    cached = meta.get("media") if isinstance(meta.get("media"), dict) else {}
+    if cached.get("signature") == signature and cached.get("kind"):
+        return cached
+    resolved = {
+        "signature": signature,
+        "kind": "video" if is_video else "image",
+        "duration": 0.0,
+        "thumbnail_url": "",
+    }
+    if is_video:
+        try:
+            resolved["duration"] = round(float(render.duration(path)) or 0.0, 2)
+        except Exception:
+            resolved["duration"] = 0.0
+        resolved["thumbnail_url"] = _ensure_material_thumb(path, signature)
+    else:
+        resolved["thumbnail_url"] = media_url(path)
+    meta["media"] = resolved
+    return resolved
+
+
+def list_materials(expo_id: str = "") -> dict[str, Any]:
     settings.default_material_dir.mkdir(parents=True, exist_ok=True)
     allowed = {".mp4", ".mov", ".m4v", ".webm", ".mkv", ".jpg", ".jpeg", ".png", ".webp"}
+    index = _load_material_index()
     items = []
+    index_dirty = False
     for path in sorted(settings.default_material_dir.iterdir()):
         if not path.is_file() or path.suffix.lower() not in allowed:
             continue
-        items.append(
-            {
-                "name": path.name,
-                "path": str(path),
-                "size": path.stat().st_size,
-                "updated_at": datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds"),
-            }
+        meta = index.get(path.name) or {}
+        # Global legacy assets remain readable; materials uploaded for an
+        # exhibition never leak into another exhibition's material picker.
+        item_expo_id = str(meta.get("expo_id") or "")
+        if expo_id and item_expo_id and item_expo_id != expo_id:
+            continue
+        prev_signature = (meta.get("media") or {}).get("signature") if isinstance(meta.get("media"), dict) else None
+        media_meta = _material_media_meta(path, meta)
+        if media_meta.get("signature") != prev_signature or path.name not in index:
+            index[path.name] = meta
+            index_dirty = True
+        items.append({
+            "name": path.name,
+            "path": str(path),
+            "size": path.stat().st_size,
+            "updated_at": datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds"),
+            "expo_id": item_expo_id,
+            "tags": meta.get("tags") or infer_material_tags(path.name),
+            "source": meta.get("source") or "本地上传",
+            "kind": media_meta.get("kind"),
+            "duration": media_meta.get("duration") or 0.0,
+            "thumbnail_url": media_meta.get("thumbnail_url") or "",
+        })
+    if index_dirty:
+        try:
+            _save_material_index(index)
+        except OSError:
+            pass
+    return {"count": len(items), "items": items, "expo_id": expo_id}
+
+
+MATERIAL_TOTAL_MIN_SECONDS = 10.0
+MATERIAL_TOTAL_MAX_SECONDS = 600.0
+IMAGE_NOMINAL_SECONDS = 3.0
+
+
+def resolve_selected_clips(expo_id: str, selected_clips: list[Any]) -> tuple[list[str], float]:
+    """Resolve ordered material picks to absolute paths and enforce total duration.
+
+    Accepts library file names or absolute paths that already live under the
+    shared library.  Stills count as a nominal duration so a photo slideshow
+    still clears the lower bound.  Enforces the reference guard: total material
+    duration must exceed 10s and stay within 10min.
+    """
+    index = _load_material_index()
+    base = settings.default_material_dir.resolve()
+    resolved: list[str] = []
+    total = 0.0
+    for raw in selected_clips or []:
+        if isinstance(raw, dict):
+            name = str(raw.get("name") or raw.get("path") or "").strip()
+        else:
+            name = str(raw or "").strip()
+        if not name:
+            continue
+        candidate = Path(name).expanduser()
+        if not candidate.is_absolute():
+            candidate = base / candidate.name
+        candidate = candidate.resolve()
+        if candidate != base and base not in candidate.parents:
+            raise ValueError(f"素材不在素材库内：{candidate.name}")
+        if not candidate.is_file():
+            raise FileNotFoundError(f"素材不存在：{candidate.name}")
+        owner = str((index.get(candidate.name) or {}).get("expo_id") or "")
+        if expo_id and owner and owner != expo_id:
+            raise ValueError(f"素材属于其它展会：{candidate.name}")
+        if candidate.suffix.lower() in MATERIAL_VIDEO_EXTS:
+            total += float(render.duration(candidate) or 0.0)
+        else:
+            total += IMAGE_NOMINAL_SECONDS
+        resolved.append(str(candidate))
+    if not resolved:
+        raise ValueError("请至少选择一个素材片段")
+    total = round(total, 2)
+    if total < MATERIAL_TOTAL_MIN_SECONDS:
+        raise ValueError(
+            f"所有素材总时长需超过 {int(MATERIAL_TOTAL_MIN_SECONDS)} 秒（当前约 {total:.0f} 秒），请再添加素材"
         )
-    return {"count": len(items), "items": items}
+    if total > MATERIAL_TOTAL_MAX_SECONDS:
+        raise ValueError(
+            f"所有素材总时长不超过 {int(MATERIAL_TOTAL_MAX_SECONDS / 60)} 分钟（当前约 {total / 60:.1f} 分钟），请精简素材"
+        )
+    return resolved, total
+
+
+def scoped_material_dir(expo_id: str, requested_dir: str) -> Path:
+    """Build an immutable material view for one exhibition video task.
+
+    Legacy files without an exhibition id are treated as shared/public assets;
+    files owned by another exhibition are excluded.  A per-task hard-link view
+    avoids modifying the source library and keeps a running render stable even
+    if users upload more files in another browser.
+    """
+    source_dir = Path(requested_dir).expanduser().resolve()
+    default_dir = settings.default_material_dir.resolve()
+    if not expo_id or source_dir != default_dir:
+        return source_dir
+    index = _load_material_index()
+    allowed = {".mp4", ".mov", ".m4v", ".webm", ".mkv", ".jpg", ".jpeg", ".png", ".webp"}
+    target_dir = settings.storage_dir / "scoped_materials" / safe_stem(expo_id) / uuid4().hex[:12]
+    target_dir.mkdir(parents=True, exist_ok=True)
+    for source in source_dir.iterdir():
+        if not source.is_file() or source.suffix.lower() not in allowed:
+            continue
+        owner = str((index.get(source.name) or {}).get("expo_id") or "")
+        if owner and owner != expo_id:
+            continue
+        target = target_dir / source.name
+        try:
+            target.hardlink_to(source)
+        except OSError:
+            shutil.copy2(source, target)
+    if not any(target_dir.iterdir()):
+        raise RuntimeError("当前展会素材库为空，请先上传图片或视频素材。")
+    return target_dir
 
 
 def _number(value: Any) -> float:
@@ -544,6 +1221,7 @@ def ocean_config_public() -> dict[str, Any]:
         "app_id_configured": bool(settings.oceanengine_app_id),
         "secret_configured": bool(settings.oceanengine_secret),
         "redirect_uri": settings.oceanengine_redirect_uri,
+        "redirect_uri_valid": ocean_redirect_uri_valid(),
         "has_access_token": bool(token.get("access_token") or settings.oceanengine_access_token),
         "advertiser_id": advertiser_id,
         "advertiser_name": token.get("advertiser_name") or "",
@@ -557,6 +1235,16 @@ def ocean_config_public() -> dict[str, Any]:
         "binding_verified_at": token.get("binding_verified_at") or "",
         "delivery_asset_verified": bool(token.get("delivery_asset_verified")),
     }
+
+
+def ocean_redirect_uri_valid() -> bool:
+    """The OAuth provider must return to the API callback, not the frontend root."""
+    try:
+        parsed = urllib.parse.urlparse(settings.oceanengine_redirect_uri)
+    except ValueError:
+        return False
+    path = (parsed.path or "").rstrip("/")
+    return parsed.scheme in {"http", "https"} and path.endswith("/api/oceanengine/callback")
 
 
 def load_ocean_token() -> dict[str, Any]:
@@ -674,6 +1362,11 @@ def ocean_auth_url(state: str = "exhibitflow") -> str:
     redirect_uri = settings.oceanengine_redirect_uri
     if not app_id:
         raise ValueError("缺少 OCEANENGINE_APP_ID，请先在 .env 配置巨量应用 APP_ID")
+    if not ocean_redirect_uri_valid():
+        raise ValueError(
+            "巨量回调地址配置错误：必须指向 /api/oceanengine/callback，"
+            "不能只填写网站根地址。"
+        )
     # 巨量授权页参数在不同应用类型间可能略有差异；redirect_uri 必须和开放平台应用后台一致。
     return "https://ad.oceanengine.com/openapi/audit/oauth.html?" + urllib.parse.urlencode(
         {"app_id": app_id, "redirect_uri": redirect_uri, "state": state}
@@ -849,9 +1542,19 @@ def ocean_permission_guide(payload: dict[str, Any] | None = None) -> dict[str, A
     def step(key: str, title: str, state: str, detail: str, action: str = "") -> None:
         steps.append({"key": key, "title": title, "state": state, "detail": detail, "action": action})
 
-    app_ready = bool(settings.oceanengine_app_id and settings.oceanengine_secret and settings.oceanengine_redirect_uri)
+    app_ready = bool(
+        settings.oceanengine_app_id
+        and settings.oceanengine_secret
+        and settings.oceanengine_redirect_uri
+        and ocean_redirect_uri_valid()
+    )
     if not app_ready:
-        step("app", "系统应用配置", "failed", "后台还没有配置巨量 APP_ID、Secret 或回调地址。", "联系平台管理员配置开放平台应用")
+        detail = (
+            "后台还没有配置巨量 APP_ID、Secret 或回调地址。"
+            if ocean_redirect_uri_valid()
+            else "回调地址必须是完整的 /api/oceanengine/callback 地址，不能只填根地址。"
+        )
+        step("app", "系统应用配置", "failed", detail, "联系平台管理员配置开放平台应用")
         return {
             "ok": True,
             "ready": False,
@@ -1331,7 +2034,16 @@ def upsert_delivery_project_unit(draft: dict[str, Any]) -> dict[str, Any]:
     project = dict(model.get("project") or {})
     unit = dict(model.get("unit") or {})
     project_key = str(project.get("project_id") or project.get("name") or "展会投放项目")
-    base = settings.storage_dir / "oceanengine" / "projects"
+    channel = str(
+        draft.get("delivery_channel")
+        or (draft.get("summary") or {}).get("delivery_channel")
+        or "douyin"
+    ).strip().lower()
+    base = (
+        settings.storage_dir / "oceanengine" / "projects"
+        if channel == "douyin"
+        else settings.storage_dir / "delivery" / safe_stem(channel) / "projects"
+    )
     base.mkdir(parents=True, exist_ok=True)
     path = base / f"{safe_stem(project_key)}.json"
     if path.exists():
@@ -1382,6 +2094,10 @@ def list_delivery_project_units() -> dict[str, Any]:
 
 
 def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
+    delivery_channel = str(payload.get("delivery_channel") or "douyin").strip().lower()
+    if delivery_channel not in {"douyin", "xiaohongshu", "weixin_channels"}:
+        raise ValueError("不支持的投放渠道")
+    channel_label = {"douyin": "抖音", "xiaohongshu": "小红书", "weixin_channels": "视频号"}[delivery_channel]
     saved = load_ocean_token()
     advertiser_id = str(
         payload.get("advertiser_id")
@@ -1406,7 +2122,7 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
     video_audit = str(payload.get("video_audit") or "").strip().lower()
     landing_audit = str(payload.get("landing_audit") or "").strip().lower()
     checks = [
-        {"key": "auth", "label": "巨量广告主授权", "ok": bool(advertiser_id and access_token)},
+        {"key": "auth", "label": f"{channel_label}渠道授权", "ok": bool(advertiser_id and access_token) if delivery_channel == "douyin" else False},
         {"key": "landing", "label": "落地页 / 留资页", "ok": bool(landing_url)},
         {"key": "video_audit", "label": "视频审核通过", "ok": not video_audit or video_audit == "passed"},
         {"key": "landing_audit", "label": "落地页审核通过", "ok": not landing_audit or landing_audit == "passed"},
@@ -1424,20 +2140,23 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
     video_id = str(payload.get("video_id") or "").strip()
     configuration_complete = not missing
     publish_ready = bool(
+        delivery_channel == "douyin"
+        and
         configuration_complete
         and advertiser_id
         and access_token
         and (not video_audit or video_audit == "passed")
         and (not landing_audit or landing_audit == "passed")
     )
-    official_created = bool(project_id and unit_id and video_id)
+    official_created = delivery_channel == "douyin" and bool(project_id and unit_id and video_id)
     official_model = {
         "model": "project_with_units",
+        "delivery_channel": delivery_channel,
         "project": {
             "name": project_name,
             "project_id": project_id,
-            "source": "official_project" if project_id else "local_draft_project",
-            "description": "已创建官方投放项目。" if project_id else "本地项目草稿，尚未提交巨量创建。",
+            "source": "official_project" if project_id and delivery_channel == "douyin" else "local_draft_project",
+            "description": "已创建官方投放项目。" if project_id and delivery_channel == "douyin" else "本地项目草稿，尚未提交对应渠道官方创建。",
         },
         "unit": {
             "name": unit_name,
@@ -1445,8 +2164,8 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
             "promotion_id": unit_id,
             "video_file": video_file,
             "video_id": video_id,
-            "source": "official_unit" if unit_id else "local_draft_unit",
-            "description": "已创建官方投放单元。" if unit_id else "本地视频单元草稿，尚未提交巨量创建。",
+            "source": "official_unit" if unit_id and delivery_channel == "douyin" else "local_draft_unit",
+            "description": "已创建官方投放单元。" if unit_id and delivery_channel == "douyin" else "本地视频单元草稿，尚未提交对应渠道官方创建。",
         },
         "report_scope": "unit_first_project_summary",
     }
@@ -1457,6 +2176,7 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
         "configuration_complete": configuration_complete,
         "publish_ready": publish_ready,
         "official_created": official_created,
+        "delivery_channel": delivery_channel,
         "missing": missing,
         "checks": checks,
         "official_model": official_model,
@@ -1474,6 +2194,7 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
             "video_id": video_id,
             "video_file": video_file,
             "goal": payload.get("goal") or "lead",
+            "delivery_channel": delivery_channel,
             "regions": payload.get("regions") or "",
             "age": payload.get("age") or "",
             "schedule": payload.get("schedule") or "",
@@ -1487,16 +2208,18 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
         "workbench": public_payload(payload.get("workbench") or {}),
         "dashboard": build_delivery_dashboard(payload.get("dashboard")),
         "recommendation": (
-            "官方项目和单元已创建，可按单元回流数据后汇总项目。"
+            f"{channel_label}官方项目和单元已创建，可按单元回流数据后汇总项目。"
             if official_created
             else (
-                "项目和单元草稿已保存；账号与审核门禁全部通过后，可以创建关闭状态的官方安全草稿。"
+                f"{channel_label}项目和单元草稿已保存；该渠道的官方创建接口仍需对应平台权限。"
+                if delivery_channel != "douyin"
+                else "项目和单元草稿已保存；账号与审核门禁全部通过后，可以创建关闭状态的官方安全草稿。"
                 if not publish_ready
                 else "本地参数检查已通过；下一步可以执行关闭状态的官方安全草稿。"
             )
         ),
         "next_steps": [
-            "检查广告主授权",
+            f"检查{channel_label}渠道授权",
             "上传视频素材并回填 video_id",
             "确认或创建官方投放项目 project",
             "在项目下创建该视频对应的官方投放单元并查询单元报表",
@@ -1516,6 +2239,9 @@ def ocean_safe_delivery_test(payload: dict[str, Any]) -> dict[str, Any]:
     This endpoint therefore proves upload/create/report connectivity without
     enabling delivery or creating spend.
     """
+    delivery_channel = str(payload.get("delivery_channel") or "douyin").strip().lower()
+    if delivery_channel != "douyin":
+        raise RuntimeError("当前安全草稿实链仅支持抖音巨量引擎；其他渠道先保存投放方案并完成对应官方授权")
     video_file = require_text(payload, "video_file", "待投放视频")
     video = Path(video_file).expanduser().resolve()
     if not video.is_file():
@@ -1543,11 +2269,77 @@ def ocean_safe_delivery_test(payload: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+# --- Cooperative progress + cancellation for background jobs -----------------
+# Jobs are plain closures with no handle to their own task id.  run_job binds
+# the running task id to this thread-local so a job can stream progress and poll
+# for a cancel request without threading the id through every call site.
+_CURRENT_JOB = threading.local()
+
+# Rough per-kind wall-clock budgets (seconds) used to seed the ETA for the
+# delivery workbench progress card.  Real elapsed time refines it at read time.
+TASK_DURATION_BUDGET = {
+    "creator-pipeline": 660,
+    "render": 240,
+    "caption-style": 90,
+    "tts": 45,
+    "copy": 20,
+    "search": 40,
+}
+
+# Monotonic (percent, stage-label) checkpoints for the creator pipeline so the
+# right-column status card advances through readable steps that mirror the
+# reference "正在匹配画面文案…" copy.
+CREATOR_STAGE_SCRIPT = (5, "解析脚本")
+CREATOR_STAGE_VOICE = (18, "生成配音")
+CREATOR_STAGE_MATCH = (42, "正在匹配画面文案")
+CREATOR_STAGE_COMPOSE = (68, "合成视频")
+CREATOR_STAGE_FINALIZE = (92, "整理成片")
+
+
+class TaskCancelled(Exception):
+    """Raised inside a job when the user requested cancellation."""
+
+
+def report_progress(progress: int | None = None, stage: str | None = None) -> None:
+    """Stream a monotonic progress/stage update for the running job (if any)."""
+    task_id = getattr(_CURRENT_JOB, "task_id", "")
+    if not task_id:
+        return
+    with TASK_LOCK:
+        task = TASKS.get(task_id)
+        if not task:
+            return
+        if progress is not None:
+            current = int(task.get("progress") or 0)
+            # Never rewind: a late checkpoint keeps the bar moving forward and
+            # 100 stays reserved for a confirmed success.
+            task["progress"] = max(0, min(99, max(current, int(progress))))
+        if stage is not None:
+            task["stage"] = str(stage)
+        task["updated_at"] = now()
+        save_task(task)
+
+
+def check_cancel() -> None:
+    """Abort the running job if the user requested cancellation."""
+    task_id = getattr(_CURRENT_JOB, "task_id", "")
+    if not task_id:
+        return
+    with TASK_LOCK:
+        task = TASKS.get(task_id)
+        cancelled = bool(task and task.get("cancel_requested"))
+    if cancelled:
+        raise TaskCancelled("任务已被取消")
+
+
 def run_job(task_id: str, fn: Callable[[], Any]) -> None:
+    _CURRENT_JOB.task_id = task_id
     with TASK_LOCK:
         task = TASKS[task_id]
         task["status"] = "running"
         task["started_at"] = now()
+        task["progress"] = int(task.get("progress") or 0)
+        task["stage"] = task.get("stage") or "准备中"
         save_task(task)
     try:
         result = fn()
@@ -1559,7 +2351,17 @@ def run_job(task_id: str, fn: Callable[[], Any]) -> None:
             task = TASKS[task_id]
             task["status"] = "succeeded"
             task["finished_at"] = now()
+            task["progress"] = 100
+            task["stage"] = "已完成"
             task["result"] = result
+            save_task(task)
+    except TaskCancelled as exc:
+        with TASK_LOCK:
+            task = TASKS[task_id]
+            task["status"] = "cancelled"
+            task["finished_at"] = now()
+            task["stage"] = "已取消"
+            task["error"] = str(exc)
             save_task(task)
     except Exception as exc:
         error = str(exc)
@@ -1569,15 +2371,39 @@ def run_job(task_id: str, fn: Callable[[], Any]) -> None:
             task = TASKS[task_id]
             task["status"] = "failed"
             task["finished_at"] = now()
+            task["stage"] = "生成失败"
             task["error"] = error
             task["traceback"] = traceback.format_exc()
             save_task(task)
+    finally:
+        _CURRENT_JOB.task_id = ""
+
+
+def request_task_cancel(task_id: str) -> dict[str, Any]:
+    """Flag a running/queued task for cooperative cancellation.
+
+    The job polls check_cancel() between stages, so cancellation lands at the
+    next stage boundary rather than killing an in-flight ffmpeg mid-encode.
+    """
+    task_id = str(task_id or "").strip()
+    with TASK_LOCK:
+        task = TASKS.get(task_id)
+        if not task:
+            return {"ok": False, "error": "task not found"}
+        status = str(task.get("status") or "")
+        if status in {"succeeded", "failed", "cancelled"}:
+            return {"ok": False, "error": "任务已结束，无法取消", "status": status}
+        task["cancel_requested"] = True
+        task["stage"] = "正在取消…"
+        task["updated_at"] = now()
+        save_task(task)
+    return {"ok": True, "status": status, "cancel_requested": True}
 
 
 def employee_for_task(kind: str) -> str:
     if kind in {"search", "import-links", "download"}:
         return "hunter"
-    if kind in {"copy", "tts", "render", "creator-pipeline"}:
+    if kind in {"copy", "tts", "render", "caption-style", "creator-pipeline"}:
         return "creator"
     if kind in {
         "publish",
@@ -1596,15 +2422,16 @@ def employee_for_task(kind: str) -> str:
 def enqueue(
     kind: str,
     payload: dict[str, Any],
-    fn: Callable[[], Any],
+    fn: Callable[[], Any] | None,
     *,
     existing_task_id: str = "",
+    executor: str = "server",
+    start: bool = True,
 ) -> dict[str, Any]:
-    task_id = existing_task_id or (
-        f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}-{kind}-"
-        f"{safe_stem(payload.get('keyword') or payload.get('topic') or payload.get('subject') or 'task')}-"
-        f"{uuid4().hex[:6]}"
-    )
+    # Business copy belongs in payload/title, never in a filesystem-backed id.
+    # Long Chinese topics previously exceeded ext4's filename component limit
+    # before the task could even be queued.
+    task_id = existing_task_id or f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}-{kind}-{uuid4().hex[:10]}"
     with TASK_LOCK:
         previous = TASKS.get(task_id) or {}
         task = {
@@ -1614,7 +2441,12 @@ def enqueue(
             "expo_id": str(payload.get("expo_id") or "").strip(),
             "source_artifact_ids": [str(item) for item in (payload.get("source_artifact_ids") or []) if str(item).strip()],
             "status": "queued",
+            "executor": executor,
             "created_at": previous.get("created_at") or now(),
+            "progress": int(previous.get("progress") or 0),
+            "stage": previous.get("stage") or "排队中",
+            "cancel_requested": False,
+            "estimated_total_seconds": TASK_DURATION_BUDGET.get(kind, 0),
             "payload": public_payload(payload),
         }
         if existing_task_id:
@@ -1623,8 +2455,9 @@ def enqueue(
             task["recovery_pending"] = False
         TASKS[task_id] = task
         save_task(task)
-    thread = threading.Thread(target=run_job, args=(task_id, fn), daemon=True)
-    thread.start()
+    if start and fn is not None:
+        thread = threading.Thread(target=run_job, args=(task_id, fn), daemon=True)
+        thread.start()
     return task
 
 
@@ -1633,15 +2466,43 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
         return enqueue(kind, payload, fn, existing_task_id=existing_task_id)
 
     if kind == "search":
-        if not public_config()["crawler_configured"]:
-            raise RuntimeError("真实平台抓取器未配置。请使用“导入链接”，或先安装抓取插件。")
         platform = payload.get("platform") or "douyin"
         keyword = require_text(payload, "keyword", "检索关键词")
         limit = int(payload.get("limit") or 10)
         if not 1 <= limit <= 50:
             raise ValueError("检索数量必须在 1 到 50 之间")
         deep = bool(payload.get("deep"))
-        return submit(lambda: social.search(platform, keyword, limit, deep=deep))
+        execution = str(payload.get("execution") or payload.get("search_mode") or "server").strip().lower()
+        if execution in {"browser", "browser_extension", "local_browser", "target_host"}:
+            if social.canonical_platform(str(platform)) != "douyin":
+                raise ValueError("目标浏览器抓取当前只支持抖音")
+            worker_id = require_text(payload, "worker_id", "目标浏览器标识")
+            external_payload = dict(payload)
+            external_payload["execution"] = "browser_extension"
+            external_payload["provider"] = "local_browser"
+            external_payload["worker_id"] = worker_id
+            return enqueue(
+                kind,
+                external_payload,
+                None,
+                existing_task_id=existing_task_id,
+                executor="browser_extension",
+                start=False,
+            )
+        provider_override = ""
+        if execution in {"tikhub", "managed", "server_api"}:
+            provider_override = "tikhub"
+        elif execution == "rnote":
+            provider_override = "rnote"
+        if provider_override and social.provider_for(platform, provider_override) != provider_override:
+            label = social.PLATFORM_LABELS.get(str(platform), str(platform))
+            if provider_override == "rnote":
+                raise RuntimeError(f"{label} Rnote 检索未配置或不可用，请检查 RNOTE_API_KEY。")
+            raise RuntimeError(f"{label} TikHub 检索未配置或不可用，请检查 TIKHUB_API_KEY。")
+        if not provider_override and not social.search_available(platform):
+            label = social.PLATFORM_LABELS.get(str(platform), str(platform))
+            raise RuntimeError(f"{label}真实平台检索未配置。请配置 TikHub API，或安装本地抓取插件。")
+        return submit(lambda: social.search(platform, keyword, limit, deep=deep, provider_override=provider_override))
     if kind == "import-links":
         platform = payload.get("platform") or "douyin"
         keyword = require_text(payload, "keyword", "样本主题")
@@ -1658,90 +2519,128 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
     if kind == "creator-pipeline":
         topic = require_text(payload, "topic", "视频需求")
         sample = payload.get("sample") or {}
+        target_duration_seconds = normalize_target_duration(payload.get("target_duration_seconds"))
+        creative_direction = str(payload.get("creative_direction") or "").strip()
         source = str(payload.get("material_source") or "local").strip().lower()
         if source not in {"local", "pexels", "pixabay"}:
             raise ValueError("素材来源必须是 local、pexels 或 pixabay")
         cta_text = str(payload.get("cta_text") or DEFAULT_VIDEO_CTA)
-        voice = str(payload.get("voice") or "zh-CN-XiaoxiaoNeural")
-        tts_service = str(payload.get("tts_service") or "edge")
+        voice = str(payload.get("voice") or tts.DEFAULT_QWEN_VOICE)
+        tts_service = str(payload.get("tts_service") or "qwen")
         caption_template = str(payload.get("caption_template") or "viral").strip().lower()
         if caption_template not in render.CAPTION_TEMPLATES:
             raise ValueError(f"未知字幕模板：{caption_template}")
-
+        caption_animation = str(payload.get("caption_animation") or "pop").strip().lower()
+        if caption_animation not in render.CAPTION_ANIMATIONS:
+            raise ValueError(f"未知字幕动画：{caption_animation}")
+        video_project_id = str(payload.get("video_project_id") or f"video-{uuid4().hex[:12]}").strip()
+        payload["video_project_id"] = video_project_id
+        # Ordered clip selection is validated synchronously so an out-of-bounds
+        # total surfaces as a 400 instead of a failed background task.
+        raw_selected_clips = payload.get("selected_clips") or []
+        if source == "local" and raw_selected_clips:
+            resolved_clips, selected_total = resolve_selected_clips(
+                str(payload.get("expo_id") or "").strip(), raw_selected_clips
+            )
+            payload["selected_clips_resolved"] = resolved_clips
+            payload["selected_clips_total_seconds"] = selected_total
         def creator_pipeline_job() -> dict[str, Any]:
             # 兼容前端的 manual_script 和直接 API 调用的 script。
-            # 之前这里只读取 script，导致用户已经填写手动文案时仍然调用 DeepSeek，
+            # 之前这里只读取 script，导致用户已经填写手动文案时仍然调用文本模型，
             # 也会让手动文案链路误报为模型生成失败。
+            report_progress(*CREATOR_STAGE_SCRIPT)
             manual_script = str(payload.get("script") or payload.get("manual_script") or "").strip()
-            script = final_script_with_cta(manual_script or qwen.generate_copy(topic, sample), cta_text)
-            sentences = render.split_sentences(script)
-            sentence_audio: list[Path] = []
-            tts_attempts: list[dict[str, Any]] = []
-            active_tts_service = tts_service
-            active_voice = voice
-            for index, sentence in enumerate(sentences, start=1):
-                audio_part, used_service, used_voice, errors = tts.synthesize_resilient(
-                    sentence,
-                    service=active_tts_service,
-                    voice=active_voice,
-                    output_name=f"pipeline-{active_tts_service}-{uuid4().hex[:10]}-part-{index:02d}.mp3",
-                )
-                sentence_audio.append(audio_part)
-                tts_attempts.append({
-                    "sentence": index,
-                    "requested_service": active_tts_service,
-                    "used_service": used_service,
-                    "used_voice": used_voice,
-                    "fallback_errors": errors,
-                })
-                # Once the first provider falls back successfully, prefer the
-                # working provider for the remaining sentences.
-                active_tts_service = used_service
-                active_voice = used_voice
-            audio = tts.concat_segments(
-                sentence_audio,
-                output_name=f"pipeline-{active_tts_service}-{uuid4().hex[:10]}.mp3",
-                text=script,
-                voice=active_voice,
+            generated_script = manual_script or qwen.generate_copy(
+                topic,
+                sample,
+                target_duration_seconds=target_duration_seconds,
+                creative_direction=creative_direction,
             )
+            script = final_script_with_cta(generated_script, cta_text)
+            check_cancel()
+            report_progress(*CREATOR_STAGE_VOICE)
+            audio, active_tts_service, active_voice, tts_attempts, speech_segments = synthesize_script_resilient(
+                script,
+                service=tts_service,
+                voice=voice,
+                output_stem=f"pipeline-{tts_service}-{uuid4().hex[:10]}",
+            )
+            check_cancel()
+            report_progress(*CREATOR_STAGE_MATCH)
             material_info: dict[str, Any] = {"source": source}
             sentence_material_dirs: list[str] = []
             if source in {"pexels", "pixabay"}:
-                # Follow MoneyPrinterTurbo's original online-material chain:
-                # generate one global set of English search terms from the full
-                # subject + script, then build one shared material pool whose
-                # usable duration covers the complete narration.  Do not search
-                # independently for every sentence here; that sentence-local
-                # strategy makes adjacent shots semantically fragmented and is
-                # not how MoneyPrinterTurbo/app/services/task.py works.
-                term_result = qwen.generate_search_terms_with_meta(topic, script, amount=5)
-                terms = list(term_result.get("terms") or [])
+                # Build one exhibition-specific visual plan. Pain points remain
+                # narration concepts; online retrieval only sees physical
+                # venues, industry products and business actions.
+                visual_plan = qwen.generate_visual_search_plan(topic, script)
                 online_dir = settings.storage_dir / "online_materials" / f"moneyprint-{uuid4().hex[:10]}"
-                downloaded = stock.download_moneyprinter_materials(
-                    terms,
+                downloaded = stock.download_moneyprinter_visual_plan(
+                    visual_plan,
                     online_dir,
                     target_duration=max(5.0, render.duration(audio)),
                     source=source,
                     max_clip_duration=5,
                 )
+                sentence_material_dirs, sentence_visual_roles = stock.visual_role_dirs_for_sentences(
+                    render.split_sentences(script),
+                    downloaded.get("role_dirs") or {},
+                    cta_text=cta_text,
+                )
                 material_info.update({
                     **downloaded,
-                    "strategy": "moneyprinter_global",
-                    "search_term_source": term_result.get("source") or "unknown",
-                    "search_term_error": term_result.get("error") or "",
-                    "sentence_material_dirs": [],
+                    "strategy": "moneyprinter_exhibition_visual_plan",
+                    "visual_plan": visual_plan,
+                    "search_term_source": visual_plan.get("source") or "unknown",
+                    "search_term_error": visual_plan.get("error") or "",
+                    "sentence_material_dirs": sentence_material_dirs,
+                    "sentence_visual_roles": sentence_visual_roles,
                 })
                 material_dir = material_info["material_dir"]
             else:
-                material_dir = require_text(payload, "material_dir", "本地素材目录")
-                if not Path(material_dir).expanduser().exists():
-                    raise FileNotFoundError(f"素材目录不存在：{material_dir}")
-                material_info["material_dir"] = material_dir
+                selected_files = payload.get("selected_clips_resolved") or []
+                if selected_files:
+                    # User hand-picked an ordered clip list; hand the exact files
+                    # (in order) to the renderer instead of scanning a directory.
+                    material_dir = str(settings.default_material_dir)
+                    material_info.update({
+                        "material_dir": material_dir,
+                        "selected_clips": selected_files,
+                        "selected_clip_count": len(selected_files),
+                        "selected_clips_total_seconds": payload.get("selected_clips_total_seconds") or 0.0,
+                        "expo_scoped": bool(payload.get("expo_id")),
+                    })
+                else:
+                    requested_material_dir = require_text(payload, "material_dir", "本地素材目录")
+                    if not Path(requested_material_dir).expanduser().exists():
+                        raise FileNotFoundError(f"素材目录不存在：{requested_material_dir}")
+                    scoped_dir = scoped_material_dir(str(payload.get("expo_id") or "").strip(), requested_material_dir)
+                    material_dir = str(scoped_dir)
+                    material_info.update({
+                        "material_dir": material_dir,
+                        "library_dir": requested_material_dir,
+                        "expo_scoped": bool(payload.get("expo_id")),
+                    })
+
+            # AI 自动补充 · 数字人（dormant seam）：only fires when a client
+            # explicitly opts in.  Raises a readable error if unconfigured so the
+            # greyed UI never silently produces a talking-head-less video.
+            avatar_clip_files: list[str] = []
+            if payload.get("supplement_avatar"):
+                check_cancel()
+                report_progress(50, "生成数字人口播")
+                avatar_clip = avatar.generate_avatar_clip(
+                    script, settings.storage_dir / "avatar_clips", voice=None
+                )
+                avatar_clip_files = [str(avatar_clip)]
+                material_info["avatar_clip"] = str(avatar_clip)
 
             raw_highlights = payload.get("highlight_words") or []
             if isinstance(raw_highlights, str):
                 raw_highlights = re.split(r"[，,、\n]+", raw_highlights)
             highlights = [str(word).strip() for word in raw_highlights if str(word).strip()]
+            check_cancel()
+            report_progress(*CREATOR_STAGE_COMPOSE)
             parsed = parse_render_result(
                 pipeline.render_video(
                     keyword=topic,
@@ -1753,11 +2652,20 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
                     script=script,
                     audio_file=str(audio),
                     caption_template=caption_template,
+                    caption_animation=caption_animation,
                     highlight_words=highlights,
                     cta_text=cta_text,
                     sentence_material_dirs=sentence_material_dirs,
+                    render_captions=False,
+                    material_files=(avatar_clip_files + (payload.get("selected_clips_resolved") or [])) or None,
                 )
             )
+            report_progress(*CREATOR_STAGE_FINALIZE)
+            render_summary = parsed.get("summary") or parsed
+            if isinstance(render_summary, dict):
+                render_summary["video_project_id"] = video_project_id
+                if render_summary.get("run_dir"):
+                    write_json(Path(str(render_summary["run_dir"])) / "manifest.json", render_summary)
             return {
                 "copy": script,
                 "audio_path": str(audio),
@@ -1768,40 +2676,64 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
                     "used_voice": active_voice,
                     "attempts": tts_attempts,
                 },
-                "summary": parsed.get("summary") or parsed,
+                "speech_segments": speech_segments,
+                "summary": render_summary,
+                "video_project_id": video_project_id,
                 "material": material_info,
                 "cta_text": cta_text,
+                "caption_template": caption_template,
+                "caption_animation": caption_animation,
+                "target_duration_seconds": target_duration_seconds,
+                **voiceover_stats(script),
             }
 
         return submit(creator_pipeline_job)
     if kind == "copy":
         topic = str(payload.get("topic") or payload.get("keyword") or "").strip()
         sample = payload.get("sample") or {}
+        target_duration_seconds = normalize_target_duration(payload.get("target_duration_seconds"))
+        creative_direction = str(payload.get("creative_direction") or "").strip()
         if not topic and not (sample.get("title") or sample.get("desc")):
             raise ValueError("请填写主题/卖点，或先选择一个参考样本")
-        return submit(
-            lambda: {
-                "copy": final_script_with_cta(
-                    qwen.generate_copy(topic, sample),
-                    str(payload.get("cta_text") or DEFAULT_VIDEO_CTA),
+        cta_text = str(payload.get("cta_text") or DEFAULT_VIDEO_CTA)
+
+        def copy_job() -> dict[str, Any]:
+            copy = final_script_with_cta(
+                qwen.generate_copy(
+                    topic,
+                    sample,
+                    target_duration_seconds=target_duration_seconds,
+                    creative_direction=creative_direction,
                 ),
-                "cta_text": str(payload.get("cta_text") or DEFAULT_VIDEO_CTA),
-            },
-        )
+                cta_text,
+            )
+            return {
+                "copy": copy,
+                "cta_text": cta_text,
+                "target_duration_seconds": target_duration_seconds,
+                **voiceover_stats(copy),
+            }
+
+        return submit(copy_job)
     if kind == "tts":
         text = final_script_with_cta(
             require_text(payload, "text", "口播稿"),
             str(payload.get("cta_text") or DEFAULT_VIDEO_CTA),
         )
-        voice = payload.get("voice") or "Cherry"
+        voice = payload.get("voice") or settings.qwen_tts_voice or tts.DEFAULT_QWEN_VOICE
         service = str(payload.get("service") or "qwen")
         def tts_job() -> dict[str, Any]:
-            audio, used_service, used_voice, fallback_errors = tts.synthesize_resilient(
+            audio, used_service, used_voice, attempts, speech_segments = synthesize_script_resilient(
                 text,
                 service=service,
                 voice=voice,
-                output_name=f"{service}-tts-{uuid4().hex[:10]}.mp3",
+                output_stem=f"{service}-tts-{uuid4().hex[:10]}",
             )
+            fallback_errors = [
+                error
+                for attempt in attempts
+                for error in (attempt.get("fallback_errors") or [])
+            ]
             return {
                 "audio_path": str(audio),
                 "preview_url": media_url(audio),
@@ -1810,9 +2742,94 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
                 "requested_service": service,
                 "fallback_used": used_service != service,
                 "fallback_errors": fallback_errors,
+                "speech_segments": speech_segments,
+                "segment_attempts": attempts,
                 "text": text,
             }
         return submit(tts_job)
+    if kind == "caption-style":
+        source_video_value = str(
+            payload.get("preview_base_video")
+            or payload.get("base_video")
+            or payload.get("source_video")
+            or ""
+        ).strip()
+        if not source_video_value:
+            raise ValueError("缺少字幕预览基底视频")
+        audio_value = str(payload.get("audio_file") or "").strip()
+        if not audio_value:
+            raise ValueError("缺少字幕预览配音")
+        source_video = project_file(source_video_value, "字幕预览基底视频")
+        audio = project_file(audio_value, "字幕预览配音")
+        raw_timeline = payload.get("caption_timeline") or []
+        if not isinstance(raw_timeline, list) or not raw_timeline:
+            raise ValueError("字幕预览时间轴为空，请重新生成视频")
+        timeline = [item for item in raw_timeline if isinstance(item, dict) and str(item.get("text") or "").strip()]
+        caption_template = str(payload.get("caption_template") or "viral").strip().lower()
+        if caption_template not in render.CAPTION_TEMPLATES:
+            raise ValueError(f"未知字幕模板：{caption_template}")
+        caption_animation = str(payload.get("caption_animation") or "pop").strip().lower()
+        if caption_animation not in render.CAPTION_ANIMATIONS:
+            raise ValueError(f"未知字幕动画：{caption_animation}")
+        caption_font_type = str(payload.get("caption_font_type") or "template").strip().lower()
+        if caption_font_type not in render.CAPTION_FONT_TYPES:
+            raise ValueError(f"未知字幕字体类型：{caption_font_type}")
+        caption_alignment = str(payload.get("caption_alignment") or "center").strip().lower()
+        if caption_alignment not in {"left", "center", "right"}:
+            caption_alignment = "center"
+        raw_highlights = payload.get("highlight_words") or []
+        if isinstance(raw_highlights, str):
+            raw_highlights = re.split(r"[，,、\n]+", raw_highlights)
+        highlight_words = [str(word).strip() for word in raw_highlights if str(word).strip()]
+        cta_text = str(payload.get("cta_text") or DEFAULT_VIDEO_CTA)
+        source_task_id = str(payload.get("source_task_id") or payload.get("render_task_id") or "").strip()
+        video_project_id = str(payload.get("video_project_id") or source_task_id or f"video-{uuid4().hex[:12]}").strip()
+        payload["video_project_id"] = video_project_id
+        try:
+            caption_font_scale = max(70.0, min(150.0, float(payload.get("caption_font_scale") or 100)))
+        except (TypeError, ValueError):
+            caption_font_scale = 100.0
+        try:
+            caption_vertical_position = max(15.0, min(50.0, float(payload.get("caption_vertical_position") or 28)))
+        except (TypeError, ValueError):
+            caption_vertical_position = 28.0
+        try:
+            raw_caption_max_chars = payload.get("caption_max_chars")
+            caption_max_chars = max(6, min(14, int(raw_caption_max_chars))) if raw_caption_max_chars not in (None, "") else None
+        except (TypeError, ValueError):
+            caption_max_chars = None
+
+        def caption_style_job() -> dict[str, Any]:
+            manifest = render.render_caption_variant(
+                str(source_video),
+                str(audio),
+                timeline,
+                name=str(payload.get("name") or f"caption-variant-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{uuid4().hex[:6]}"),
+                caption_template=caption_template,
+                caption_animation=caption_animation,
+                highlight_words=highlight_words,
+                cta_text=cta_text,
+                caption_sfx_enabled=bool(payload.get("caption_sfx_enabled", True)),
+                caption_font_scale=caption_font_scale,
+                caption_vertical_position=caption_vertical_position,
+                caption_max_chars=caption_max_chars,
+                caption_font_type=caption_font_type,
+                caption_alignment=caption_alignment,
+            )
+            manifest["video_project_id"] = video_project_id
+            manifest["parent_render_task_id"] = str(payload.get("parent_task_id") or source_task_id)
+            write_json(Path(str(manifest["run_dir"])) / "manifest.json", manifest)
+            return {
+                "source_task_id": source_task_id,
+                "video_project_id": video_project_id,
+                "caption_template": caption_template,
+                "caption_animation": caption_animation,
+                "caption_font_scale": caption_font_scale,
+                "caption_vertical_position": caption_vertical_position,
+                "summary": decorate_render_summary(manifest),
+            }
+
+        return submit(caption_style_job)
     if kind == "render":
         script = final_script_with_cta(
             require_text(payload, "script", "成片脚本"),
@@ -1826,6 +2843,9 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
         caption_template = str(payload.get("caption_template") or "viral").strip().lower()
         if caption_template not in render.CAPTION_TEMPLATES:
             raise ValueError(f"未知字幕模板：{caption_template}")
+        caption_animation = str(payload.get("caption_animation") or "pop").strip().lower()
+        if caption_animation not in render.CAPTION_ANIMATIONS:
+            raise ValueError(f"未知字幕动画：{caption_animation}")
         raw_highlights = payload.get("highlight_words") or []
         if isinstance(raw_highlights, str):
             raw_highlights = re.split(r"[，,、\n]+", raw_highlights)
@@ -1836,11 +2856,11 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
             resolved_audio = audio_file
             actual_tts_service = str(payload.get("tts_service") or "qwen")
             if not resolved_audio and payload.get("auto_tts", True):
-                generated_audio, actual_tts_service, _actual_voice, _fallback_errors = tts.synthesize_resilient(
+                generated_audio, actual_tts_service, _actual_voice, _attempts, _speech_segments = synthesize_script_resilient(
                     script,
                     service=actual_tts_service,
-                    voice=str(payload.get("voice") or "Cherry"),
-                    output_name=f"render-tts-{uuid4().hex[:10]}.mp3",
+                    voice=str(payload.get("voice") or settings.qwen_tts_voice or tts.DEFAULT_QWEN_VOICE),
+                    output_stem=f"render-tts-{uuid4().hex[:10]}",
                 )
                 resolved_audio = str(generated_audio)
             parsed = parse_render_result(
@@ -1854,6 +2874,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
                     script=script,
                     audio_file=resolved_audio,
                     caption_template=caption_template,
+                    caption_animation=caption_animation,
                     highlight_words=highlight_words,
                     cta_text=cta_text,
                 )
@@ -2049,10 +3070,19 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(public_config())
             return
         if path == "/api/materials":
-            self.send_json(list_materials())
+            query = parse_qs(parsed.query)
+            self.send_json(list_materials((query.get("expo_id") or [""])[0]))
             return
         if path == "/api/social/bindings":
             self.send_json({"ok": True, "items": social.public_bindings()})
+            return
+        if path == "/api/browser-workers/status":
+            query = parse_qs(parsed.query)
+            worker_id = (query.get("worker_id") or [""])[0]
+            if not worker_id:
+                self.send_json({"ok": True, "worker": {"status": "offline", "online": False}})
+                return
+            self.send_json({"ok": True, "worker": browser_worker_public(load_browser_worker(worker_id))})
             return
         if path == "/api/latest":
             query = parse_qs(parsed.query)
@@ -2083,6 +3113,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/oceanengine/status":
             self.send_json({"ok": True, **ocean_config_public()})
             return
+        if path == "/api/tencent/status":
+            self.send_json({"ok": True, **tencent_ads.public_status()})
+            return
+        if path == "/api/platforms":
+            self.send_json({"ok": True, "items": platforms.public_capabilities(ocean_config_public())})
+            return
         if path == "/api/oceanengine/projects":
             self.send_json(list_delivery_project_units())
             return
@@ -2104,15 +3140,20 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(data)
             return
         if path == "/api/tasks":
+            query = parse_qs(parsed.query)
+            expo_id = str((query.get("expo_id") or [""])[0]).strip()
             with TASK_LOCK:
                 tasks = sorted(TASKS.values(), key=lambda item: item.get("created_at", ""), reverse=True)
-            self.send_json({"count": len(tasks), "items": tasks[:100]})
+            if expo_id:
+                tasks = [task for task in tasks if str((task.get("payload") or {}).get("expo_id") or "") == expo_id]
+            tasks = [decorate_task_for_client(task) for task in tasks]
+            self.send_json({"count": len(tasks), "items": tasks[:100], "expo_id": expo_id})
             return
         if path.startswith("/api/tasks/"):
             task_id = unquote(path.rsplit("/", 1)[-1])
             with TASK_LOCK:
                 task = TASKS.get(task_id)
-            self.send_json(task or {"error": "task not found"}, status=200 if task else 404)
+            self.send_json(decorate_task_for_client(task) if task else {"error": "task not found"}, status=200 if task else 404)
             return
         static_path = (FRONTEND_DIR / path.lstrip("/")).resolve()
         if FRONTEND_DIR.resolve() in static_path.parents:
@@ -2145,6 +3186,18 @@ class Handler(BaseHTTPRequestHandler):
                 payload = self.read_payload()
                 self.send_json(social.open_local_login_page(require_text(payload, "platform", "平台")))
                 return
+            if path == "/api/browser-workers/register":
+                self.send_json(register_browser_worker(self.read_payload()))
+                return
+            if path == "/api/browser-workers/heartbeat":
+                self.send_json(register_browser_worker(self.read_payload()))
+                return
+            if path == "/api/browser-workers/claim":
+                self.send_json(claim_browser_worker_task(self.read_payload()))
+                return
+            if path == "/api/browser-workers/result":
+                self.send_json(finish_browser_worker_task(self.read_payload()))
+                return
             if path == "/api/oceanengine/advertisers":
                 self.send_json(ocean_advertisers(self.read_payload()))
                 return
@@ -2166,9 +3219,13 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/oceanengine/promotion-create":
                 self.send_json(ocean_promotion_create(self.read_payload()))
                 return
+            if path == "/api/tencent/creatives":
+                self.send_json(tencent_ads.get_creatives(self.read_payload()))
+                return
             if path == "/api/materials/upload":
                 query = parse_qs(parsed.query)
                 filename = Path((query.get("name") or [""])[0]).name
+                expo_id = str((query.get("expo_id") or [""])[0]).strip()
                 allowed = {".mp4", ".mov", ".m4v", ".webm", ".mkv", ".jpg", ".jpeg", ".png", ".webp"}
                 if not filename or Path(filename).suffix.lower() not in allowed:
                     raise ValueError("仅支持常见视频和图片素材")
@@ -2187,7 +3244,22 @@ class Handler(BaseHTTPRequestHandler):
                             break
                         handle.write(chunk)
                         remaining -= len(chunk)
-                self.send_json({"ok": True, "name": filename, "path": str(target), "size": target.stat().st_size}, status=201)
+                index = _load_material_index()
+                index[target.name] = {
+                    "expo_id": expo_id,
+                    "tags": infer_material_tags(target.name),
+                    "source": "本地上传",
+                    "uploaded_at": now(),
+                }
+                _save_material_index(index)
+                self.send_json({
+                    "ok": True,
+                    "name": target.name,
+                    "path": str(target),
+                    "size": target.stat().st_size,
+                    "expo_id": expo_id,
+                    "tags": index[target.name]["tags"],
+                }, status=201)
                 return
             payload = self.read_payload()
             if path == "/api/artifacts":
@@ -2200,6 +3272,10 @@ class Handler(BaseHTTPRequestHandler):
             if handoff_match:
                 handoff_id = unquote(handoff_match.group(1))
                 self.send_json(update_handoff(handoff_id, handoff_match.group(2)))
+                return
+            cancel_match = re.fullmatch(r"/api/tasks/([^/]+)/cancel", path)
+            if cancel_match:
+                self.send_json(request_task_cancel(unquote(cancel_match.group(1))))
                 return
             if path.startswith("/api/tasks/"):
                 kind = path.rsplit("/", 1)[-1]
