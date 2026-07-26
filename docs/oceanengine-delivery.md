@@ -12,7 +12,21 @@ OCEANENGINE_SECRET=你的巨量应用 Secret
 OCEANENGINE_REDIRECT_URI=http://localhost:8610/api/oceanengine/callback
 ```
 
-巨量开放平台应用后台的“回调地址”必须与 `OCEANENGINE_REDIRECT_URI` 完全一致。若后台只填 `http://localhost:8610`，系统也兼容根路径回调；若后台仍是 `http://localhost:8501`，请把服务端口和回调地址统一成 8501，或去巨量后台改为上面的地址。
+巨量开放平台应用后台的“回调地址”必须与 `OCEANENGINE_REDIRECT_URI` 完全一致，并且必须包含 `/api/oceanengine/callback` 路径，不能只填服务根地址。
+
+当前公开站点使用：
+
+```env
+OCEANENGINE_REDIRECT_URI=https://xianshi.icu/exhibitflow-api/api/oceanengine/callback
+```
+
+如果只使用本机访问，则使用：
+
+```env
+OCEANENGINE_REDIRECT_URI=http://localhost:8501/api/oceanengine/callback
+```
+
+切换环境后要同时修改巨量开放平台应用后台的回调地址；两边必须逐字符一致（协议、域名、路径、端口都不能不同）。
 
 ## 2. 授权账户
 

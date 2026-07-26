@@ -12,6 +12,7 @@ from typing import Any
 
 from .config import settings
 from .storage import manifest_path, safe_stem, write_json
+from . import rnote, tikhub
 
 
 PLATFORM_SCRIPTS = {
@@ -290,6 +291,53 @@ def report_path_matches_platform(path: Path, platform: str) -> bool:
     return has_xhs_part if platform == "xiaohongshu" else not has_xhs_part
 
 
+def provider_for(platform: str, override: str = "") -> str:
+    """Select the social search backend without coupling the UI to a crawler."""
+    platform = canonical_platform(platform)
+    configured_provider = str(override or settings.social_search_provider or "auto").strip().lower()
+    if configured_provider in {"browser", "browser_extension", "local_browser", "target_host"}:
+        return "browser_extension"
+    if configured_provider == "local":
+        return "local"
+    if configured_provider == "tikhub":
+        return "tikhub" if platform == "douyin" and tikhub.configured() else "unavailable"
+    if configured_provider == "rnote":
+        return "rnote" if platform == "xiaohongshu" and rnote.configured() else "unavailable"
+    # auto: TikHub is preferred for public Douyin search, while XHS and
+    # installations without a managed-provider key continue using the local
+    # adapter. Rnote is preferred for public Xiaohongshu search when present.
+    if platform == "douyin" and tikhub.configured():
+        return "tikhub"
+    if platform == "xiaohongshu" and rnote.configured():
+        return "rnote"
+    return "local"
+
+
+def search_available(platform: str = "") -> bool:
+    platforms = [canonical_platform(platform)] if platform else list(PLATFORM_SCRIPTS)
+    return any(
+        provider_for(item_platform) == "tikhub"
+        or provider_for(item_platform) == "rnote"
+        or (
+            provider_for(item_platform) == "local"
+            and (settings.crawler_dir / PLATFORM_SCRIPTS[item_platform]).exists()
+        )
+        for item_platform in platforms
+    )
+
+
+def public_search_config() -> dict[str, Any]:
+    return {
+        "provider": settings.social_search_provider,
+        "douyin_provider": provider_for("douyin"),
+        "xiaohongshu_provider": provider_for("xiaohongshu"),
+        "tikhub_configured": tikhub.configured(),
+        "tikhub_base_url": settings.tikhub_base_url if tikhub.configured() else "",
+        "rnote_configured": rnote.configured(),
+        "rnote_base_url": settings.rnote_base_url if rnote.configured() else "",
+    }
+
+
 def load_report(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -367,10 +415,40 @@ def normalize_report(report_path: Path, action: str, platform: str, log: str, li
     }
 
 
-def search(platform: str, keyword: str, limit: int, deep: bool = False) -> dict[str, Any]:
+def search(
+    platform: str,
+    keyword: str,
+    limit: int,
+    deep: bool = False,
+    *,
+    provider_override: str = "",
+) -> dict[str, Any]:
     platform = canonical_platform(platform)
     if platform not in PLATFORM_SCRIPTS:
         raise ValueError(f"unsupported platform: {platform}")
+    provider = provider_for(platform, provider_override)
+    if provider == "tikhub":
+        manifest = tikhub.search(keyword, limit, deep=deep)
+        out = manifest_path("search", platform, keyword)
+        manifest["_manifest_path"] = str(write_json(out, manifest))
+        if not manifest.get("items"):
+            manifest["warning"] = (
+                f"{PLATFORM_LABELS.get(platform, platform)}检索已完成，但没有找到匹配视频。"
+                "请换一个更宽泛的关键词或调整筛选条件后重试。"
+            )
+        return manifest
+    if provider == "rnote":
+        manifest = rnote.search(keyword, limit, deep=deep, note_type=1)
+        out = manifest_path("search", platform, keyword)
+        manifest["_manifest_path"] = str(write_json(out, manifest))
+        if not manifest.get("items"):
+            manifest["warning"] = (
+                f"{PLATFORM_LABELS.get(platform, platform)}检索已完成，但没有找到匹配视频。"
+                "请换一个更宽泛的关键词或调整检索平台筛选后重试。"
+            )
+        return manifest
+    if provider == "unavailable":
+        raise RuntimeError("已指定 TikHub 搜索，但没有配置 TIKHUB_API_KEY")
     if not (settings.crawler_dir / PLATFORM_SCRIPTS[platform]).exists():
         manifest = {
             "created_at": datetime.now().isoformat(timespec="seconds"),

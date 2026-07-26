@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "ExhibitFlow 本机抖音抓取助手",
+  "version": "0.1.0",
+  "description": "让 ExhibitFlow 在当前 Chrome 配置中使用已登录的抖音账号执行检索。",
+  "permissions": [
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://employee.xianshi.icu/*",
+    "http://localhost:5173/*",
+    "http://127.0.0.1:5173/*",
+    "https://www.douyin.com/*",
+    "https://www.douyin.com/aweme/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://employee.xianshi.icu/*",
+        "http://localhost:5173/*",
+        "http://127.0.0.1:5173/*"
+      ],
+      "js": ["bridge.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.douyin.com/*"],
+      "js": ["douyin-content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "ExhibitFlow 本机抓取助手"
+  }
+}
