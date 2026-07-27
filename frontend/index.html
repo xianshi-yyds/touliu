@@ -610,7 +610,7 @@
     #buyer .section-panel { margin-bottom:0; }
     #buyer .metric-board { grid-template-columns:repeat(3,1fr); }
     #buyer .simple-flow { margin-bottom:14px; }
-    #hunter .section-panel h2 .agent-step-label::after { content:' · 选中样本后自动进入生视频员工'; font-weight:700; color:#7b8390; }
+    #hunter .section-panel h2 .agent-step-label::after { content:''; }
     #hunter .agent-workbench { grid-template-columns:minmax(360px,.72fr) minmax(520px,1.28fr); }
     #hunter .sample.selected { background:#fbfcff; }
     @media (max-width: 980px) { #hunter .agent-workbench, #buyer .metric-board { grid-template-columns:1fr; } }
@@ -1001,7 +1001,7 @@
     /* 找爆款首页只保留任务核心信息，避免把实现链路铺成大段说明。 */
     #hunter .employee-page-head { margin-bottom:10px; padding-bottom:10px !important; }
     #hunter .employee-page-head > div:first-child > p { margin:4px 0 0; font-size:13px; line-height:1.45; }
-    #hunter .employee-tabbar { margin-bottom:12px; }
+    #hunter .employee-tabbar { width:fit-content; max-width:100%; margin-bottom:12px; }
     #hunter .process-home { min-height:0; margin:16px auto 24px; padding:18px; border-radius:14px; }
     #hunter .process-home-head { gap:12px; padding-bottom:14px; }
     #hunter .process-home-head h2 { margin-bottom:4px; font-size:18px; }
@@ -1197,6 +1197,21 @@
     .creator-studio-mode { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:14px; }
     .creator-studio-mode button { min-height:36px; padding:0 8px; border:1px solid #dfe4eb; border-radius:9px; background:#fff; color:#7a8492; font-size:12px; font-weight:900; }
     .creator-studio-mode button.active { border-color:#17191f; background:#17191f; color:#fff; }
+    .creator-reference-picker { margin:10px 0 12px; padding:11px; border:1px solid #e1e6ee; border-radius:11px; background:#f8faff; }
+    .creator-reference-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:8px; }
+    .creator-reference-head b { display:block; color:#252a33; font-size:12px; }
+    .creator-reference-head small { display:block; margin-top:3px; color:#8791a0; font-size:10px; line-height:1.4; }
+    .creator-reference-head button { min-height:26px; padding:0 8px; border:1px solid #d8e0ec; border-radius:7px; background:#fff; color:#5e6a7b; font-size:11px; font-weight:850; }
+    .creator-reference-list { display:grid; gap:7px; max-height:180px; overflow:auto; }
+    .creator-reference-empty { padding:10px; border:1px dashed #cfd8e5; border-radius:8px; color:#8791a0; font-size:11px; line-height:1.5; background:#fff; }
+    .creator-reference-card { width:100%; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:9px 10px; border:1px solid #dfe5ee; border-radius:9px; background:#fff; text-align:left; cursor:pointer; }
+    .creator-reference-card:hover { border-color:#aab7ca; }
+    .creator-reference-card.active { border-color:#17191f; box-shadow:0 0 0 2px rgba(23,25,31,.08); }
+    .creator-reference-card b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#252a33; font-size:12px; }
+    .creator-reference-card p { margin:3px 0 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#7d8795; font-size:10px; line-height:1.4; }
+    .creator-reference-card > span { color:#657185; font-size:10px; font-weight:850; white-space:nowrap; }
+    .creator-reference-logic { margin-top:7px; padding:8px 9px; border-radius:8px; background:#fff; color:#69778a; font-size:10px; line-height:1.5; }
+    .creator-reference-logic strong { color:#303845; }
     .creator-studio-inline { display:grid; grid-template-columns:minmax(0,1fr) 112px; gap:8px; margin-top:10px; }
     .creator-studio-inline select { width:100%; }
     .creator-studio-duration { min-height:40px; display:flex; align-items:center; padding:0 9px; border:1px solid #e0e5ec; border-radius:9px; background:#f8f9fb; color:#667383; font-size:11px; font-weight:850; line-height:1.35; }
@@ -1573,7 +1588,7 @@
         <div class="delivery-subtabs"><button class="active" data-delivery-tab="overview" onclick="switchDeliveryWorkspace('overview')">数据总览</button><button data-delivery-tab="launch" onclick="switchDeliveryWorkspace('launch')">开始投放</button><button data-delivery-tab="production" onclick="switchDeliveryWorkspace('production')">素材产出</button></div>
         <div class="delivery-panel active" data-delivery-panel="overview"><div class="delivery-overview-grid"><div class="overview-metric"><small>累计消耗</small><b>¥ 0</b><span>Mock 数据 · 连接巨量后同步</span></div><div class="overview-metric"><small>投放素材</small><b id="expo-material-count">0</b><span>仅统计当前展会素材</span></div><div class="overview-metric"><small>待处理线索</small><b>0</b><span>Mock 数据 · 后续接入客服</span></div></div><div class="empty-module" style="margin-top:16px"><b>投放数据看板准备中</b><p>当前先提供数据展示框架；真实消耗、展示、点击和转化数据将在巨量账号连接后同步。</p></div></div>
         <div class="delivery-panel" data-delivery-panel="launch"><div class="delivery-action-card"><span class="status queued">巨量投放</span><h3>开始一条投放任务</h3><p>在材料预检中选择当前展会已经产出的成片，或从当前展会素材库选择视频。素材与投放记录不会跨展会混用。</p><button class="primary" onclick="openEmployee('buyer')">进入投放工作台</button></div></div>
-        <div class="delivery-panel" data-delivery-panel="production"><div class="delivery-action-grid"><div class="delivery-action-card"><span class="status blue">01 · 找爆款</span><h3>检索爆款参考</h3><p>直接通过 TikHub API 检索公开内容，筛选后保存为当前展会的爆款样本包。</p><button class="primary" onclick="openEmployee('hunter')">开始找爆款</button></div><div class="delivery-action-card"><span class="status blue">02 · 生视频</span><h3>生成投放视频</h3><p>基于样本包、已有素材或文案生成视频，所有成片自动归属于当前展会。</p><button class="primary" onclick="openEmployee('creator')">开始生视频</button></div></div><div class="material-library-card" style="margin-top:16px"><b>当前展会素材库</b><p style="color:#707a89">素材库中的内容已经按展会隔离，可在视频生成和投放时直接选用。</p><button onclick="showMaterialLibrary()">管理当前展会素材</button></div></div>
+        <div class="delivery-panel" data-delivery-panel="production"><div class="delivery-action-grid"><div class="delivery-action-card"><span class="status blue">01 · 找爆款</span><h3>检索爆款参考</h3><p>检索公开案例，筛选后反推开头、痛点、价值和行动的结构时间线。</p><button class="primary" onclick="openEmployee('hunter')">开始找爆款</button></div><div class="delivery-action-card"><span class="status blue">02 · 生视频</span><h3>生成投放视频</h3><p>在脚本步骤主动选择爆款逻辑，也可以从零创作，再生成配音、素材和成片。</p><button class="primary" onclick="openEmployee('creator')">开始生视频</button></div></div><div class="material-library-card" style="margin-top:16px"><b>当前展会素材库</b><p style="color:#707a89">素材库中的内容已经按展会隔离，可在视频生成和投放时直接选用。</p><button onclick="showMaterialLibrary()">管理当前展会素材</button></div></div>
       </div>
       <div class="compat-hidden" aria-hidden="true">
         <div id="kpis"></div><div id="ops-snapshot"></div><div id="asset-chain"></div><span id="asset-package-status"></span>
@@ -1596,7 +1611,7 @@
       <div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>找爆款员工详情</span></div><h1>找爆款员工</h1><p>检索、筛选并沉淀可复用的参考样本。</p></div>
       <div class="employee-head-actions"><span class="status blue">岗位：内容洞察</span><button class="primary" onclick="startNewHunterTask()">新建检索任务</button></div>
     </div>
-    <div class="employee-tabbar" data-employee-tabs="hunter"><button class="active" data-employee-tab="tasks" onclick="switchEmployeeWorkspace('hunter','tasks')">任务</button><button data-employee-tab="outcomes" onclick="switchEmployeeWorkspace('hunter','outcomes')">成果</button><button data-employee-tab="inbox" onclick="switchEmployeeWorkspace('hunter','inbox')">收件箱 <span id="hunter-inbox-count">0</span></button><button data-employee-tab="settings" onclick="switchEmployeeWorkspace('hunter','settings')">账号与设备</button></div>
+    <div class="employee-tabbar" data-employee-tabs="hunter"><button class="active" data-employee-tab="tasks" onclick="switchEmployeeWorkspace('hunter','tasks')">任务</button><button data-employee-tab="outcomes" onclick="switchEmployeeWorkspace('hunter','outcomes')">成果</button></div>
     <div class="creator-entry hunter-page active" data-hunter-page="menu">
       <div class="process-home">
         <div class="process-home-head"><div><h2>检索任务</h2><p>查看进行中的检索和历史样本，完成后进入样本画廊。</p></div><button onclick="loadTasks()">刷新</button></div>
@@ -1624,9 +1639,9 @@
         </div>
       </section>
       <section class="stage-panel" data-hunter-stage="working"><div class="working-panel"><div class="working-dot"></div><h2 id="hunter-working-title">找爆款员工正在检索</h2><p id="hunter-working-description">员工会在后台检索、去重、计算互动分并补全封面；离开页面不影响执行，完成后从任务卡查看样本。</p><div class="hunter-progress-meter"><div class="hunter-progress-bar"><i id="hunter-progress-fill"></i></div><div class="hunter-progress-text" id="hunter-progress-text">任务已提交，正在等待后台开始...</div></div><div class="work-console" id="hunter-work"><div class="work-console-head"><div class="work-console-title"><i></i><span>后台执行日志</span></div><span id="hunter-work-status" class="status running">工作中</span></div><div class="work-progress"><span class="done"></span><span class="done"></span><span></span><span></span></div><div class="work-summary" id="hunter-work-summary">任务已提交。你可以留在本页等待，也可以返回展会。</div><div class="activity-list" id="hunter-activity"></div></div></div></section>
-      <section class="stage-panel" data-hunter-stage="results"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择参考样本并生成成果包</div><p class="stage-help">可以选择一条或多条样本。生成样本包后任务即完成；是否投递给生视频员工由你在成果页决定。</p></div><button onclick="startNewHunterTask()">新建其他检索</button></div><div class="result-gallery-wrap"><div class="gallery" id="gallery"></div></div><div class="sample-pack-bar"><div><b id="sample-pack-count">尚未选择样本</b><p>样本只会加入当前成果包，不会自动启动其他员工。</p></div><div class="actions"><button onclick="clearSampleSelection()">清空选择</button><button class="primary" id="create-sample-pack-button" onclick="saveSamplePackArtifact()" disabled>生成爆款样本包</button></div></div></section>
+      <section class="stage-panel" data-hunter-stage="results"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择案例并生成爆款逻辑</div><p class="stage-help">选择一条或多条案例，员工会输出可供生视频使用的结构时间线 JSON；不会复制原案例文案，也不会自动创建视频任务。</p></div><button onclick="startNewHunterTask()">新建其他检索</button></div><div class="result-gallery-wrap"><div class="gallery" id="gallery"></div></div><div class="sample-pack-bar"><div><b id="sample-pack-count">尚未选择案例</b><p>完成后会保存到“成果”，生视频员工可在脚本步骤中主动选择。</p></div><div class="actions"><button onclick="clearSampleSelection()">清空选择</button><button class="primary" id="create-sample-pack-button" onclick="saveSamplePackArtifact()" disabled>生成爆款逻辑</button></div></div></section>
     </div>
-    <div class="employee-extra-page" data-employee-extra="hunter:outcomes"><div class="employee-extra-head"><div><h2>找爆款员工的成果</h2><p>每个样本包都是独立、带版本的交付物，可以下载或确认后投递给其他员工。</p></div><button onclick="loadEmployeeRecords()">刷新成果</button></div><div class="artifact-grid" id="hunter-artifacts"></div></div>
+    <div class="employee-extra-page" data-employee-extra="hunter:outcomes"><div class="employee-extra-head"><div><h2>找爆款员工的成果</h2><p>每条成果包含参考案例与爆款逻辑时间线。生视频员工会在脚本步骤中读取它，不会自动启动下一条任务。</p></div><button onclick="loadEmployeeRecords()">刷新成果</button></div><div class="artifact-grid" id="hunter-artifacts"></div></div>
     <div class="employee-extra-page" data-employee-extra="hunter:inbox"><div class="employee-extra-head"><div><h2>找爆款员工收件箱</h2><p>其他员工投递的成果会先停在这里，不会自动创建任务。</p></div><button onclick="loadEmployeeRecords()">刷新收件箱</button></div><div id="hunter-inbox"></div></div>
     <div class="employee-extra-page" data-employee-extra="hunter:settings"><div class="employee-extra-head"><div><h2>账号与本地采集设备</h2><p>抖音支持服务器公共检索和目标主机账号抓取两条链路；目标主机模式使用打开本网址的 Chrome 登录态。</p></div><button onclick="loadPlatformBindings()">刷新状态</button></div><div class="capability-card" id="hunter-settings-content"></div></div>
   </div>
@@ -1691,6 +1706,7 @@
                 <div class="cs-block-head"><h3>脚本 <small>配音员实际朗读的内容</small></h3><span id="creator-studio-script-status" class="status">待开始</span></div>
                 <div id="cs-script-tabs" class="cs-script-tabs"></div>
                 <div class="creator-studio-mode" style="margin-bottom:10px"><button id="creator-studio-mode-ai" class="active" onclick="setCreatorStudioInputMode('ai')">AI 生成</button><button id="creator-studio-mode-manual" onclick="setCreatorStudioInputMode('manual')">已有文案</button></div>
+                <div class="creator-reference-picker" id="creator-reference-picker"><div class="creator-reference-head"><div><b>参考案例</b><small>可选：只复用爆款逻辑，不复制原文</small></div><button type="button" onclick="loadEmployeeRecords()">刷新</button></div><div id="creator-reference-options"></div></div>
                 <input id="creator-studio-topic" type="hidden">
                 <label class="cs-label" for="creator-studio-script">口播稿 <small>一句一段</small></label>
                 <textarea id="creator-studio-script" class="cs-script" placeholder="流量贵得让人头疼。&#10;你是否还在硬扛。&#10;不如换个思路试试。&#10;……（一句一行；也可点上方按钮用展会信息生成）" oninput="onStudioScriptInput(this.value)"></textarea>
@@ -1744,7 +1760,7 @@
         <div class="creator-mode-panel" data-creator-mode-panel="manual"><label>完整口播正文</label><textarea id="manual-copy-input" placeholder="只粘贴配音员需要朗读的正文，不要包含镜头、字幕或音效说明。"></textarea><p class="copy-generation-note">系统不会再调用文案模型，只会在下一步确认配音和统一 CTA。</p></div>
         <input id="copy-topic" type="hidden" value="">
         <div class="copy-length-panel"><div><label>目标口播时长</label><select id="copy-length" onchange="updateCopyDurationEstimate()"><option value="15">约 15 秒 · 短促</option><option value="20">约 20 秒</option><option value="30" selected>约 30 秒 · 标准</option><option value="45">约 45 秒</option><option value="60">约 60 秒 · 完整</option></select></div><div class="copy-duration-summary"><b id="copy-length-plan">建议字数：84-110 字</b><small id="copy-length-plan-hint">系统会为最终 CTA 预留朗读时长</small></div></div>
-        <details class="creator-optional-reference"><summary>可选：添加爆款样本或参考视频</summary><div class="employee-source-options compact"><button class="employee-source-option" onclick="switchEmployeeWorkspace('creator','inbox')"><b>使用爆款样本包</b><p>从收件箱选择已有参考成果。</p></button><button class="employee-source-option" onclick="useCreatorReferenceLink()"><b>添加参考视频链接</b><p>只参考表达方式，不抓取原文照搬。</p></button></div></details>
+        <details class="creator-optional-reference"><summary>可选：添加爆款案例或参考视频</summary><div class="employee-source-options compact"><button class="employee-source-option" onclick="openCreatorReferencePicker()"><b>使用爆款逻辑成果</b><p>从找爆款员工的成果中选择结构参考。</p></button><button class="employee-source-option" onclick="useCreatorReferenceLink()"><b>添加参考视频链接</b><p>只参考表达方式，不抓取原文照搬。</p></button></div></details>
         <div class="stage-actions"><button class="primary" onclick="submitCreatorBrief()">确认内容，进入文案与声音</button></div>
       </section>
       <section id="creator-stage-copy" class="flow-stage" data-stage="copy"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>确认文案和声音</div><p class="stage-help">编辑配音员实际朗读的内容，并选择音色。</p></div><span id="creator-copy-status" class="status">等待文案</span></div><label>最终口播稿</label><textarea id="final-copy" oninput="updateCopyDurationEstimate()" placeholder="生成完成后显示纯口播稿"></textarea><div class="copy-target-strip"><div><span>目标时长</span><b id="copy-target-display">约 30 秒</b></div><div id="copy-duration-summary" class="copy-duration-summary"><b id="copy-duration-estimate">等待口播稿</b><small id="copy-length-hint">生成后显示实际预估时长</small></div></div><div style="margin-top:14px"><label>结尾行动引导</label><input id="video-cta" oninput="updateCopyDurationEstimate()" value="点击下方链接，立即报名吧"></div><input id="tts-service" type="hidden" value="qwen"><div style="margin-top:14px"><label>配音音色</label><select id="tts-voice"></select></div><div class="stage-actions"><button id="create-tts-button" class="primary" onclick="createTts()">生成并试听语音</button><button id="confirm-copy-button" onclick="confirmCreatorCopy()">跳过试听，进入素材配置</button></div><div id="tts-preview" class="media-preview hidden" style="margin-top:14px"></div></section>
@@ -1893,6 +1909,15 @@
     </div>
   </div>
 
+  <div id="logic-dialog" class="handoff-dialog" onclick="if(event.target===this) closeLogicDialog()">
+    <div class="handoff-dialog-card" style="width:min(760px,calc(100vw - 32px))" role="dialog" aria-modal="true" aria-labelledby="logic-dialog-title">
+      <h2 id="logic-dialog-title">爆款逻辑时间线 JSON</h2>
+      <p>这是给生视频员工使用的结构参考，不是原视频文案，也不代表已经读取了完整音视频。</p>
+      <pre id="logic-json-output" style="max-height:52vh;overflow:auto;margin:0;padding:14px;border-radius:12px;background:#f7f8fb;color:#394252;font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap"></pre>
+      <div class="actions" style="justify-content:flex-end;margin-top:16px"><button onclick="closeLogicDialog()">关闭</button><button class="primary" onclick="copyLogicJson()">复制 JSON</button></div>
+    </div>
+  </div>
+
   <div id="expo-create-dialog" class="expo-create-dialog" onclick="if(event.target===this) closeExhibitionDraft()">
     <form class="expo-create-card" onsubmit="confirmExhibitionDraft(event)">
       <div class="expo-create-head"><span>新建展会</span><button type="button" aria-label="关闭" onclick="closeExhibitionDraft()">×</button></div>
@@ -1937,6 +1962,7 @@
     const selectedSampleUrls = new Set();
     let latestSamples = [];
     let latestArtifacts = [];
+    let selectedCreatorReferenceArtifact = null;
     let latestHandoffs = [];
     let pendingHandoff = null;
     const employeeWorkspace = {hunter:'tasks', creator:'tasks', buyer:'tasks'};
@@ -2789,6 +2815,7 @@
           renderEmployeeArtifacts(employee);
           renderEmployeeInbox(employee);
         });
+        renderCreatorReferencePicker();
         updateEmployeeStatuses(latestTaskItems || []);
       } catch (error) {
         notify(`员工成果读取失败：${error.message}`, 'error');
@@ -2797,6 +2824,86 @@
     function recordsForCurrentExpo(items) {
       const expoId = currentExpoRecordId();
       return (items || []).filter(item => !item.expo_id || item.expo_id === expoId);
+    }
+    function hunterLogicForArtifact(artifact) {
+      return artifact?.data?.viral_logic || artifact?.data?.logic_timeline || null;
+    }
+    function renderCreatorReferencePicker() {
+      const box = document.getElementById('creator-reference-options');
+      if (!box) return;
+      const items = recordsForCurrentExpo(latestArtifacts)
+        .filter(item => item.employee === 'hunter' && item.type === 'sample_pack')
+        .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+      if (!items.length) {
+        box.innerHTML = '<div class="creator-reference-empty">暂无爆款逻辑成果。先在找爆款员工中完成检索并生成成果，之后可以在这里主动选择。</div>';
+        return;
+      }
+      const cards = items.map(item => {
+        const samples = Array.isArray(item.data?.samples) ? item.data.samples : [];
+        const logic = hunterLogicForArtifact(item);
+        const active = selectedCreatorReferenceArtifact?.id === item.id;
+        const logicSummary = logic?.summary || item.summary || '已保存参考案例';
+        const timelineCount = Array.isArray(logic?.timeline) ? logic.timeline.length : 0;
+        return `<button type="button" class="creator-reference-card${active ? ' active' : ''}" onclick="selectCreatorReferenceArtifact('${escapeAttr(item.id)}')"><span><b>${escapeHtml(item.title || item.data?.keyword || '未命名爆款逻辑')}</b><p>${escapeHtml(String(logicSummary).slice(0, 80))}</p></span><span>${samples.length} 条案例${timelineCount ? ` · ${timelineCount} 段时间线` : ''}</span></button>`;
+      }).join('');
+      const logic = hunterLogicForArtifact(selectedCreatorReferenceArtifact);
+      const logicPreview = logic ? `<div class="creator-reference-logic"><strong>已选结构：</strong>${escapeHtml(String(logic.summary || '已生成爆款逻辑'))}${Array.isArray(logic.timeline) ? ` · ${logic.timeline.length} 段时间线` : ''}</div>` : '';
+      box.innerHTML = `<div class="creator-reference-list">${cards}</div>${logicPreview}`;
+    }
+    function selectCreatorReferenceArtifact(artifactId) {
+      const artifact = recordsForCurrentExpo(latestArtifacts).find(item => item.id === artifactId && item.employee === 'hunter' && item.type === 'sample_pack');
+      if (!artifact) return notify('找不到这条爆款逻辑成果，请刷新后重试', 'error');
+      selectedCreatorReferenceArtifact = artifact;
+      activeCreatorSourceArtifactId = artifact.id || '';
+      const samples = Array.isArray(artifact.data?.samples) ? artifact.data.samples : [];
+      selectedSample = samples[0] || null;
+      const topic = String(artifact.data?.keyword || '').trim();
+      const studioTopic = document.getElementById('creator-studio-topic');
+      const briefSubject = document.getElementById('brief-subject');
+      if (topic && studioTopic && !studioTopic.value) studioTopic.value = topic;
+      if (topic && briefSubject && !briefSubject.value) briefSubject.value = topic;
+      renderCreatorReferencePicker();
+      notify(`已选择“${artifact.title || '爆款逻辑'}”，接下来先确认脚本，再生成配音和视频。`);
+    }
+    function clearCreatorReference() {
+      selectedCreatorReferenceArtifact = null;
+      activeCreatorSourceArtifactId = '';
+      selectedSample = null;
+      renderCreatorReferencePicker();
+    }
+    function selectedCreatorReferenceLogic() {
+      return hunterLogicForArtifact(selectedCreatorReferenceArtifact) || {};
+    }
+    let activeLogicJson = null;
+    function showHunterLogicArtifact(artifactId) {
+      const artifact = recordsForCurrentExpo(latestArtifacts).find(item => item.id === artifactId && item.employee === 'hunter');
+      const logic = hunterLogicForArtifact(artifact);
+      if (!logic) return notify('这条成果还没有爆款逻辑时间线', 'error');
+      activeLogicJson = logic;
+      const output = document.getElementById('logic-json-output');
+      if (output) output.textContent = JSON.stringify(logic, null, 2);
+      document.getElementById('logic-dialog')?.classList.add('active');
+    }
+    function closeLogicDialog() {
+      document.getElementById('logic-dialog')?.classList.remove('active');
+    }
+    function copyLogicJson() {
+      if (!activeLogicJson) return;
+      const text = JSON.stringify(activeLogicJson, null, 2);
+      const copy = navigator.clipboard?.writeText(text);
+      if (copy) copy.then(() => notify('爆款逻辑 JSON 已复制。')).catch(() => notify(text));
+      else notify(text);
+    }
+    function openCreatorReferencePicker() {
+      switchEmployeeWorkspace('creator', 'tasks', false);
+      setCreatorTab('menu', false);
+      setCreatorStudioMode('compose');
+      window.setTimeout(() => document.getElementById('creator-reference-picker')?.scrollIntoView({behavior:'smooth', block:'center'}), 80);
+    }
+    function useHunterArtifactInCreator(artifactId) {
+      startNewCreatorTask();
+      selectCreatorReferenceArtifact(artifactId);
+      window.setTimeout(() => document.getElementById('creator-reference-picker')?.scrollIntoView({behavior:'smooth', block:'center'}), 80);
     }
     function renderEmployeeArtifacts(employee) {
       const box = document.getElementById(`${employee}-artifacts`);
@@ -2808,10 +2915,17 @@
       }
       box.innerHTML = items.map(item => {
         const sampleCount = item.type === 'sample_pack' ? (item.data?.samples || []).length : 0;
+        const logic = hunterLogicForArtifact(item);
         const video = item.type === 'video_package' ? (item.data?.preview_url || '') : '';
         const target = item.type === 'sample_pack' ? 'creator' : item.type === 'video_package' ? 'buyer' : '';
-        const detail = sampleCount ? `${sampleCount} 条参考样本` : item.data?.video_file ? '包含最终成片与创作配置' : item.summary || '员工正式交付成果';
-        return `<article class="artifact-card">${video ? `<video controls preload="metadata" src="${escapeAttr(assetPath(video))}"></video>` : ''}<div class="artifact-card-head"><div><span class="status blue">${escapeHtml(artifactTypeName(item.type))}</span><h3>${escapeHtml(item.title)}</h3></div><span class="status">V${Number(item.version || 1)}</span></div><p>${escapeHtml(detail)}</p><div class="artifact-meta"><span>${escapeHtml(item.created_at || '')}</span><span>成果 ID：${escapeHtml(String(item.id || '').slice(-12))}</span></div><div class="actions">${target ? `<button class="primary" onclick="openArtifactHandoff('${escapeAttr(item.id)}','${target}')">投递给${employeeName(target)}</button>` : ''}<button onclick="copyArtifactId('${escapeAttr(item.id)}')">复制成果编号</button></div></article>`;
+        const detail = logic?.timeline?.length
+          ? `${sampleCount} 条参考案例 · ${logic.timeline.length} 段爆款逻辑时间线`
+          : sampleCount ? `${sampleCount} 条参考案例 · 等待生成逻辑` : item.data?.video_file ? '包含最终成片与创作配置' : item.summary || '员工正式交付成果';
+        const action = item.type === 'sample_pack'
+          ? `<button class="primary" onclick="useHunterArtifactInCreator('${escapeAttr(item.id)}')">用于生视频脚本</button>`
+          : target ? `<button class="primary" onclick="openArtifactHandoff('${escapeAttr(item.id)}','${target}')">投递给${employeeName(target)}</button>` : '';
+        const logicButton = logic ? `<button onclick="showHunterLogicArtifact('${escapeAttr(item.id)}')">查看逻辑 JSON</button>` : '';
+        return `<article class="artifact-card">${video ? `<video controls preload="metadata" src="${escapeAttr(assetPath(video))}"></video>` : ''}<div class="artifact-card-head"><div><span class="status blue">${escapeHtml(logic ? '爆款逻辑' : artifactTypeName(item.type))}</span><h3>${escapeHtml(item.title)}</h3></div><span class="status">V${Number(item.version || 1)}</span></div><p>${escapeHtml(detail)}</p><div class="artifact-meta"><span>${escapeHtml(item.created_at || '')}</span><span>成果 ID：${escapeHtml(String(item.id || '').slice(-12))}</span></div><div class="actions">${action}${logicButton}<button onclick="copyArtifactId('${escapeAttr(item.id)}')">复制成果编号</button></div></article>`;
       }).join('');
     }
     function renderEmployeeInbox(employee) {
@@ -2833,11 +2947,17 @@
       const samples = latestSamples.filter(item => selectedSampleUrls.has(item.url || item.aweme_id || String(latestSamples.indexOf(item))));
       if (!samples.length) return notify('请先选择至少一条参考样本', 'error');
       const keyword = valueOf('search-keyword') || '未命名检索';
-      const artifact = await createArtifactRecord({employee:'hunter', type:'sample_pack', title:`${keyword}爆款样本包`, summary:`已选择 ${samples.length} 条参考样本`, source_task_id:currentHunterTaskId, data:{keyword, platform:valueOf('search-platform'), samples}});
-      notify('爆款样本包已保存。你可以在成果页决定是否投递。');
-      await loadEmployeeRecords();
-      switchEmployeeWorkspace('hunter','outcomes');
-      return artifact;
+      const task = await createTask('sample-analysis', {
+        keyword,
+        platform:valueOf('search-platform'),
+        samples,
+        source_search_task_id:currentHunterTaskId,
+      }, true);
+      if (task?.id) {
+        notify('已提交爆款逻辑反推任务；完成后会保存到成果页。');
+        switchEmployeeWorkspace('hunter','tasks');
+      }
+      return task;
     }
     async function saveVideoPackageArtifact() {
       if (captionPreviewState.locked) return notify('当前版本已经保存到视频创作包，字幕编辑已锁定。请从历史记录复制参数生成新版本。', 'error');
@@ -2861,6 +2981,8 @@
           script:valueOf('final-copy') || summary.script || '',
           cta:valueOf('video-cta'),
           reference_sample:selectedSample || {},
+          reference_artifact_id:activeCreatorSourceArtifactId || selectedCreatorReferenceArtifact?.id || '',
+          reference_logic:selectedCreatorReferenceLogic(),
           creative_direction:selectedCreatorDirection,
           material_source:selectedMaterialSource,
           caption_template:summary.caption_template || selectedCaptionTemplate,
@@ -2970,12 +3092,14 @@
     function startCreatorFromArtifact(artifact) {
       startNewCreatorTask();
       activeCreatorSourceArtifactId = artifact.id || '';
+      selectedCreatorReferenceArtifact = artifact.type === 'sample_pack' ? artifact : null;
       const samples = artifact.data?.samples || [];
       selectedSample = samples[0] || null;
       const topic = artifact.data?.keyword || artifact.title || '';
       document.getElementById('copy-topic').value = topic;
       document.getElementById('brief-subject').value = topic;
       chooseCreatorInputMode('ai');
+      renderCreatorReferencePicker();
       notify(`已接收“${artifact.title || '样本包'}”，新视频任务仍需你确认后才会执行。`);
     }
     function startBuyerFromArtifact(artifact) {
@@ -2987,7 +3111,9 @@
     }
     function useCreatorBlankSource() {
       selectedSample = null;
+      selectedCreatorReferenceArtifact = null;
       activeCreatorSourceArtifactId = '';
+      renderCreatorReferencePicker();
       chooseCreatorDirection('impact');
       chooseCreatorInputMode('ai');
       notify('已选择从零创作，请填写业务主题和核心卖点。');
@@ -2997,12 +3123,16 @@
       const url = window.prompt('粘贴抖音或小红书参考视频链接');
       if (!url) return;
       selectedSample = {url, title:'手动参考视频'};
+      selectedCreatorReferenceArtifact = null;
       activeCreatorSourceArtifactId = '';
+      renderCreatorReferencePicker();
       notify('参考链接已加入当前视频任务。');
     }
     function focusCreatorMaterials() {
       selectedSample = null;
+      selectedCreatorReferenceArtifact = null;
       activeCreatorSourceArtifactId = '';
+      renderCreatorReferencePicker();
       chooseCreatorInputMode('manual');
       notify('请粘贴完整口播稿，确认后再选择当前展会素材。');
       document.getElementById('manual-copy-input')?.focus();
@@ -3068,6 +3198,7 @@
       captionPreviewState = {summary:null, sourceTaskId:'', taskId:'', template:'viral', animation:'pop', fontType:'template', fontScale:100, verticalPosition:28, maxCharsPerLine:10, alignment:'center', capColor:'default', capFill:'', capStroke:'', activeTool:'basic', currentIndex:-1, currentToken:-1, editable:true, locked:false, live:false};
       creatorCompletedSteps.clear();
       selectedSample = null;
+      selectedCreatorReferenceArtifact = null;
       activeCreatorSourceArtifactId = '';
 
       ['copy-topic','brief-subject','brief-audience','brief-pain','brief-selling','brief-tone','cs-exhibition-name','cs-exhibition-category','manual-copy-input','final-copy','creator-studio-topic','creator-studio-script','competitor-dir','highlight-words','batch-copy-list','publish-video'].forEach(id => {
@@ -3112,6 +3243,7 @@
       }
       setCreatorStudioMode('compose');
       syncCreatorStudioFromWorkflow();
+      renderCreatorReferencePicker();
       const toast = document.getElementById('toast');
       if (toast) {
         clearTimeout(window.__toastTimer);
@@ -3156,6 +3288,7 @@
     let studioComposerReady = false;
     function initStudioComposer() {
       renderStudioScriptTabs();
+      renderCreatorReferencePicker();
       if (selectedMaterialSource === 'local') renderStudioMaterialGrid();
       syncStudioAvatarAvailability();
       studioComposerReady = true;
@@ -3422,6 +3555,8 @@
         creative_direction: selectedCreatorDirection,
         target_duration_seconds: Number(valueOf('creator-studio-copy-length') || 30),
         sample: selectedSample || {},
+        reference_logic: selectedCreatorReferenceLogic(),
+        reference_artifact_id: selectedCreatorReferenceArtifact?.id || '',
         script: finalScript,
         material_source: selectedMaterialSource,
         material_dir: valueOf('material-dir'),
@@ -3524,6 +3659,8 @@
         creative_direction: selectedCreatorDirection,
         target_duration_seconds: Number(valueOf('copy-length') || 30),
         sample: selectedSample || {},
+        reference_logic: selectedCreatorReferenceLogic(),
+        reference_artifact_id: selectedCreatorReferenceArtifact?.id || '',
         script,
         material_source: selectedMaterialSource,
         material_dir: valueOf('material-dir'),
@@ -3552,6 +3689,8 @@
           creative_direction: selectedCreatorDirection,
           target_duration_seconds: Number(valueOf('copy-length') || 30),
           sample: selectedSample || {},
+          reference_logic: selectedCreatorReferenceLogic(),
+          reference_artifact_id: selectedCreatorReferenceArtifact?.id || '',
           script: line.includes('。') || line.length > 80 ? ensureCta(line) : line,
           material_source: selectedMaterialSource,
           material_dir: valueOf('material-dir'),
@@ -3644,14 +3783,14 @@
         const taskPayload = {...payload, expo_id:currentExpoRecordId(), source_artifact_ids:sourceArtifactIds};
         const task = await api(`/api/tasks/${kind}`, { method:'POST', body: JSON.stringify(taskPayload) });
         if (task?.id && ['copy','tts','render','caption-style','creator-pipeline'].includes(kind)) rememberCreatorTask(task);
-        if (task?.id && ['search','import-links'].includes(kind)) {
+        if (task?.id && ['search','import-links','sample-analysis'].includes(kind)) {
           // Persist the server task id as soon as POST returns.  The user can
           // leave this page before the follow-up loadTasks() request finishes;
           // the process board will still reopen this exact task later.
           currentHunterTaskId = task.id;
           sessionStorage.setItem('currentHunterTaskId', currentHunterTaskId);
         }
-        notify(['search','import-links','download','copy','tts','render','caption-style','creator-pipeline'].includes(kind)
+        notify(['search','import-links','sample-analysis','download','copy','tts','render','caption-style','creator-pipeline'].includes(kind)
           ? '任务已提交；即使返回其他页面，员工也会在服务端后台继续执行，稍后可在员工进程页查看状态。'
           : '任务已提交，员工正在后台处理。');
         if (task?.id) startTaskPolling(task.id, kind);
@@ -3751,6 +3890,8 @@
       const task = await createTask('copy', {
         topic,
         sample: selectedSample || {},
+        reference_logic: selectedCreatorReferenceLogic(),
+        reference_artifact_id: selectedCreatorReferenceArtifact?.id || '',
         creative_direction: selectedCreatorDirection,
         target_duration_seconds: Number(valueOf('copy-length') || 30),
         cta_text: valueOf('video-cta'),
@@ -4968,7 +5109,7 @@
           <div class="sample-title">#${item.rank || i + 1} ${escapeHtml(title)}</div>
           <div class="sample-meta">赞 ${like} ｜ 评 ${comment} ｜ 转 ${share}</div>
           <div class="sample-score-line">互动分 ${score} = 点赞×1 + 评论×1.5 + 转发×2</div>
-          <div class="actions"><button class="${selected ? 'primary' : ''}" onclick="selectSample(${i})">${selected ? '已加入样本包 · 点击移出' : '加入样本包'}</button></div>
+          <div class="actions"><button class="${selected ? 'primary' : ''}" onclick="selectSample(${i})">${selected ? '已选案例 · 点击移出' : '选择案例'}</button></div>
         </div>`;
       }).join('');
       updateSamplePackSelection();
@@ -4982,20 +5123,20 @@
       selectedSample = latestSamples.find((sample, sampleIndex) => selectedSampleUrls.has(sample.url || sample.aweme_id || String(sampleIndex))) || null;
       renderGallery(latestSamples);
       updateEmployeeStatuses();
-      notify(selectedSampleUrls.has(sampleKey) ? '已加入当前爆款样本包。' : '已从当前爆款样本包移出。');
+      notify(selectedSampleUrls.has(sampleKey) ? '已加入当前爆款逻辑分析。' : '已从当前爆款逻辑分析移出。');
     }
     function updateSamplePackSelection() {
       const count = selectedSampleUrls.size;
       const label = document.getElementById('sample-pack-count');
       const button = document.getElementById('create-sample-pack-button');
-      if (label) label.textContent = count ? `已选择 ${count} 条样本` : '尚未选择样本';
+      if (label) label.textContent = count ? `已选择 ${count} 条案例` : '尚未选择案例';
       if (button) button.disabled = count === 0;
     }
     function clearSampleSelection() {
       selectedSampleUrls.clear();
       selectedSample = null;
       renderGallery(latestSamples);
-      notify('已清空当前样本包选择。');
+      notify('已清空当前逻辑分析选择。');
     }
     function renderHunterHistory(items = []) {
       latestHunterHistoryTasks = (items || []).filter(task => ['search','import-links'].includes(task.kind));
@@ -5026,26 +5167,32 @@
       const box = document.getElementById('hunter-process-overview');
       if (!box) return;
       latestHunterHistoryTasks = (items || []).filter(task => ['search','import-links'].includes(task.kind));
-      if (!latestHunterHistoryTasks.length) {
+      const processTasks = (items || []).filter(task => ['search','import-links','sample-analysis'].includes(task.kind));
+      if (!processTasks.length) {
         box.innerHTML = '<div class="process-empty">暂无抓取进程。点击右上角“创建抓取任务”，绑定平台账号并开始第一次检索。</div>';
         return;
       }
-      box.innerHTML = `<div class="process-list">${latestHunterHistoryTasks.slice(0, 10).map((task, index) => {
+      box.innerHTML = `<div class="process-list">${processTasks.slice(0, 10).map((task, index) => {
         const keyword = task.payload?.keyword || task.result?.keyword || '未命名抓取任务';
         const count = task.result?.count || task.result?.items?.length || 0;
         const running = ['queued','running'].includes(task.status);
+        const isAnalysis = task.kind === 'sample-analysis';
         const empty = isEmptyHunterTask(task);
         const localBrowser = task.payload?.execution === 'browser_extension';
         const description = running
-          ? `${task.status === 'queued' ? '排队中 · ' : ''}${localBrowser ? '目标主机抓取中' : '服务器检索中'} · 离开页面不影响执行。`
+          ? `${task.status === 'queued' ? '排队中 · ' : ''}${isAnalysis ? '正在反推爆款逻辑' : localBrowser ? '目标主机抓取中' : '服务器检索中'} · 离开页面不影响执行。`
           : empty
             ? '未找到匹配视频，可调整关键词后重试。'
           : task.status === 'succeeded'
-            ? `已找到 ${count} 条参考样本，可进入画廊选择。`
+            ? isAnalysis
+              ? `已生成 ${task.result?.viral_logic?.timeline?.length || task.result?.timeline_json?.length || 0} 段结构时间线，成果已保存。`
+              : `已找到 ${count} 条参考样本，可进入画廊选择。`
             : '任务未完成，可查看状态并重新执行。';
         const statusClass = empty ? 'queued' : task.status || '';
         const statusLabel = empty ? '已完成·0条' : taskStateText(task.status);
-        return `<button class="process-item" onclick="openHunterProcessTask(${index})"><div><b>${index + 1}. ${escapeHtml(keyword)}</b><p>${escapeHtml(description)}</p><div class="process-meta"><span class="status ${escapeAttr(statusClass)}">${escapeHtml(statusLabel)}</span><span>${escapeHtml(platformLabel(task.payload?.platform || 'douyin'))}</span><span>${escapeHtml(task.created_at || '')}</span></div></div><span class="process-item-action">${task.status === 'succeeded' && count ? '查看样本 →' : '查看进程 →'}</span></button>`;
+        const handler = isAnalysis ? `openHunterAnalysisTask('${escapeAttr(task.id)}')` : `openHunterProcessTask(${latestHunterHistoryTasks.indexOf(task)})`;
+        const action = isAnalysis && task.status === 'succeeded' ? '查看成果 →' : task.status === 'succeeded' && count ? '查看样本 →' : '查看进程 →';
+        return `<button class="process-item" onclick="${handler}"><div><b>${index + 1}. ${escapeHtml(keyword)}</b><p>${escapeHtml(description)}</p><div class="process-meta"><span class="status ${escapeAttr(statusClass)}">${escapeHtml(statusLabel)}</span><span>${escapeHtml(platformLabel(task.payload?.platform || 'douyin'))}</span><span>${escapeHtml(task.created_at || '')}</span></div></div><span class="process-item-action">${action}</span></button>`;
       }).join('')}</div>`;
     }
     function isEmptyHunterTask(task) {
@@ -5067,6 +5214,18 @@
       // like a brand-new task.  A new task can still be created from the
       // header button or the panel's retry/config controls.
       setHunterStage(['queued','running'].includes(task.status) || isEmptyHunterTask(task) ? 'working' : 'config');
+      renderHunterProgress(task);
+    }
+    function openHunterAnalysisTask(taskId) {
+      const task = latestTaskItems.find(item => item.id === taskId);
+      if (!task) return notify('找不到这条爆款逻辑任务，请刷新后重试', 'error');
+      currentHunterTaskId = task.id || currentHunterTaskId;
+      if (task.status === 'succeeded') {
+        switchEmployeeWorkspace('hunter', 'outcomes');
+        return;
+      }
+      setHunterPage('task', false);
+      setHunterStage('working');
       renderHunterProgress(task);
     }
     function renderBuyerProcessBoard(items = []) {
@@ -5233,7 +5392,7 @@
       };
       let hunter = {status:'等待任务', title:'检索展会爆款样本', desc:'输入行业/主题和数量后，找爆款员工会在后台检索、去重并按互动分排序。', action:'填写检索条件', section:'hunter', target:'search-keyword', primary:true};
       if (state.hasSamples && !state.hasSelected) hunter = {status:'需要你确认', statusClass:'queued', title:'已找到候选样本，等待选择参考', desc:'选择一个最接近你想复刻风格的视频，系统会把它交给生视频员工。', action:'选择参考样本', section:'hunter', target:'gallery', primary:true};
-      if (state.hasSelected) hunter = {status:'已交付', statusClass:'succeeded', title:'参考样本已交给生视频员工', desc:'找爆款员工的本轮交付已完成，你可以继续生成口播和成片。', action:'去生成视频', section:'creator', target:'copy-topic'};
+      if (state.hasSelected) hunter = {status:'已选择', statusClass:'succeeded', title:'参考案例已准备好', desc:'生视频员工会在脚本步骤中读取你主动选择的爆款逻辑。', action:'去生成视频', section:'creator', target:'copy-topic'};
       let creator = {status:'等待参考', title:'等待选择参考样本', desc:'先让找爆款员工找到并选择一个样本，再开始生成口播、语音和成片。', action:'去找样本', section:'hunter', target:'search-keyword'};
       if (state.hasSelected && !state.hasCopy) creator = {status:'需要你确认', statusClass:'queued', title:'确认主题和卖点，生成口播稿', desc:'基于参考样本和你的业务卖点生成可直接配音的最终口播稿。', action:'生成口播稿', section:'creator', target:'copy-topic', primary:true};
       else if (state.hasCopy && !state.hasAudio) creator = {status:'下一步', statusClass:'queued', title:'口播稿已准备，等待生成配音', desc:'选择 TTS 服务和音色后，生视频员工会生成语音文件。', action:'生成语音', section:'creator', target:'tts-service', primary:true};
@@ -5257,7 +5416,7 @@
       if (recentFailures.length) approvals.push({level:'urgent', title:'处理异常任务', desc:`近 24 小时有 ${recentFailures.length} 个任务失败，先处理后再继续自动流程。`, action:'去任务中心', section:'tasks', target:'task-list'});
       if (!state.hasSamples) approvals.push({title:'安排第一个检索任务', desc:'还没有参考样本。输入主题后，找爆款员工会在后台检索候选视频。', action:'安排检索', section:'hunter', target:'search-keyword'});
       else if (!state.hasSelected) approvals.push({level:'urgent', title:'选择参考样本', desc:'找爆款员工已经找到候选视频，需要你选择一个最像目标风格的参考样本。', action:'去样本画廊', section:'hunter', target:'gallery'});
-      if (state.hasSelected && !state.hasCopy) approvals.push({title:'确认视频主题和卖点', desc:'把参考样本交给生视频员工前，补充你的招商主题、卖点和 CTA。', action:'生成口播稿', section:'creator', target:'copy-topic'});
+      if (state.hasSelected && !state.hasCopy) approvals.push({title:'确认视频主题和卖点', desc:'选择爆款逻辑后，补充当前展会的主题、痛点和解决路径，再生成口播稿。', action:'生成口播稿', section:'creator', target:'copy-topic'});
       else if (state.hasCopy && !state.hasAudio) approvals.push({title:'确认最终口播稿', desc:'口播稿已经准备好。你可以修改文字，再选择音色生成配音。', action:'去确认口播', section:'creator', target:'final-copy'});
       else if (state.hasAudio && !state.hasVideo) approvals.push({title:'确认成片素材', desc:'语音已生成，下一步选择素材来源和字幕模板，生成最终推广视频。', action:'生成成片', section:'creator', target:'material-dir'});
       if (state.hasVideo && !state.hasOcean) approvals.push({level:'urgent', title:'绑定巨量账户', desc:'已有可投放成片。投放员工需要一次巨量授权，才能上传素材和创建安全草稿。', action:'前往巨量绑定', section:'buyer', target:'oe-guide'});
@@ -5286,8 +5445,8 @@
       updateFlowProgress(items);
       renderHandoffList(items);
       let model = {title:'先安排找爆款员工', desc:'输入展会主题，让找爆款员工先找到可复刻样本。', actions:[['去安排检索','hunter','primary','search-keyword']]};
-      if (hasSamples && !hasSelected) model = {title:'从样本画廊选择一个参考视频', desc:'找爆款员工已经有候选样本了，先设定一个参考样本，再交给生视频员工复刻。', actions:[['去选择样本','hunter','primary','gallery']]};
-      else if (hasSelected && !hasCopy) model = {title:'把参考样本交给生视频员工', desc:'基于选中的参考视频和你的业务卖点，生成最终口播稿。', actions:[['生成口播稿','creator','primary','copy-topic']]};
+      if (hasSamples && !hasSelected) model = {title:'从样本画廊选择一个参考视频', desc:'先选择案例并生成爆款逻辑，再由你在生视频脚本步骤中主动使用。', actions:[['去选择样本','hunter','primary','gallery']]};
+      else if (hasSelected && !hasCopy) model = {title:'在脚本步骤选择参考逻辑', desc:'补充当前展会的业务信息，AI 会借鉴结构并重新生成原创口播稿。', actions:[['生成口播稿','creator','primary','copy-topic']]};
       else if (hasCopy && !hasAudio) model = {title:'给口播稿生成声音', desc:'口播稿已准备好，下一步选择音色并生成配音。', actions:[['去生成语音','creator','primary','tts-service']]};
       else if (hasCopy && !hasVideo) model = {title:'生成可投放成片', desc:'文案已经就绪，选择素材和字幕模板，让生视频员工生成成片。', actions:[['生成推广视频','creator','primary','material-dir']]};
       else if (hasVideo && !oceanConnected) model = {title:'成片已就绪，绑定巨量账户', desc:'投放员工需要先完成巨量授权，才能上传素材、创建草稿和同步报表。', actions:[['前往投放员工','buyer','primary','oe-guide']]};
@@ -5309,7 +5468,7 @@
       const taskText = failedCount ? `${failedCount} 个待处理` : runningCount ? `${runningCount} 个工作中` : '待命';
       const taskDesc = failedCount ? '近 24 小时异常需要处理' : runningCount ? '员工正在后台执行' : historicalFailedCount > 0 ? '历史异常已归档，不阻塞流程' : '暂无员工在工作';
       const cards = [
-        {label:'参考样本', value:String(latestSamples.length || 0), desc: latestSamples.length ? '可交给生视频员工复刻' : '等待找爆款员工检索', cls: latestSamples.length ? 'ok' : ''},
+        {label:'参考样本', value:String(latestSamples.length || 0), desc: latestSamples.length ? '可生成爆款逻辑' : '等待找爆款员工检索', cls: latestSamples.length ? 'ok' : ''},
         {label:'推广成片', value:String(renderCount), desc: renderCount ? '可交给投放员工' : '等待生视频员工生成', cls: renderCount ? 'ok' : ''},
         {label:'巨量账户', value:accountText, desc: oceanConnected ? '投放员工可创建草稿' : '等待投放员工授权', cls: oceanConnected ? 'ok' : 'warn'},
         {label:'任务状态', value:taskText, desc: deliveryDone ? '已有投放链路结果' : taskDesc, cls: failedCount ? 'warn' : runningCount ? 'warn' : ''},
@@ -5341,8 +5500,8 @@
       const total = document.getElementById('mission-total');
       if (!box) return;
       const employees = [
-        {key:'hunter', name:'找爆款员工', kinds:['search','import-links','download'], idle:'等待检索任务：输入主题后会自动抓取、去重并排序候选样本。', action:'安排检索', section:'hunter'},
-        {key:'creator', name:'生视频员工', kinds:['creator-pipeline','copy','tts','render','caption-style'], idle:'等待生成任务：选中样本后生成口播、配音、字幕和最终成片。', action:'生成视频', section:'creator'},
+        {key:'hunter', name:'找爆款员工', kinds:['search','import-links','sample-analysis','download'], idle:'等待检索任务：输入主题后会自动抓取、去重并生成爆款逻辑。', action:'安排检索', section:'hunter'},
+        {key:'creator', name:'生视频员工', kinds:['creator-pipeline','copy','tts','render','caption-style'], idle:'等待生成任务：可从零创作，也可在脚本步骤选择爆款逻辑。', action:'生成视频', section:'creator'},
         {key:'buyer', name:'投放员工', kinds:['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch','publish'], idle:'等待投放任务：绑定巨量账户后选择成片并创建安全投放草稿。', action:'配置投放', section:'buyer'},
       ];
       const taskCount = items.length;
@@ -5362,7 +5521,7 @@
       }).join('');
     }
     function taskKindLabel(kind) {
-      return ({search:'检索样本', 'import-links':'导入样本', download:'下载样本', copy:'生成口播', tts:'生成语音', 'creator-pipeline':'生成完整视频', render:'生成成片', 'caption-style':'应用字幕样式', publish:'账号发布', 'delivery-draft':'投放检查', 'delivery-report':'同步报表', 'ocean-video-upload':'上传视频', 'ocean-project-create':'创建项目', 'ocean-promotion-create':'创建推广', 'ocean-safe-launch':'安全投放草稿'})[kind] || kind;
+      return ({search:'检索样本', 'import-links':'导入样本', 'sample-analysis':'反推爆款逻辑', download:'下载样本', copy:'生成口播', tts:'生成语音', 'creator-pipeline':'生成完整视频', render:'生成成片', 'caption-style':'应用字幕样式', publish:'账号发布', 'delivery-draft':'投放检查', 'delivery-report':'同步报表', 'ocean-video-upload':'上传视频', 'ocean-project-create':'创建项目', 'ocean-promotion-create':'创建推广', 'ocean-safe-launch':'安全投放草稿'})[kind] || kind;
     }
     function renderEmployeeActivity(employee, kinds, items) {
       const box = document.getElementById(`${employee}-activity`);
@@ -5383,7 +5542,7 @@
     }
     function renderEmployeeWork(items) {
       const groups = {
-        hunter:['search','import-links','download'],
+        hunter:['search','import-links','sample-analysis','download'],
         creator:['creator-pipeline','copy','tts','render','caption-style'],
         buyer:['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch','publish'],
       };
@@ -5430,6 +5589,7 @@
         return;
       }
       const empty = isEmptyHunterTask(task);
+      const isAnalysis = task.kind === 'sample-analysis';
       const terminalEmpty = empty && task.status === 'failed';
       const progress = task.status === 'succeeded' || terminalEmpty ? 100 : task.status === 'failed' ? 100 : task.status === 'running' ? 58 : 22;
       fill.style.width = `${progress}%`;
@@ -5437,24 +5597,28 @@
       const state = terminalEmpty ? '已完成' : taskStateText(task.status);
       text.textContent = `${state} · ${suffix}`;
       if (title) {
-        title.textContent = task.status === 'queued'
-          ? '找爆款员工正在排队'
-          : task.status === 'running'
-            ? '找爆款员工正在检索'
-            : task.status === 'succeeded'
-              ? (empty ? '找爆款员工检索完成' : '找爆款员工已完成检索')
-              : (terminalEmpty ? '找爆款员工检索完成' : '找爆款员工任务需处理');
+        title.textContent = isAnalysis
+          ? task.status === 'queued' ? '找爆款员工正在整理逻辑' : task.status === 'running' ? '找爆款员工正在反推爆款逻辑' : task.status === 'succeeded' ? '找爆款员工已生成爆款逻辑' : '爆款逻辑任务需处理'
+          : task.status === 'queued'
+            ? '找爆款员工正在排队'
+            : task.status === 'running'
+              ? '找爆款员工正在检索'
+              : task.status === 'succeeded'
+                ? (empty ? '找爆款员工检索完成' : '找爆款员工已完成检索')
+                : (terminalEmpty ? '找爆款员工检索完成' : '找爆款员工任务需处理');
       }
       if (description) {
         const localBrowser = task.payload?.execution === 'browser_extension';
         description.textContent = task.status === 'queued' || task.status === 'running'
-          ? (localBrowser
+          ? isAnalysis
+            ? '员工会提取案例共同的钩子、痛点、价值和行动结构，输出时间线 JSON；离开页面不会中断。'
+            : (localBrowser
             ? '目标主机 Chrome 会使用当前抖音登录态抓取；关闭本页面不会中断，稍后重新进入即可查看。'
             : '员工会在服务器后台检索、去重、计算互动分并补全封面；离开页面不会中断，稍后重新进入即可查看。')
           : empty
             ? '平台检索流程已执行完毕，但没有返回匹配视频。请换一个更宽泛的关键词或调整筛选条件后重试。'
             : task.status === 'succeeded'
-              ? '检索已完成，参考样本已同步到样本画廊。'
+              ? isAnalysis ? '爆款逻辑已保存到成果页，生视频员工可以主动选择。' : '检索已完成，参考样本已同步到样本画廊。'
               : '任务已经停止，不会继续卡在“检索中”；请根据下方原因修正后重试。';
       }
       if (statusEl) {
@@ -5471,7 +5635,7 @@
         return;
       }
       const groups = [
-        {name:'找爆款员工', desc:'负责检索、导入和沉淀参考样本。', kinds:['search','import-links','download'], section:'hunter'},
+        {name:'找爆款员工', desc:'负责检索案例并生成爆款逻辑时间线。', kinds:['search','import-links','sample-analysis','download'], section:'hunter'},
         {name:'生视频员工', desc:'负责口播、配音和最终成片。', kinds:['creator-pipeline','copy','tts','render','caption-style'], section:'creator'},
         {name:'投放员工', desc:'负责绑定巨量、创建草稿和同步数据。', kinds:['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch','publish'], section:'buyer'},
       ];
@@ -5544,7 +5708,7 @@
         updateCopyDurationEstimate();
         notify(taskBusinessMessage(latestCopyFailed) || 'AI 文案生成失败。', 'error');
       }
-      const latestHunter = currentHunterTaskId ? items.find(t => t.id === currentHunterTaskId) : items.find(t => ['search','import-links'].includes(t.kind));
+      const latestHunter = currentHunterTaskId ? items.find(t => t.id === currentHunterTaskId) : items.find(t => ['search','import-links','sample-analysis'].includes(t.kind));
       if (latestHunter) {
         renderHunterProgress(latestHunter);
         if (latestHunter.status === 'failed' && latestHunter.payload?.platform) loadPlatformBindings();
@@ -5865,7 +6029,7 @@
       const hunterOutcome = recordsForCurrentExpo(latestArtifacts).some(item => item.employee === 'hunter');
       const creatorOutcome = recordsForCurrentExpo(latestArtifacts).some(item => item.employee === 'creator');
       const buyerOutcome = recordsForCurrentExpo(latestArtifacts).some(item => item.employee === 'buyer');
-      const runningHunter = items.some(t => ['search','import-links'].includes(t.kind) && ['queued','running'].includes(t.status));
+      const runningHunter = items.some(t => ['search','import-links','sample-analysis'].includes(t.kind) && ['queued','running'].includes(t.status));
       const runningCreator = items.some(t => ['creator-pipeline','copy','tts','render','caption-style'].includes(t.kind) && ['queued','running'].includes(t.status));
       const runningBuyer = items.some(t => ['publish','delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch'].includes(t.kind) && ['queued','running'].includes(t.status));
       setStatus('hunter-status', runningHunter ? '工作中' : hunterOutcome ? '已有成果' : hasSamples ? '待整理成果' : '空闲中', runningHunter ? 'running' : hunterOutcome ? 'succeeded' : hasSamples ? 'blue' : '');
@@ -5910,6 +6074,10 @@
       if (task.kind === 'search' || task.kind === 'import-links') {
         if (task.result.empty_result) return task.result.warning || '检索完成，但没有找到匹配视频；请换关键词重试。';
         return `找到了 ${task.result.count || 0} 条参考样本`;
+      }
+      if (task.kind === 'sample-analysis') {
+        const timelineCount = task.result?.viral_logic?.timeline?.length || task.result?.timeline_json?.length || 0;
+        return task.result?.artifact_id ? `爆款逻辑已生成，包含 ${timelineCount} 段时间线` : '爆款逻辑分析已完成';
       }
       if (task.kind === 'copy') return '口播稿已回填到生视频员工面板';
       if (task.kind === 'tts') return `语音已生成，音色：${task.result.voice || ''}${task.result.fallback_used ? `（已自动切换到 ${task.result.service}）` : ''}`;

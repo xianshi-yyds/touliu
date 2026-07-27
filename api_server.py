@@ -49,6 +49,7 @@ RESUMABLE_TASK_KINDS = {
     "tts",
     "render",
     "caption-style",
+    "sample-analysis",
 }
 _DASHSCOPE_HEALTH: dict[str, Any] = {"checked_at": 0.0, "valid": False, "status": "unchecked", "checking": False}
 _DASHSCOPE_HEALTH_LOCK = threading.Lock()
@@ -2285,6 +2286,7 @@ TASK_DURATION_BUDGET = {
     "tts": 45,
     "copy": 20,
     "search": 40,
+    "sample-analysis": 45,
 }
 
 # Monotonic (percent, stage-label) checkpoints for the creator pipeline so the
@@ -2402,7 +2404,7 @@ def request_task_cancel(task_id: str) -> dict[str, Any]:
 
 
 def employee_for_task(kind: str) -> str:
-    if kind in {"search", "import-links", "download"}:
+    if kind in {"search", "import-links", "download", "sample-analysis"}:
         return "hunter"
     if kind in {"copy", "tts", "render", "caption-style", "creator-pipeline"}:
         return "creator"
@@ -2509,6 +2511,47 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
         keyword = require_text(payload, "keyword", "样本主题")
         links = require_text(payload, "links", "至少一个视频链接")
         return submit(lambda: render.import_links(platform, keyword, links))
+    if kind == "sample-analysis":
+        platform = str(payload.get("platform") or "douyin").strip()
+        keyword = str(payload.get("keyword") or "未命名检索").strip()
+        raw_samples = payload.get("samples") or []
+        if not isinstance(raw_samples, list) or not raw_samples:
+            raise ValueError("请先选择至少一条参考样本")
+        samples = [item for item in raw_samples if isinstance(item, dict)][:8]
+        if not samples:
+            raise ValueError("参考样本格式无效")
+
+        def sample_analysis_job() -> dict[str, Any]:
+            report_progress(12, "整理参考案例")
+            check_cancel()
+            logic = qwen.generate_viral_logic(samples, topic=keyword, platform=platform)
+            check_cancel()
+            report_progress(72, "生成爆款逻辑时间线")
+            source_task_id = str(getattr(_CURRENT_JOB, "task_id", "") or "")
+            timeline = logic.get("timeline") if isinstance(logic, dict) else []
+            artifact = create_artifact({
+                "employee": "hunter",
+                "type": "sample_pack",
+                "title": f"{keyword} · 爆款逻辑",
+                "summary": f"{len(samples)} 条参考案例 · 已生成结构时间线",
+                "source_task_id": source_task_id,
+                "data": {
+                    "keyword": keyword,
+                    "platform": platform,
+                    "samples": samples,
+                    "viral_logic": logic,
+                    "timeline_json": timeline,
+                },
+            })
+            report_progress(92, "保存爆款逻辑成果")
+            return {
+                "count": len(samples),
+                "artifact_id": artifact.get("id", ""),
+                "viral_logic": logic,
+                "timeline_json": timeline,
+            }
+
+        return submit(sample_analysis_job)
     if kind == "download":
         if not public_config()["crawler_configured"]:
             raise RuntimeError("下载能力未配置，请先安装抓取插件。")
@@ -2528,6 +2571,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
         cta_text = str(payload.get("cta_text") or DEFAULT_VIDEO_CTA)
         voice = str(payload.get("voice") or tts.DEFAULT_QWEN_VOICE)
         tts_service = str(payload.get("tts_service") or "qwen")
+        reference_logic = payload.get("reference_logic") or payload.get("viral_logic") or {}
         caption_template = str(payload.get("caption_template") or "viral").strip().lower()
         if caption_template not in render.CAPTION_TEMPLATES:
             raise ValueError(f"未知字幕模板：{caption_template}")
@@ -2556,6 +2600,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
                 sample,
                 target_duration_seconds=target_duration_seconds,
                 creative_direction=creative_direction,
+                reference_logic=reference_logic if isinstance(reference_logic, dict) else None,
             )
             script = final_script_with_cta(generated_script, cta_text)
             check_cancel()
@@ -2694,6 +2739,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
         sample = payload.get("sample") or {}
         target_duration_seconds = normalize_target_duration(payload.get("target_duration_seconds"))
         creative_direction = str(payload.get("creative_direction") or "").strip()
+        reference_logic = payload.get("reference_logic") or payload.get("viral_logic") or {}
         if not topic and not (sample.get("title") or sample.get("desc")):
             raise ValueError("请填写主题/卖点，或先选择一个参考样本")
         cta_text = str(payload.get("cta_text") or DEFAULT_VIDEO_CTA)
@@ -2705,6 +2751,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
                     sample,
                     target_duration_seconds=target_duration_seconds,
                     creative_direction=creative_direction,
+                    reference_logic=reference_logic if isinstance(reference_logic, dict) else None,
                 ),
                 cta_text,
             )

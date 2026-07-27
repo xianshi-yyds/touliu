@@ -185,12 +185,191 @@ def copy_quality_issues(text: str, topic: str, min_chars: int, max_chars: int) -
     return issues
 
 
+def _fallback_viral_logic(topic: str, samples: list[dict[str, Any]], platform: str) -> dict[str, Any]:
+    """Return a usable structure when the model response is not valid JSON."""
+    first = samples[0] if samples else {}
+    title = str(first.get("title") or first.get("desc") or topic or "参考案例").strip()
+    source_ids = [
+        str(item.get("aweme_id") or item.get("note_id") or item.get("id") or "").strip()
+        for item in samples
+    ]
+    source_ids = [item for item in source_ids if item]
+    return {
+        "version": "1.0",
+        "analysis_type": "viral_logic_timeline",
+        "topic": str(topic or "").strip(),
+        "platform": str(platform or "").strip(),
+        "evidence_level": "metadata",
+        "evidence_summary": "当前基于公开标题、描述和互动数据生成结构模板，未读取原视频的完整音频与画面。",
+        "summary": f"围绕“{title[:40]}”提取开头钩子、痛点展开、价值说明和行动收束四段结构。",
+        "audience": "需要快速判断内容价值的目标受众",
+        "core_tension": "用户注意力有限，需要先看到与自身相关的问题或结果。",
+        "timeline": [
+            {"start_sec": 0, "end_sec": 3, "phase": "hook", "goal": "在前三秒让目标受众意识到这和自己有关", "content_role": "问题或结果先行", "voiceover_pattern": "如果你正在面对某个具体问题……", "visual_role": "直接呈现与主题相关的真实场景或对象"},
+            {"start_sec": 3, "end_sec": 8, "phase": "pain", "goal": "把抽象痛点落到决策阻力", "content_role": "补充一个具体顾虑", "voiceover_pattern": "真正难的不是……而是……", "visual_role": "展示问题细节、对比或现场证据"},
+            {"start_sec": 8, "end_sec": 18, "phase": "value", "goal": "给出可验证的解决路径，而非空泛承诺", "content_role": "说明可以比较、沟通或验证什么", "voiceover_pattern": "到现场可以重点了解……", "visual_role": "展示产品、展位、交流或行业场景"},
+            {"start_sec": 18, "end_sec": 24, "phase": "action", "goal": "让用户知道下一步应该做什么", "content_role": "自然收束并连接行动", "voiceover_pattern": "如果这正是你在找的……", "visual_role": "回到展会主题、品牌或报名入口"},
+        ],
+        "reuse_rules": ["保留段落节奏，不复制原案例的具体句子。", "先讲受众正在面对的问题，再讲展会可以提供的验证路径。", "每个画面只服务一个口播句意。"],
+        "avoid_rules": ["不虚构规模、买家、订单、排名或效果数据。", "不把标题中的情绪词直接改写成行业事实。", "不照搬原视频文案和品牌表达。"],
+        "source_sample_ids": source_ids,
+    }
+
+
+def _normalise_viral_logic(raw: Any, topic: str, samples: list[dict[str, Any]], platform: str) -> dict[str, Any]:
+    """Constrain a model-produced logic object to the frontend contract."""
+    fallback = _fallback_viral_logic(topic, samples, platform)
+    if not isinstance(raw, dict):
+        return fallback
+    result = dict(fallback)
+    for key in ("version", "analysis_type", "evidence_level", "evidence_summary", "summary", "audience", "core_tension"):
+        if str(raw.get(key) or "").strip():
+            result[key] = str(raw[key]).strip()
+    for key in ("topic", "platform"):
+        result[key] = str(raw.get(key) or result[key] or "").strip()
+    timeline = raw.get("timeline")
+    if isinstance(timeline, list):
+        cleaned: list[dict[str, Any]] = []
+        for index, item in enumerate(timeline[:8]):
+            if not isinstance(item, dict):
+                continue
+            start = item.get("start_sec", item.get("start", 0))
+            end = item.get("end_sec", item.get("end", 0))
+            try:
+                start_value = max(0, round(float(start), 1))
+                end_value = max(start_value, round(float(end), 1))
+            except (TypeError, ValueError):
+                continue
+            cleaned.append({
+                "start_sec": start_value,
+                "end_sec": end_value,
+                "phase": str(item.get("phase") or item.get("stage") or f"segment_{index + 1}").strip(),
+                "goal": str(item.get("goal") or item.get("purpose") or "").strip(),
+                "content_role": str(item.get("content_role") or item.get("content") or "").strip(),
+                "voiceover_pattern": str(item.get("voiceover_pattern") or item.get("narrative") or "").strip(),
+                "visual_role": str(item.get("visual_role") or item.get("visual") or "").strip(),
+            })
+        if cleaned:
+            result["timeline"] = cleaned
+    for key in ("reuse_rules", "avoid_rules", "source_sample_ids"):
+        value = raw.get(key)
+        if isinstance(value, list):
+            result[key] = [str(item).strip() for item in value[:8] if str(item).strip()]
+    result["topic"] = str(topic or result.get("topic") or "").strip()
+    result["platform"] = str(platform or result.get("platform") or "").strip()
+    return result
+
+
+def generate_viral_logic(
+    samples: list[dict[str, Any]] | None = None,
+    *,
+    topic: str = "",
+    platform: str = "",
+) -> dict[str, Any]:
+    """Reverse-engineer selected public samples into a reusable timeline."""
+    samples = [item for item in (samples or []) if isinstance(item, dict)][:8]
+    snapshots = []
+    for index, item in enumerate(samples, start=1):
+        snapshots.append({
+            "index": index,
+            "id": item.get("aweme_id") or item.get("note_id") or item.get("id") or "",
+            "title": str(item.get("title") or item.get("desc") or "").strip()[:180],
+            "author": str(item.get("author") or item.get("nickname") or "").strip()[:80],
+            "likes": item.get("digg_count") or item.get("like_count") or item.get("likes") or 0,
+            "comments": item.get("comment_count") or item.get("comments") or 0,
+            "shares": item.get("share_count") or item.get("shares") or 0,
+            "url": str(item.get("url") or item.get("share_url") or "").strip()[:300],
+        })
+    if not snapshots:
+        return _fallback_viral_logic(topic, [], platform)
+    system_prompt = """
+你是短视频内容洞察员工，负责把用户选中的公开视频案例拆成可复用的“爆款逻辑时间线”。
+你只能根据输入的公开标题、描述和互动数据做结构推断；没有提供的音频、字幕、画面和事实不能假装已经识别。
+你的结果供另一个生视频员工使用，必须是结构参考，不能复制原视频文案、品牌和具体承诺。
+""".strip()
+    prompt = f"""
+请分析以下 {len(snapshots)} 条参考案例，输出一个 JSON 对象，不要输出 Markdown、解释或思考过程。
+
+当前业务主题：{str(topic or '').strip()}
+检索平台：{str(platform or '').strip()}
+参考案例：
+{json.dumps(snapshots, ensure_ascii=False, indent=2)}
+
+JSON 必须符合以下结构：
+{{
+  "version": "1.0",
+  "analysis_type": "viral_logic_timeline",
+  "evidence_level": "metadata|partial",
+  "evidence_summary": "说明依据和缺失数据",
+  "summary": "一句话总结这批案例共同的表达逻辑",
+  "audience": "主要受众",
+  "core_tension": "受众的核心决策阻力",
+  "timeline": [
+    {{
+      "start_sec": 0,
+      "end_sec": 3,
+      "phase": "hook",
+      "goal": "这一段要完成什么",
+      "content_role": "应该表达的内容角色，不要写原文",
+      "voiceover_pattern": "可泛化的句式方向，不要照抄",
+      "visual_role": "画面应该证明或承载什么"
+    }}
+  ],
+  "reuse_rules": ["可复用原则"],
+  "avoid_rules": ["不可照搬或容易误导的内容"],
+  "source_sample_ids": ["来源 ID"]
+}}
+
+要求：
+1. timeline 按视频时间顺序输出 4-6 段，时间范围从 0 秒开始并保持递增。
+2. 重点拆解开头钩子、痛点/冲突、价值说明、证据/比较、行动收束等功能，不要把它写成某个展会的成稿。
+3. 如果只有标题和互动数据，evidence_level 必须是 metadata，并在 evidence_summary 中明确说明没有完整音视频转写。
+4. 不要输出原案例的完整句子，不要虚构播放量、客户、订单、买家、品牌或政策信息。
+5. 所有字段使用简体中文，timeline 中 phase 使用 hook、pain、value、proof、action 等英文枚举。
+""".strip()
+    url = settings.text_llm_base_url.rstrip("/") + "/chat/completions"
+    payload = {
+        "model": settings.text_llm_model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt},
+        ],
+        "stream": False,
+        "enable_thinking": settings.text_llm_enable_thinking,
+        "temperature": 0.2,
+        "max_tokens": 1800,
+    }
+    response = post_json_with_retry(
+        url,
+        headers={"Authorization": f"Bearer {require_text_llm_key()}", "Content-Type": "application/json"},
+        payload=payload,
+        timeout=(8, 60),
+        attempts=3,
+    )
+    if response.status_code >= 400:
+        raise RuntimeError(f"Qwen viral logic analysis failed: HTTP {response.status_code} {response.text[:800]}")
+    try:
+        content = response.json()["choices"][0]["message"].get("content") or ""
+    except (ValueError, KeyError, IndexError, TypeError) as exc:
+        raise RuntimeError(f"Qwen viral logic analysis failed: invalid response {response.text[:800]}") from exc
+    content = str(content).strip()
+    content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content, flags=re.I).strip()
+    try:
+        start = content.find("{")
+        end = content.rfind("}")
+        raw = json.loads(content[start:end + 1]) if start >= 0 and end > start else None
+    except (TypeError, ValueError, json.JSONDecodeError):
+        raw = None
+    return _normalise_viral_logic(raw, topic, samples, platform)
+
+
 def generate_copy(
     topic: str,
     sample: dict[str, Any] | None = None,
     *,
     target_duration_seconds: int = 30,
     creative_direction: str = "",
+    reference_logic: dict[str, Any] | None = None,
 ) -> str:
     sample = sample or {}
     target_seconds = max(10, min(120, int(target_duration_seconds or 30)))
@@ -200,6 +379,7 @@ def generate_copy(
     max_chars = max(min_chars + 8, round(target_seconds * 4.0) - 10)
     min_sentences = max(3, math.ceil(min_chars / 16))
     max_sentences = max(min_sentences + 2, math.ceil(max_chars / 11))
+    logic_text = json.dumps(reference_logic, ensure_ascii=False, indent=2)[:8000] if isinstance(reference_logic, dict) else ""
     direction_label = {
         "impact": "现场冲击型：先抛出与客户、订单、资源或现场热度直接相关的结果，再说明为什么值得来",
         "trend": "行业趋势型：先指出行业机会或变化，再讲专业价值和适合谁来",
@@ -219,6 +399,8 @@ def generate_copy(
 创意方向（只用于确定表达策略，不要把它写成制作指令）：{direction_label}
 参考标题：{sample.get('title') or sample.get('desc') or ''}
 参考数据：点赞 {sample.get('digg_count') or 0}，评论 {sample.get('comment_count') or 0}，转发 {sample.get('share_count') or 0}
+参考爆款逻辑（只借鉴结构，不复制原文）：
+{logic_text or '未选择结构参考，请根据业务信息独立判断。'}
 
 写作要求：
 1. 先识别这类展会真正的目标人群、业务阻力和决策顾虑，再选择最合适的叙事结构：
@@ -233,9 +415,10 @@ def generate_copy(
 6. 语言要像专业招商人员自然说话：具体、克制、有节奏。避免“炸场、错过等一年、闭眼冲、全网最、史无前例、颠覆、赋能、生态闭环、合作商机、窗口期”等空泛词。
 7. 避免套话复用。“精准、高效、锁定、直击、聚焦、汇聚”每个词整条最多出现一次；“不是……而是……”最多一次，也可以完全不用。不要连续罗列超过三个卖点。
 8. 正文中自然提及一次输入里的展会名称或主题主语，避免全文只写“这里、本次活动”。最后一句只负责自然收束“为什么值得进一步了解”。不要写“点击、立即报名、预约、咨询、提交需求”等行动按钮文案，系统会在后续统一追加用户配置的 CTA。
-9. 输出前在内部检查：行业痛点是否专属、解决路径是否对应、是否虚构事实、是否像另一类展会换名套写。检查完成后只输出正文，不要输出检查过程。
-10. 只输出配音员要说的话。禁止输出标题、分析、解释、分镜、画面描述、镜头运动、字幕、音效、配乐、转场、场景说明、角色名或 Markdown。
-11. 禁止使用括号或方括号标注动作，例如“（镜头推进）”“【画面显示】”；不要出现“镜头切换、推近、拉远、特写、航拍、字幕出现”等制作词。
+9. 如果提供了参考爆款逻辑，只复用 timeline 的节奏和信息功能；必须替换成当前展会、当前受众和当前痛点，不能照搬句式、标题、品牌或具体事实。
+10. 输出前在内部检查：行业痛点是否专属、解决路径是否对应、是否虚构事实、是否像另一类展会换名套写。检查完成后只输出正文，不要输出检查过程。
+11. 只输出配音员要说的话。禁止输出标题、分析、解释、分镜、画面描述、镜头运动、字幕、音效、配乐、转场、场景说明、角色名或 Markdown。
+12. 禁止使用括号或方括号标注动作，例如“（镜头推进）”“【画面显示】”；不要出现“镜头切换、推近、拉远、特写、航拍、字幕出现”等制作词。
 """.strip()
     url = settings.text_llm_base_url.rstrip("/") + "/chat/completions"
     messages = [
