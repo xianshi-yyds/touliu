@@ -998,6 +998,21 @@
     .process-empty { margin-top:20px; padding:34px; border:1px dashed #d8dfe9; border-radius:14px; background:#fbfcff; color:#7d8795; font-weight:800; line-height:1.7; }
     .stage-shell, .creator-flow { padding:18px 32px 32px; }
 
+    /* 找爆款首页只保留任务核心信息，避免把实现链路铺成大段说明。 */
+    #hunter .employee-page-head { margin-bottom:10px; padding-bottom:10px !important; }
+    #hunter .employee-page-head > div:first-child > p { margin:4px 0 0; font-size:13px; line-height:1.45; }
+    #hunter .employee-tabbar { margin-bottom:12px; }
+    #hunter .process-home { min-height:0; margin:16px auto 24px; padding:18px; border-radius:14px; }
+    #hunter .process-home-head { gap:12px; padding-bottom:14px; }
+    #hunter .process-home-head h2 { margin-bottom:4px; font-size:18px; }
+    #hunter .process-home-head p { font-size:13px; line-height:1.45; }
+    #hunter .process-list { gap:8px; margin-top:14px; }
+    #hunter .process-item { gap:12px; padding:12px 14px; border-radius:12px; }
+    #hunter .process-item b { margin-bottom:4px; font-size:15px; }
+    #hunter .process-item p { font-size:12px; line-height:1.4; }
+    #hunter .process-meta { gap:7px; margin-top:7px; font-size:11px; }
+    #hunter .process-item-action { min-width:84px; font-size:13px; }
+
     /* V2 employee shell: every employee owns independent tasks, outcomes,
        inbox and capability settings. Cross-employee work is explicit handoff. */
     .employee-tabbar { display:flex; align-items:center; gap:6px; max-width:1120px; margin:0 auto 18px; padding:6px; border:1px solid #e1e6ed; border-radius:14px; background:#f7f8fa; }
@@ -1578,13 +1593,13 @@
       <section id="hunter" class="section">
   <div class="shell">
     <div class="employee-page-head">
-      <div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>找爆款员工详情</span></div><h1>找爆款员工</h1><p>独立完成平台检索、去重、内容分析和样本推荐，最终交付可复用的爆款样本包。</p></div>
+      <div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>找爆款员工详情</span></div><h1>找爆款员工</h1><p>检索、筛选并沉淀可复用的参考样本。</p></div>
       <div class="employee-head-actions"><span class="status blue">岗位：内容洞察</span><button class="primary" onclick="startNewHunterTask()">新建检索任务</button></div>
     </div>
     <div class="employee-tabbar" data-employee-tabs="hunter"><button class="active" data-employee-tab="tasks" onclick="switchEmployeeWorkspace('hunter','tasks')">任务</button><button data-employee-tab="outcomes" onclick="switchEmployeeWorkspace('hunter','outcomes')">成果</button><button data-employee-tab="inbox" onclick="switchEmployeeWorkspace('hunter','inbox')">收件箱 <span id="hunter-inbox-count">0</span></button><button data-employee-tab="settings" onclick="switchEmployeeWorkspace('hunter','settings')">账号与设备</button></div>
     <div class="creator-entry hunter-page active" data-hunter-page="menu">
       <div class="process-home">
-        <div class="process-home-head"><div><h2>抓取进程与历史记录</h2><p>这里显示正在抓取的任务和过往抓取结果。点击任务进入对应进程，完成后进入推荐样本画廊。</p></div><button onclick="loadTasks()">刷新进程</button></div>
+        <div class="process-home-head"><div><h2>检索任务</h2><p>查看进行中的检索和历史样本，完成后进入样本画廊。</p></div><button onclick="loadTasks()">刷新</button></div>
         <div id="hunter-process-overview"></div>
       </div>
     </div>
@@ -5022,12 +5037,12 @@
         const empty = isEmptyHunterTask(task);
         const localBrowser = task.payload?.execution === 'browser_extension';
         const description = running
-          ? `${task.status === 'queued' ? '任务已排队，' : ''}${localBrowser ? '目标主机 Chrome 正在使用当前抖音账号抓取；' : '员工正在服务器后台检索、去重、计算互动分并补全封面；'}离开本页面不会中断。`
+          ? `${task.status === 'queued' ? '排队中 · ' : ''}${localBrowser ? '目标主机抓取中' : '服务器检索中'} · 离开页面不影响执行。`
           : empty
-            ? '检索流程已执行完毕，但没有找到匹配视频；换一个更宽泛的关键词后可重新执行。'
+            ? '未找到匹配视频，可调整关键词后重试。'
           : task.status === 'succeeded'
-            ? `已产出 ${count} 个参考样本，点击进入推荐样本画廊。`
-            : '任务执行未完成，点击查看后可重新提交。';
+            ? `已找到 ${count} 条参考样本，可进入画廊选择。`
+            : '任务未完成，可查看状态并重新执行。';
         const statusClass = empty ? 'queued' : task.status || '';
         const statusLabel = empty ? '已完成·0条' : taskStateText(task.status);
         return `<button class="process-item" onclick="openHunterProcessTask(${index})"><div><b>${index + 1}. ${escapeHtml(keyword)}</b><p>${escapeHtml(description)}</p><div class="process-meta"><span class="status ${escapeAttr(statusClass)}">${escapeHtml(statusLabel)}</span><span>${escapeHtml(platformLabel(task.payload?.platform || 'douyin'))}</span><span>${escapeHtml(task.created_at || '')}</span></div></div><span class="process-item-action">${task.status === 'succeeded' && count ? '查看样本 →' : '查看进程 →'}</span></button>`;
