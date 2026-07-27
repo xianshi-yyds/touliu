@@ -3288,7 +3288,11 @@
       const m = Math.floor(sec / 60), s = sec % 60;
       return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     }
-    function syncStudioExpoInfo() { /* 展会信息即时保存，无需额外动作，生成时读取 */ }
+    function syncStudioExpoInfo() {
+      const topic = studioExpoTopic();
+      const hiddenTopic = document.getElementById('creator-studio-topic');
+      if (hiddenTopic) hiddenTopic.value = topic;
+    }
     function studioExpoTopic() {
       const exhibitionName = valueOf('cs-exhibition-name'), category = valueOf('cs-exhibition-category');
       const parts = [];
