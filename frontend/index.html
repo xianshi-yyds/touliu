@@ -734,7 +734,7 @@
     .caption-design-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
     .caption-design-head label { margin:0; color:#3c424c; font-size:13px; font-weight:900; }
     .caption-design-head small { color:#929aa6; font-size:11px; }
-    .caption-preset-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:7px; }
+    .caption-preset-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
     .caption-font-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
     .caption-animation-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
     .caption-option { min-height:48px; padding:9px 10px; text-align:left; border:1px solid #dfe3ea; border-radius:10px; background:#fff; cursor:pointer; }
@@ -742,13 +742,19 @@
     .caption-option.active { border-color:#17191f; box-shadow:0 0 0 2px rgba(23,25,31,.08); background:#f8f9fb; }
     .caption-option b { display:block; color:#17191f; margin:0; font-size:13px; }
     .caption-option small { display:block; margin-top:2px; line-height:1.35; color:#858e9c; font-size:10px; }
-    .caption-preset-option { display:flex; align-items:center; gap:7px; min-width:0; }
-    .caption-preset-swatch { width:22px; height:22px; flex:0 0 22px; border-radius:6px; background:#20242b; border:1px solid rgba(0,0,0,.12); position:relative; overflow:hidden; }
-    .caption-preset-swatch::after { content:"字"; position:absolute; inset:0; display:grid; place-items:center; color:#fff; font-size:11px; font-weight:900; text-shadow:1px 1px #000; }
+    .caption-preset-option { min-width:0; min-height:0; aspect-ratio:1 / 1; padding:6px 4px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-align:center; border-radius:11px; }
+    .caption-preset-option > span:last-child { display:block; min-width:0; max-width:100%; }
+    .caption-preset-option b { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; line-height:1.15; }
+    .caption-preset-option small { display:none; }
+    .caption-preset-swatch { width:31px; height:31px; flex:0 0 31px; border-radius:8px; background:#20242b; border:1px solid rgba(0,0,0,.12); position:relative; overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,.04); }
+    .caption-preset-swatch::after { content:"字"; position:absolute; inset:0; display:grid; place-items:center; color:#fff; font-size:13px; font-weight:950; text-shadow:1px 1px #000; }
+    .caption-preset-option[data-caption-template="viral"] .caption-preset-swatch::after { content:"爆"; }
     .caption-preset-option[data-caption-template="business"] .caption-preset-swatch::after { color:#57c8ff; }
+    .caption-preset-option[data-caption-template="business"] .caption-preset-swatch::after { content:"专"; }
     .caption-preset-option[data-caption-template="minimal"] .caption-preset-swatch { background:rgba(25,31,41,.72); }
-    .caption-preset-option[data-caption-template="energetic"] .caption-preset-swatch::after { color:#ff8731; }
-    .caption-preset-option[data-caption-template="pycaps_hype"] .caption-preset-swatch::after { color:#ffd400; transform:scale(1.12); }
+    .caption-preset-option[data-caption-template="minimal"] .caption-preset-swatch::after { content:"卡"; color:#fff; }
+    .caption-preset-option[data-caption-template="energetic"] .caption-preset-swatch::after { content:"行"; color:#ff8731; }
+    .caption-preset-option[data-caption-template="pycaps_hype"] .caption-preset-swatch::after { content:"高"; color:#ffd400; transform:scale(1.12); }
     .caption-font-option { min-height:66px; text-align:center; padding:8px; }
     .caption-font-sample { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#17191f; font-size:19px; line-height:1.25; }
     .caption-font-option small { margin-top:4px; }
@@ -4034,7 +4040,7 @@
     }
     function captionBasicPanelHtml() {
       const s = captionPreviewState;
-      const presets = Object.entries(captionPreviewTemplates).map(([key, item]) => `<button class="caption-option caption-preset-option ${key === s.template ? 'active' : ''}" onclick="selectCaptionPreviewTemplate('${key}')"><span class="caption-preset-swatch"></span><span><b>${escapeHtml(item.label)}</b><small>${escapeHtml(item.description)}</small></span></button>`).join('');
+      const presets = Object.entries(captionPreviewTemplates).map(([key, item]) => `<button class="caption-option caption-preset-option ${key === s.template ? 'active' : ''}" data-caption-template="${escapeAttr(key)}" aria-label="${escapeAttr(`${item.label}：${item.description}`)}" title="${escapeAttr(`${item.label}：${item.description}`)}" onclick="selectCaptionPreviewTemplate('${key}')"><span class="caption-preset-swatch" aria-hidden="true"></span><span><b>${escapeHtml(item.label)}</b><small>${escapeHtml(item.description)}</small></span></button>`).join('');
       const fonts = Object.entries(captionFontTypes).map(([key, item]) => `<button class="caption-option caption-font-option ${key === s.fontType ? 'active' : ''}" onclick="selectCaptionPreviewFont('${key}')" title="${escapeAttr(item.family)}"><span class="caption-font-sample font-sample-${escapeAttr(key)}">国际新能源展</span><small>${escapeHtml(item.label)}</small></button>`).join('');
       const anims = Object.entries(captionPreviewAnimations).map(([key, item]) => `<button class="caption-option caption-animation-option ${key === s.animation ? 'active' : ''}" onclick="selectCaptionPreviewAnimation('${key}')"><b>${escapeHtml(item.label)}</b></button>`).join('');
       const aligns = ['left','center','right'];
