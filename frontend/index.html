@@ -1204,12 +1204,17 @@
     .creator-reference-head button { min-height:26px; padding:0 8px; border:1px solid #d8e0ec; border-radius:7px; background:#fff; color:#5e6a7b; font-size:11px; font-weight:850; }
     .creator-reference-list { display:grid; gap:7px; max-height:180px; overflow:auto; }
     .creator-reference-empty { padding:10px; border:1px dashed #cfd8e5; border-radius:8px; color:#8791a0; font-size:11px; line-height:1.5; background:#fff; }
+    .creator-reference-group { display:grid; gap:5px; }
     .creator-reference-card { width:100%; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:9px 10px; border:1px solid #dfe5ee; border-radius:9px; background:#fff; text-align:left; cursor:pointer; }
     .creator-reference-card:hover { border-color:#aab7ca; }
     .creator-reference-card.active { border-color:#17191f; box-shadow:0 0 0 2px rgba(23,25,31,.08); }
     .creator-reference-card b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#252a33; font-size:12px; }
     .creator-reference-card p { margin:3px 0 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#7d8795; font-size:10px; line-height:1.4; }
     .creator-reference-card > span { color:#657185; font-size:10px; font-weight:850; white-space:nowrap; }
+    .creator-reference-samples { display:grid; gap:4px; padding-left:8px; }
+    .creator-reference-sample { display:block; width:100%; padding:6px 8px; border:1px solid #e4e8ef; border-radius:7px; background:#fff; color:#707b8b; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
+    .creator-reference-sample:hover { border-color:#aab7ca; }
+    .creator-reference-sample.active { border-color:#17191f; color:#242a34; font-weight:900; }
     .creator-reference-logic { margin-top:7px; padding:8px 9px; border-radius:8px; background:#fff; color:#69778a; font-size:10px; line-height:1.5; }
     .creator-reference-logic strong { color:#303845; }
     .creator-studio-inline { display:grid; grid-template-columns:minmax(0,1fr) 112px; gap:8px; margin-top:10px; }
@@ -1963,6 +1968,7 @@
     let latestSamples = [];
     let latestArtifacts = [];
     let selectedCreatorReferenceArtifact = null;
+    let selectedCreatorReferenceSampleIndex = 0;
     let latestHandoffs = [];
     let pendingHandoff = null;
     const employeeWorkspace = {hunter:'tasks', creator:'tasks', buyer:'tasks'};
@@ -2844,19 +2850,26 @@
         const active = selectedCreatorReferenceArtifact?.id === item.id;
         const logicSummary = logic?.summary || item.summary || '已保存参考案例';
         const timelineCount = Array.isArray(logic?.timeline) ? logic.timeline.length : 0;
-        return `<button type="button" class="creator-reference-card${active ? ' active' : ''}" onclick="selectCreatorReferenceArtifact('${escapeAttr(item.id)}')"><span><b>${escapeHtml(item.title || item.data?.keyword || '未命名爆款逻辑')}</b><p>${escapeHtml(String(logicSummary).slice(0, 80))}</p></span><span>${samples.length} 条案例${timelineCount ? ` · ${timelineCount} 段时间线` : ''}</span></button>`;
+        const sampleButtons = samples.slice(0, 5).map((sample, sampleIndex) => {
+          const title = String(sample.title || sample.desc || `案例 ${sampleIndex + 1}`).replace(/\s+/g, ' ').trim();
+          const sampleActive = active && selectedCreatorReferenceSampleIndex === sampleIndex;
+          return `<button type="button" class="creator-reference-sample${sampleActive ? ' active' : ''}" onclick="selectCreatorReferenceArtifact('${escapeAttr(item.id)}',${sampleIndex})">${sampleActive ? '✓ ' : ''}案例 ${sampleIndex + 1} · ${escapeHtml(title.slice(0, 42))}</button>`;
+        }).join('');
+        return `<div class="creator-reference-group"><button type="button" class="creator-reference-card${active ? ' active' : ''}" onclick="selectCreatorReferenceArtifact('${escapeAttr(item.id)}',0)"><span><b>${escapeHtml(item.title || item.data?.keyword || '未命名爆款逻辑')}</b><p>${escapeHtml(String(logicSummary).slice(0, 80))}</p></span><span>${samples.length} 条案例${timelineCount ? ` · ${timelineCount} 段时间线` : ''}</span></button>${sampleButtons ? `<div class="creator-reference-samples">${sampleButtons}</div>` : ''}</div>`;
       }).join('');
       const logic = hunterLogicForArtifact(selectedCreatorReferenceArtifact);
-      const logicPreview = logic ? `<div class="creator-reference-logic"><strong>已选结构：</strong>${escapeHtml(String(logic.summary || '已生成爆款逻辑'))}${Array.isArray(logic.timeline) ? ` · ${logic.timeline.length} 段时间线` : ''}</div>` : '';
+      const selectedTitle = selectedSample?.title || selectedSample?.desc || '';
+      const logicPreview = logic ? `<div class="creator-reference-logic"><strong>已选案例：</strong>${escapeHtml(String(selectedTitle).slice(0, 54) || '代表案例')}<br><strong>结构：</strong>${escapeHtml(String(logic.summary || '已生成爆款逻辑'))}${Array.isArray(logic.timeline) ? ` · ${logic.timeline.length} 段时间线` : ''}</div>` : '';
       box.innerHTML = `<div class="creator-reference-list">${cards}</div>${logicPreview}`;
     }
-    function selectCreatorReferenceArtifact(artifactId) {
+    function selectCreatorReferenceArtifact(artifactId, sampleIndex = 0) {
       const artifact = recordsForCurrentExpo(latestArtifacts).find(item => item.id === artifactId && item.employee === 'hunter' && item.type === 'sample_pack');
       if (!artifact) return notify('找不到这条爆款逻辑成果，请刷新后重试', 'error');
       selectedCreatorReferenceArtifact = artifact;
       activeCreatorSourceArtifactId = artifact.id || '';
       const samples = Array.isArray(artifact.data?.samples) ? artifact.data.samples : [];
-      selectedSample = samples[0] || null;
+      selectedCreatorReferenceSampleIndex = samples.length ? Math.max(0, Math.min(samples.length - 1, Number(sampleIndex) || 0)) : 0;
+      selectedSample = samples[selectedCreatorReferenceSampleIndex] || null;
       const topic = String(artifact.data?.keyword || '').trim();
       const studioTopic = document.getElementById('creator-studio-topic');
       const briefSubject = document.getElementById('brief-subject');
@@ -2867,6 +2880,7 @@
     }
     function clearCreatorReference() {
       selectedCreatorReferenceArtifact = null;
+      selectedCreatorReferenceSampleIndex = 0;
       activeCreatorSourceArtifactId = '';
       selectedSample = null;
       renderCreatorReferencePicker();
@@ -3093,6 +3107,7 @@
       startNewCreatorTask();
       activeCreatorSourceArtifactId = artifact.id || '';
       selectedCreatorReferenceArtifact = artifact.type === 'sample_pack' ? artifact : null;
+      selectedCreatorReferenceSampleIndex = 0;
       const samples = artifact.data?.samples || [];
       selectedSample = samples[0] || null;
       const topic = artifact.data?.keyword || artifact.title || '';
@@ -3112,6 +3127,7 @@
     function useCreatorBlankSource() {
       selectedSample = null;
       selectedCreatorReferenceArtifact = null;
+      selectedCreatorReferenceSampleIndex = 0;
       activeCreatorSourceArtifactId = '';
       renderCreatorReferencePicker();
       chooseCreatorDirection('impact');
@@ -3124,6 +3140,7 @@
       if (!url) return;
       selectedSample = {url, title:'手动参考视频'};
       selectedCreatorReferenceArtifact = null;
+      selectedCreatorReferenceSampleIndex = 0;
       activeCreatorSourceArtifactId = '';
       renderCreatorReferencePicker();
       notify('参考链接已加入当前视频任务。');
@@ -3131,6 +3148,7 @@
     function focusCreatorMaterials() {
       selectedSample = null;
       selectedCreatorReferenceArtifact = null;
+      selectedCreatorReferenceSampleIndex = 0;
       activeCreatorSourceArtifactId = '';
       renderCreatorReferencePicker();
       chooseCreatorInputMode('manual');
@@ -3199,6 +3217,7 @@
       creatorCompletedSteps.clear();
       selectedSample = null;
       selectedCreatorReferenceArtifact = null;
+      selectedCreatorReferenceSampleIndex = 0;
       activeCreatorSourceArtifactId = '';
 
       ['copy-topic','brief-subject','brief-audience','brief-pain','brief-selling','brief-tone','cs-exhibition-name','cs-exhibition-category','manual-copy-input','final-copy','creator-studio-topic','creator-studio-script','competitor-dir','highlight-words','batch-copy-list','publish-video'].forEach(id => {
