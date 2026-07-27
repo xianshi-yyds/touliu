@@ -1245,6 +1245,7 @@
     /* ============ 智能成片 · 屏A 浅色合成器（布局对齐参考，配色对齐整站） ============ */
     #creator-studio-compose.cs-shell { background:transparent; border:none; border-radius:0; padding:0; color:var(--ink); overflow:visible; }
     #creator-studio-compose .cs-topbar { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:0 2px 16px; flex-wrap:wrap; }
+    #creator-studio-compose .cs-topbar.cs-topbar-compact { justify-content:flex-end; padding-bottom:10px; }
     #creator-studio-compose .cs-topbar h2 { margin:0; font-size:18px; color:var(--ink); font-weight:850; }
     #creator-studio-compose .cs-topbar .cs-topbar-sub { margin:4px 0 0; color:var(--muted); font-size:12.5px; }
     #creator-studio-compose .cs-topbar-actions { display:flex; gap:8px; }
@@ -1658,8 +1659,7 @@
     <div class="employee-tabbar" data-employee-tabs="creator"><button class="active" data-employee-tab="tasks" onclick="switchEmployeeWorkspace('creator','tasks')">任务</button><button data-employee-tab="outcomes" onclick="switchEmployeeWorkspace('creator','outcomes')">成果</button></div><span id="creator-inbox-count" style="display:none">0</span>
     <div class="creator-entry creator-page active" data-creator-page="menu">
       <div id="creator-studio-compose" class="creator-studio-shell cs-shell">
-        <div class="cs-topbar">
-          <div><h2>智能成片</h2><p class="cs-topbar-sub">填写展会信息与脚本，勾选素材片段，一键生成成片；生成完成后进入字幕编辑。</p></div>
+        <div class="cs-topbar cs-topbar-compact" aria-label="视频创作记录">
           <div class="cs-topbar-actions"><button onclick="loadTasks()">⟳ 刷新记录</button><button onclick="setCreatorTab('history')">查看全部历史</button></div>
         </div>
         <div class="cs-two">
@@ -1668,7 +1668,6 @@
               <!-- 1. 展会信息（替代参考的“添加商品”） -->
               <div class="cs-block">
                 <div class="cs-block-head"><h3>展会信息 <small>选填</small></h3><span class="badge-violet">✨ 自动生成口播稿</span></div>
-                <p class="cs-hint">填写后 AI 会站在主办方角度，围绕展会名称和展会类别生成更贴合的口播稿；也可直接跳到脚本区粘贴文案。</p>
                 <div class="cs-grid2">
                   <div><label class="cs-label">展会名</label><input id="cs-exhibition-name" placeholder="例如：华南国际新能源产业展" oninput="syncStudioExpoInfo()"></div>
                   <div><label class="cs-label">展会类别</label><input id="cs-exhibition-category" placeholder="例如：新能源产业 / B2B 专业展" oninput="syncStudioExpoInfo()"></div>
@@ -1684,7 +1683,6 @@
                   <button class="active" data-studio-source="local" onclick="selectCreatorStudioMaterial('local')">📁 本地素材库</button>
                   <button data-studio-source="pexels" onclick="selectCreatorStudioMaterial('pexels')">🌐 网络检索</button>
                 </div>
-                <p class="cs-hint" style="margin:10px 0 8px">勾选要用的片段（按点击顺序拼接）；总时长需 10s~10min。</p>
                 <div id="cs-material-grid" class="cs-material-grid">
                   <div class="cs-add-tile" onclick="showMaterialLibrary('creator')">＋</div>
                 </div>
@@ -5878,26 +5876,18 @@
         const restoreIndex = items.indexOf(base);
         const baseSummary = base.result?.summary || {};
         const displaySummary = displayTask.result?.summary || baseSummary;
-        const materialInfo = base.result?.material || {};
-        const visualPlan = materialInfo.visual_plan || {};
-        const source = ['pexels','pixabay'].includes(base.payload?.material_source) ? '网络检索' : '当前展会素材库';
         const title = base.payload?.topic || base.payload?.keyword || '未命名推广视频';
-        const projectId = projectIdOf(base) || base.id;
         const successfulVariants = related.filter(item => item.status === 'succeeded');
-        const failedVariants = related.filter(item => item.status === 'failed');
         const saved = Boolean(base.saved_to_video_package || related.some(item => item.saved_to_video_package));
         const hasDraft = Boolean(baseSummary.caption_timeline?.length && baseSummary.audio_file && (baseSummary.preview_base_url || baseSummary.base_video || baseSummary.combined_video));
         const editable = base.status === 'succeeded' && !saved && base.editable_captions !== false && hasDraft;
         const statusClass = base.status === 'succeeded' ? 'succeeded' : 'failed';
         const statusText = saved ? '已保存成果' : base.status === 'failed' ? '生成失败' : successfulVariants.length ? '已有最终成片' : '字幕草稿';
-        const versionText = `1 个基底草稿 · ${successfulVariants.length} 个字幕版本${failedVariants.length ? ` · ${failedVariants.length} 次失败` : ''}`;
-        const detail = base.status === 'failed'
-          ? (base.error || '后台任务失败，请重试')
-          : `${versionText} · ${source}${visualPlan.industry ? ` · ${visualPlan.industry}分镜素材` : ''} · ${base.payload?.voice || '默认音色'}`;
+        const detail = base.status === 'failed' ? '生成失败，可重新生成' : '';
         const preview = (displaySummary.preview_url || displaySummary.preview_base_url) ? `<button class="primary" onclick="previewCreatorVersion(${previewIndex})">打开项目</button>` : '';
         const retry = base.status === 'failed' ? `<button onclick="retryTask(${restoreIndex})">重试</button>` : '';
-        return `<div class="history-item"><div><b>${escapeHtml(String(title).slice(0,100))}</b><span class="status ${statusClass}" style="margin-left:8px">${escapeHtml(statusText)}</span><span class="status ${saved ? 'queued' : editable ? 'succeeded' : ''}" style="margin-left:8px">${saved ? '只读成果' : editable ? '字幕可继续编辑' : '仅可查看'}</span><p>${escapeHtml(base.created_at || '')} · 项目 ${escapeHtml(String(projectId).slice(-12))}</p><p>${escapeHtml(detail)}</p></div><div class="actions">${preview}<button onclick="restoreCreatorVersion(${restoreIndex})">复制参数新建</button>${retry}</div></div>`;
-      }).join('') : '<div class="result-empty">暂无视频项目。生成第一条视频后，基底草稿与字幕版本会归在同一个项目中。</div>';
+        return `<div class="history-item"><div><b>${escapeHtml(String(title).slice(0,100))}</b><span class="status ${statusClass}" style="margin-left:8px">${escapeHtml(statusText)}</span><span class="status ${saved ? 'queued' : editable ? 'succeeded' : ''}" style="margin-left:8px">${saved ? '只读成果' : editable ? '字幕可继续编辑' : '仅可查看'}</span>${detail ? `<p>${escapeHtml(detail)}</p>` : ''}</div><div class="actions">${preview}<button onclick="restoreCreatorVersion(${restoreIndex})">复制参数新建</button>${retry}</div></div>`;
+      }).join('') : '<div class="result-empty">暂无视频项目。生成第一条视频后，历史记录会显示在这里。</div>';
       boxes.forEach(box => box.innerHTML = html);
     }
     function previewCreatorVersion(index) {
