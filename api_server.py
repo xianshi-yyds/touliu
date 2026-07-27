@@ -941,6 +941,7 @@ def public_config() -> dict[str, Any]:
         "dashscope_configured": bool(dashscope_status.get("valid")),
         "dashscope_status": dashscope_status.get("status"),
         "material_count": len(materials),
+        "online_stock_configured": bool(settings.pexels_api_key),
         "moneyprint_stock_configured": bool(settings.pexels_api_key),
         "pixabay_stock_configured": bool(settings.pixabay_api_key),
         "ffmpeg_configured": bool(shutil.which("ffmpeg") and shutil.which("ffprobe")),

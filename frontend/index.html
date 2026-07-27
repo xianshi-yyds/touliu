@@ -1353,19 +1353,19 @@
     @media (max-width: 760px) { .creator-studio-shell,.creator-studio-editor { width:calc(100% - 28px); } .creator-studio-grid { grid-template-columns:1fr; } .creator-studio-panel { min-height:auto; } .creator-studio-history { grid-template-columns:1fr; max-height:360px; } .creator-studio-editor-head { align-items:flex-start; flex-direction:column; } .creator-caption-editor.caption-preview-shell { grid-template-columns:1fr; } .creator-caption-editor .caption-preview-stage,.creator-caption-editor .caption-preview-controls { grid-column:1; grid-row:auto; } }
     @media (max-width: 760px) { .creator-caption-script textarea { min-height:240px; } }
 
-    /* ============ 字幕编辑弹窗 · 屏B（布局对齐参考，配色对齐整站） ============ */
-    #creator-studio-editor:not(.hidden) { position:fixed; inset:0; z-index:120; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(30,33,40,.42); backdrop-filter:blur(3px); overflow:auto; }
-    #creator-studio-editor:not(.hidden) > * { width:100%; max-width:1180px; }
-    #creator-studio-editor .creator-studio-editor-head { display:none; }
-    #creator-studio-editor #render-preview { background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:0 24px 70px rgba(20,24,32,.28); color:var(--ink); }
+    /* ============ 成片编辑工作台 · 屏B（嵌入展会页面，不再使用遮罩弹窗） ============ */
+    #creator-studio-editor:not(.hidden) { position:relative; inset:auto; z-index:auto; display:block; width:100%; max-width:none; margin:22px 0 34px; padding:0; background:transparent; backdrop-filter:none; overflow:visible; }
+    #creator-studio-editor:not(.hidden) > * { width:100%; max-width:none; }
+    #creator-studio-editor .creator-studio-editor-head { display:flex; }
+    #creator-studio-editor #render-preview { background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:0 12px 34px rgba(20,24,32,.10); color:var(--ink); }
     #creator-studio-editor #render-preview.result-empty { min-height:420px; display:grid; place-items:center; color:var(--muted); }
-    .cap-editor { display:grid; grid-template-columns:76px minmax(180px,240px) minmax(300px,1fr) minmax(300px,360px); grid-template-rows:1fr auto; min-height:540px; max-height:calc(100vh - 56px); }
+    .cap-editor { display:grid; grid-template-columns:76px minmax(180px,240px) minmax(300px,1fr) minmax(300px,360px); grid-template-rows:minmax(0,1fr) auto; height:min(720px,calc(100vh - 180px)); min-height:520px; }
     /* 三栏：左文案 / 中视频 / 右字体样式 */
-    .cap-editor-3 { grid-template-columns:minmax(220px,290px) minmax(300px,1fr) minmax(280px,340px); }
+    .cap-editor-3 { grid-template-columns:minmax(240px,300px) minmax(340px,1fr) minmax(320px,380px); }
     .cap-editor > .cap-footer { grid-column:1/-1; }
     @media (max-width:1080px){ .cap-editor-3 { grid-template-columns:minmax(200px,1fr) 1.25fr; } .cap-editor .cap-controls { grid-column:1/-1; grid-row:2; } .cap-editor > .cap-footer { grid-row:3; } }
     /* 左：文案列 */
-    .cap-copy { display:flex; flex-direction:column; gap:8px; padding:16px 14px; border-right:1px solid var(--line); min-height:0; overflow:auto; }
+    .cap-copy { display:flex; flex-direction:column; gap:8px; padding:18px 16px; border-right:1px solid var(--line); min-height:0; overflow:auto; }
     .cap-copy-text { flex:0 0 auto; min-height:140px; background:#fff; border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:11px; font-size:13px; line-height:1.85; font-family:inherit; resize:vertical; }
     .cap-copy-text:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft); }
     .cap-copy-meta { display:flex; justify-content:space-between; color:var(--muted); font-size:11.5px; font-weight:700; }
@@ -1380,7 +1380,7 @@
     .cap-line-row.is-current { background:var(--blue-soft); border-color:#c7cdff; color:var(--blue); font-weight:800; }
     .cap-line-row .cap-line-time { display:block; margin-top:2px; color:var(--faint); font-size:10.5px; font-weight:700; }
     /* 中列预览舞台 */
-    .cap-stage { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; border-right:1px solid var(--line); background:var(--soft); overflow:auto; }
+    .cap-stage { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:24px; border-right:1px solid var(--line); background:var(--soft); min-width:0; min-height:0; overflow:auto; }
     #creator-studio-editor .caption-preview-stage { border:none; background:none; padding:0; }
     #creator-studio-editor .caption-preview-video-wrap { width:min(100%,260px); box-shadow:0 10px 30px rgba(20,24,32,.18); }
     #creator-studio-editor .caption-preview-video { object-fit:contain; background:transparent; }
@@ -1390,7 +1390,7 @@
     .cap-play { width:34px; height:34px; border-radius:50%; border:none; background:var(--ink); color:#fff; font-size:13px; cursor:pointer; }
     .cap-show-cap { display:inline-flex; align-items:center; gap:8px; color:#57606f; font-size:12px; font-weight:800; }
     /* 右列样式面板 */
-    .cap-controls { padding:16px 16px 6px; overflow:auto; }
+    .cap-controls { padding:18px 18px 8px; min-width:0; min-height:0; overflow:auto; }
     .cap-controls .cap-panel-title { margin:0 0 3px; font-size:15px; color:var(--ink); font-weight:850; }
     .cap-controls .cap-panel-sub { margin:0 0 14px; font-size:11.5px; color:var(--muted); }
     .cap-controls .cap-apply-all { display:flex; align-items:center; gap:8px; margin-bottom:14px; color:#4a5261; font-size:12.5px; font-weight:700; }
@@ -1423,6 +1423,21 @@
     /* 配音/文案工具面板 */
     #creator-studio-editor .cap-controls .creator-caption-script { display:block; }
     #creator-studio-editor .cap-controls textarea#creator-editor-script { width:100%; min-height:160px; background:#fff; border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:13px; }
+    @media (max-width:1080px) {
+      #creator-studio-editor:not(.hidden) { margin-top:18px; }
+      .cap-editor { height:auto; min-height:0; }
+      .cap-editor .cap-controls { max-height:480px; }
+    }
+    @media (max-width:760px) {
+      #creator-studio-editor:not(.hidden) { margin:14px 0 24px; }
+      #creator-studio-editor .creator-studio-editor-head { margin-bottom:10px; }
+      .cap-editor-3 { grid-template-columns:1fr; height:auto; }
+      .cap-editor .cap-copy,
+      .cap-editor .cap-stage,
+      .cap-editor .cap-controls { grid-column:1; grid-row:auto; border-right:none; border-bottom:1px solid var(--line); max-height:none; }
+      .cap-editor .cap-stage { min-height:500px; }
+      .cap-editor > .cap-footer { grid-column:1; grid-row:auto; }
+    }
 
   </style>
 </head>
@@ -1516,7 +1531,7 @@
         </div>
         <div class="employee-tile figma-staff-card" data-staff-card="creator" onclick="openEmployeeDetail('creator')">
           <img class="figma-staff-avatar" src="assets/figma-sync/employee-green-crop.png" alt="生视频员工">
-          <div class="figma-staff-copy"><span class="figma-work-status" id="creator-status">工作中</span><h2>生视频员工</h2><p class="staff-space-name">杭州国际数字人展会</p><span class="figma-role-pill">🎬 视频运营</span><div class="figma-card-line"></div><div class="figma-bound-row">素材库：本地 / MoneyPrinter</div></div>
+          <div class="figma-staff-copy"><span class="figma-work-status" id="creator-status">工作中</span><h2>生视频员工</h2><p class="staff-space-name">杭州国际数字人展会</p><span class="figma-role-pill">🎬 视频运营</span><div class="figma-card-line"></div><div class="figma-bound-row">素材库：本地 / 网络检索</div></div>
         </div>
         <div class="employee-tile figma-staff-card" data-staff-card="buyer" onclick="openEmployeeDetail('buyer')">
           <img class="figma-staff-avatar" src="assets/figma-sync/employee-blue-crop.png" alt="投放员工">
@@ -1611,29 +1626,28 @@
             <div class="cs-composer-scroll">
               <!-- 1. 展会信息（替代参考的“添加商品”） -->
               <div class="cs-block">
-                <div class="cs-block-head"><h3>展会信息 <small>选填</small></h3><span class="badge-violet">✨ 自动生成卖点</span></div>
-                <p class="cs-hint">填写后 AI 会围绕展位与主推产品生成更贴合的口播稿；也可直接跳到脚本区粘贴文案。</p>
+                <div class="cs-block-head"><h3>展会信息 <small>选填</small></h3><span class="badge-violet">✨ 自动生成口播稿</span></div>
+                <p class="cs-hint">填写后 AI 会站在主办方角度，围绕展会名称和展会类别生成更贴合的口播稿；也可直接跳到脚本区粘贴文案。</p>
                 <div class="cs-grid2">
-                  <div><label class="cs-label">展位号 / 展位名</label><input id="cs-booth" placeholder="例如：A2 馆 T18"></div>
-                  <div><label class="cs-label">主推产品</label><input id="cs-product" placeholder="例如：360kW 液冷超充桩"></div>
+                  <div><label class="cs-label">展会名</label><input id="cs-exhibition-name" placeholder="例如：华南国际新能源产业展" oninput="syncStudioExpoInfo()"></div>
+                  <div><label class="cs-label">展会类别</label><input id="cs-exhibition-category" placeholder="例如：新能源产业 / B2B 专业展" oninput="syncStudioExpoInfo()"></div>
                 </div>
-                <div style="margin-top:10px"><label class="cs-label">关键卖点 <small>逗号分隔</small></label><textarea id="cs-selling" style="min-height:60px" placeholder="例如：现场比价、对接采购决策人、可预约实测" oninput="syncStudioExpoInfo()"></textarea></div>
                 <div style="margin-top:12px"><button class="cs-linkbtn" onclick="generateStudioSellingScript()">✨ 用展会信息生成口播稿 →</button></div>
               </div>
 
               <!-- 2. 素材内容 -->
               <div class="cs-block">
                 <div class="cs-block-head"><h3>素材来源</h3><div class="cs-block-tools"><button class="cs-linkbtn" onclick="showMaterialLibrary('creator')">↗ 去素材库上传</button><button class="cs-linkbtn" onclick="clearStudioClips()">🗑 清空</button></div></div>
-                <p class="cs-hint">选择走本地素材库（你上传的素材）还是 MoneyPrinter 在线素材。</p>
+                <p class="cs-hint">选择走当前展会的本地素材库，还是通过网络检索获取通用补充素材。</p>
                 <div class="cs-source-toggle cs-source-binary">
                   <button class="active" data-studio-source="local" onclick="selectCreatorStudioMaterial('local')">📁 本地素材库</button>
-                  <button data-studio-source="pexels" onclick="selectCreatorStudioMaterial('pexels')">🌐 MoneyPrinter 在线</button>
+                  <button data-studio-source="pexels" onclick="selectCreatorStudioMaterial('pexels')">🌐 网络检索</button>
                 </div>
                 <p class="cs-hint" style="margin:10px 0 8px">勾选要用的片段（按点击顺序拼接）；总时长需 10s~10min。</p>
                 <div id="cs-material-grid" class="cs-material-grid">
                   <div class="cs-add-tile" onclick="showMaterialLibrary('creator')">＋</div>
                 </div>
-                <div id="cs-material-online" class="cs-hint" style="display:none;margin-top:10px">MoneyPrinter 在线素材：生成时按脚本主题自动搜索通用补充素材，无需手动挑选，不写入你的素材库。</div>
+                <div id="cs-material-online" class="cs-hint" style="display:none;margin-top:10px">网络检索素材：生成时按脚本主题自动搜索通用补充素材，无需手动挑选，不写入你的素材库。</div>
                 <div id="cs-material-total" class="cs-material-total">未选择素材片段</div>
                 <div id="creator-studio-material-summary" class="creator-material-summary" style="display:none"></div>
               </div>
@@ -1683,7 +1697,7 @@
         </div>
       </div>
       <div id="creator-studio-editor" class="creator-studio-editor hidden">
-        <div class="creator-studio-editor-head"><div><button class="back-link" onclick="setCreatorStudioMode('compose')">← 返回创作工作台</button><h2>字幕编辑</h2><p>左侧文案，中间预览，右侧调整字幕样式；确认后再生成最终成片。</p></div><div class="actions"><button onclick="setCreatorTab('history')">查看历史版本</button></div></div>
+        <div class="creator-studio-editor-head"><div><button class="back-link" onclick="setCreatorStudioMode('compose')">← 返回智能成片</button><h2>编辑成片</h2><p>同一展会内直接编辑文案和字幕样式，确认后再生成最终版本。</p></div><div class="actions"><button onclick="setCreatorTab('history')">查看历史版本</button></div></div>
         <div id="render-preview" class="result-empty">视频草稿完成后会出现在这里。</div>
       </div>
       <div id="creator-process-overview" class="hidden" aria-hidden="true"><div id="creator-active-jobs"></div><div id="creator-history-overview"></div></div>
@@ -1715,7 +1729,7 @@
       <section id="creator-stage-copy" class="flow-stage" data-stage="copy"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>确认文案和声音</div><p class="stage-help">编辑配音员实际朗读的内容，并选择音色。</p></div><span id="creator-copy-status" class="status">等待文案</span></div><label>最终口播稿</label><textarea id="final-copy" oninput="updateCopyDurationEstimate()" placeholder="生成完成后显示纯口播稿"></textarea><div class="copy-target-strip"><div><span>目标时长</span><b id="copy-target-display">约 30 秒</b></div><div id="copy-duration-summary" class="copy-duration-summary"><b id="copy-duration-estimate">等待口播稿</b><small id="copy-length-hint">生成后显示实际预估时长</small></div></div><div style="margin-top:14px"><label>结尾行动引导</label><input id="video-cta" oninput="updateCopyDurationEstimate()" value="点击下方链接，立即报名吧"></div><input id="tts-service" type="hidden" value="qwen"><div style="margin-top:14px"><label>配音音色</label><select id="tts-voice"></select></div><div class="stage-actions"><button id="create-tts-button" class="primary" onclick="createTts()">生成并试听语音</button><button id="confirm-copy-button" onclick="confirmCreatorCopy()">跳过试听，进入素材配置</button></div><div id="tts-preview" class="media-preview hidden" style="margin-top:14px"></div></section>
       <section id="creator-stage-material" class="flow-stage" data-stage="material">
         <div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择素材来源</div><p class="stage-help">任务页只选择素材来源；上传、标签和展会归属统一在素材库管理。</p></div><span id="creator-material-status" class="status">待配置</span></div>
-        <div class="grid two" id="material-source-choices"><div class="source-choice active" data-source="local" onclick="chooseMaterialSource('local')"><b>当前展会素材库</b><p>使用归属于当前展会的内部视频与图片。</p></div><div class="source-choice" data-source="pexels" onclick="chooseMaterialSource('pexels')"><b>MoneyPrinter 在线素材</b><p>通过 Pexels/Pixabay 搜索并下载通用补充素材。</p></div></div>
+        <div class="grid two" id="material-source-choices"><div class="source-choice active" data-source="local" onclick="chooseMaterialSource('local')"><b>当前展会素材库</b><p>使用归属于当前展会的内部视频与图片。</p></div><div class="source-choice" data-source="pexels" onclick="chooseMaterialSource('pexels')"><b>网络检索素材</b><p>通过公开素材接口搜索并下载通用补充素材。</p></div></div>
         <div id="local-material-settings" class="material-source-summary"><div><span>当前素材目录</span><b id="creator-material-dir-label">等待读取</b><small id="creator-material-library-count">正在读取当前展会素材数量…</small></div><button onclick="showMaterialLibrary('creator')">管理当前展会素材</button></div>
         <input id="material-dir" type="hidden"><input id="competitor-dir" type="hidden"><input id="highlight-words" type="hidden" value="">
         <textarea id="batch-copy-list" class="hidden" aria-hidden="true"></textarea>
@@ -2370,7 +2384,7 @@
     let currentEmployeeModal = 'hunter';
     const employeeModalModels = {
       hunter: {title:'找爆款员工详情', name:'Jerome Bell', role:'爆款运营', state:'工作中', accountType:'抖音 / 小红书', accountState:'未登录', accountName:'未登录', accountId:'未登录', badge:'🔎', avatar:'assets/figma-sync/employee-modal-cow-clean.png'},
-      creator: {title:'生视频员工详情', name:'小金', role:'视频运营', state:'工作中', accountType:'素材库 / TTS', accountState:'已配置', accountName:'本地素材 + MoneyPrinter', accountId:'Edge / Qwen TTS', badge:'🎬', avatar:'assets/figma-sync/employee-modal-cow-clean.png'},
+      creator: {title:'生视频员工详情', name:'小金', role:'视频运营', state:'工作中', accountType:'素材库 / TTS', accountState:'已配置', accountName:'本地素材 + 网络检索', accountId:'Edge / Qwen TTS', badge:'🎬', avatar:'assets/figma-sync/employee-modal-cow-clean.png'},
       buyer: {title:'投放员工详情', name:'投放员', role:'多平台投放', state:'待授权', accountType:'抖音 / 小红书 / 视频号', accountState:'未授权', accountName:'未绑定广告主', accountId:'未获取', badge:'📈', avatar:'assets/figma-sync/employee-modal-cow-clean.png'},
     };
     function openEmployeeDetail(id) {
@@ -2417,7 +2431,7 @@
         return;
       }
       if (id === 'creator') {
-        box.innerHTML = `<div class="figma-modal-bind-card"><div class="figma-info-row"><span>素材来源</span><b>本地素材库 / MoneyPrinter 搜索链路</b><span></span></div><div class="figma-info-row"><span>配音服务</span><b>Edge TTS / Qwen TTS</b><span></span></div><div class="figma-info-row"><span>状态</span><b>已配置</b><span></span></div></div>`;
+        box.innerHTML = `<div class="figma-modal-bind-card"><div class="figma-info-row"><span>素材来源</span><b>本地素材库 / 网络检索链路</b><span></span></div><div class="figma-info-row"><span>配音服务</span><b>Edge TTS / Qwen TTS</b><span></span></div><div class="figma-info-row"><span>状态</span><b>已配置</b><span></span></div></div>`;
         return;
       }
       const st = latestOceanStatus || {};
@@ -2695,7 +2709,7 @@
       if (employee === 'creator') {
         const box = document.getElementById('creator-settings-content');
         if (!box) return;
-        box.innerHTML = `<div class="grid two"><div><label>本地素材库</label><b>${escapeHtml(appConfig.material_dir || '未配置')}</b><p>当前可用素材 ${Number(appConfig.material_count || 0)} 个</p></div><div><label>在线素材搜索</label><b>${appConfig.moneyprint_stock_configured ? '已配置' : '未配置'}</b><p>MoneyPrinter / Pexels 搜索链路</p></div><div><label>文本生成</label><b>${appConfig.text_llm_configured ? `Qwen ${escapeHtml(appConfig.text_llm_model || 'qwen3.6-plus')} 已连接` : '需要配置'}</b></div><div><label>配音与渲染</label><b>Qwen TTS / Edge 备用 / ${escapeHtml(appConfig.render_engine || 'internal')}</b></div></div>`;
+        box.innerHTML = `<div class="grid two"><div><label>本地素材库</label><b>${escapeHtml(appConfig.material_dir || '未配置')}</b><p>当前可用素材 ${Number(appConfig.material_count || 0)} 个</p></div><div><label>网络检索</label><b>${appConfig.online_stock_configured ? '已配置' : '未配置'}</b><p>公开素材接口搜索链路</p></div><div><label>文本生成</label><b>${appConfig.text_llm_configured ? `Qwen ${escapeHtml(appConfig.text_llm_model || 'qwen3.6-plus')} 已连接` : '需要配置'}</b></div><div><label>配音与渲染</label><b>Qwen TTS / Edge 备用 / ${escapeHtml(appConfig.render_engine || 'internal')}</b></div></div>`;
         return;
       }
       const box = document.getElementById('buyer-settings-content');
@@ -3035,7 +3049,7 @@
       selectedSample = null;
       activeCreatorSourceArtifactId = '';
 
-      ['copy-topic','brief-subject','brief-audience','brief-pain','brief-selling','brief-tone','manual-copy-input','final-copy','creator-studio-topic','creator-studio-script','competitor-dir','highlight-words','batch-copy-list','publish-video'].forEach(id => {
+      ['copy-topic','brief-subject','brief-audience','brief-pain','brief-selling','brief-tone','cs-exhibition-name','cs-exhibition-category','manual-copy-input','final-copy','creator-studio-topic','creator-studio-script','competitor-dir','highlight-words','batch-copy-list','publish-video'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -3274,25 +3288,28 @@
       const m = Math.floor(sec / 60), s = sec % 60;
       return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     }
-    function syncStudioExpoInfo() { /* 卖点变化即时保存，无需额外动作，生成时读取 */ }
+    function syncStudioExpoInfo() { /* 展会信息即时保存，无需额外动作，生成时读取 */ }
     function studioExpoTopic() {
-      const booth = valueOf('cs-booth'), product = valueOf('cs-product'), selling = valueOf('cs-selling');
+      const exhibitionName = valueOf('cs-exhibition-name'), category = valueOf('cs-exhibition-category');
       const parts = [];
-      if (product) parts.push(`主推产品：${product}`);
-      if (booth) parts.push(`展位：${booth}`);
-      if (selling) parts.push(`关键卖点：${selling}`);
+      if (exhibitionName) parts.push(`展会名：${exhibitionName}`);
+      if (category) parts.push(`展会类别：${category}`);
       return parts.join('；');
     }
     function generateStudioSellingScript() {
       const topic = studioExpoTopic();
-      if (!topic) return notify('请先填写主推产品或关键卖点', 'error');
+      if (!topic) return notify('请先填写展会名或展会类别', 'error');
       document.getElementById('creator-studio-topic').value = topic;
-      document.getElementById('brief-subject').value = topic;
-      const selling = valueOf('cs-selling');
-      if (selling) document.getElementById('brief-selling').value = selling;
+      const exhibitionName = valueOf('cs-exhibition-name');
+      const category = valueOf('cs-exhibition-category');
+      document.getElementById('brief-subject').value = exhibitionName || category;
+      document.getElementById('brief-audience').value ||= '展会主办方、拟参展企业和专业观众';
+      document.getElementById('brief-pain').value ||= '展会价值不够清晰，难以让目标企业和专业观众快速判断是否值得参加';
+      document.getElementById('brief-selling').value ||= '通过清晰呈现展会定位、行业范围和现场连接价值，降低参展与到场决策成本';
+      document.getElementById('brief-tone').value ||= '站在展会主办方角度表达，突出展会定位、参展价值和到场理由，不虚构规模、品牌或数据';
       setCreatorStudioInputMode('ai');
       document.getElementById('copy-topic').value = creatorBriefTopic ? creatorBriefTopic() : topic;
-      notify('正在用展会信息生成口播稿…');
+      notify('正在用展会信息生成主办方口播稿…');
       return createCopy();
     }
     // 多脚本
@@ -4878,8 +4895,8 @@
       setText('system-pill', cfg.ffmpeg_configured ? '系统可用' : '缺 FFmpeg', `status ${cfg.ffmpeg_configured ? 'succeeded' : 'failed'}`);
       setText('material-count', `素材 ${cfg.material_count || 0} 个`);
       setText('local-source-count', `素材 ${cfg.material_count || 0} 个`);
-      const moneyStatus = document.getElementById('moneyprint-source-status');
-      if (moneyStatus) moneyStatus.textContent = cfg.moneyprint_stock_configured ? '已配置，可直接使用' : '需要配置 PEXELS_API_KEY';
+      const onlineStatus = document.getElementById('online-source-status');
+      if (onlineStatus) onlineStatus.textContent = cfg.online_stock_configured ? '已配置，可直接使用' : '需要配置网络素材接口';
       refreshSearchProviderChoices();
       const publisherNotice = document.getElementById('publisher-notice');
       publisherNotice.textContent = cfg.publisher_configured ? '' : '当前未配置个人账号发布器，不能执行真实发布。';
@@ -5655,7 +5672,7 @@
         const displaySummary = displayTask.result?.summary || baseSummary;
         const materialInfo = base.result?.material || {};
         const visualPlan = materialInfo.visual_plan || {};
-        const source = ['pexels','pixabay'].includes(base.payload?.material_source) ? 'MoneyPrinter 在线搜索' : '当前展会素材库';
+        const source = ['pexels','pixabay'].includes(base.payload?.material_source) ? '网络检索' : '当前展会素材库';
         const title = base.payload?.topic || base.payload?.keyword || '未命名推广视频';
         const projectId = projectIdOf(base) || base.id;
         const successfulVariants = related.filter(item => item.status === 'succeeded');
