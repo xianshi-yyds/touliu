@@ -1253,6 +1253,7 @@
     #creator-studio-compose .cs-topbar-actions button:hover { border-color:#aeb9cb; color:var(--ink); }
     #creator-studio-compose .cs-two { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:16px; align-items:start; }
     @media (max-width:1080px){ #creator-studio-compose .cs-two { grid-template-columns:1fr; } }
+    @media (max-width:640px){ #creator-studio-compose .cs-report-grid,#creator-studio-compose .cs-decision-options { grid-template-columns:1fr; } #creator-studio-compose .cs-expo-context small { width:100%; margin-left:0; } }
     #creator-studio-compose .cs-composer { display:flex; flex-direction:column; min-width:0; }
     #creator-studio-compose .cs-composer-scroll { display:grid; gap:14px; }
     #creator-studio-compose .cs-block { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; }
@@ -1260,6 +1261,29 @@
     #creator-studio-compose .cs-block-head h3 { margin:0; font-size:14px; color:var(--ink); font-weight:850; }
     #creator-studio-compose .cs-block-head h3 small { margin-left:6px; color:var(--muted); font-weight:700; font-size:11px; }
     #creator-studio-compose .cs-block-tools { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    #creator-studio-compose .cs-expo-context { display:flex; align-items:center; gap:9px; min-height:42px; padding:10px 14px; border:1px solid var(--line); border-radius:12px; background:#f8f9ff; color:#6a7382; font-size:12px; flex-wrap:wrap; }
+    #creator-studio-compose .cs-expo-context b { color:var(--ink); font-size:13px; }
+    #creator-studio-compose .cs-expo-context small { margin-left:auto; color:var(--blue); font-weight:800; }
+    #creator-studio-compose .cs-preloaded-badge { display:inline-flex; align-items:center; min-height:22px; padding:0 8px; border-radius:999px; background:#eef7e8; color:#3f7d27; font-size:11px; font-weight:850; }
+    #creator-studio-compose .cs-report-empty { padding:14px; border:1px dashed #cfd6e3; border-radius:11px; background:var(--soft); }
+    #creator-studio-compose .cs-report-empty p { margin:0 0 12px; color:#697486; font-size:12px; line-height:1.65; }
+    #creator-studio-compose .cs-report-result { display:grid; gap:11px; }
+    #creator-studio-compose .cs-report-summary { padding:12px 14px; border-radius:11px; background:#f5f6ff; color:#343b49; font-size:12.5px; font-weight:750; line-height:1.7; }
+    #creator-studio-compose .cs-report-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+    #creator-studio-compose .cs-report-section { padding:11px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; min-width:0; }
+    #creator-studio-compose .cs-report-section b { display:block; margin-bottom:6px; font-size:12px; color:var(--ink); }
+    #creator-studio-compose .cs-report-section ul { margin:0; padding-left:17px; color:#667181; font-size:11.5px; line-height:1.65; }
+    #creator-studio-compose .cs-report-recommendation { padding:11px 12px; border-left:3px solid var(--blue); border-radius:8px; background:#f7f9ff; color:#536071; font-size:11.5px; line-height:1.65; }
+    #creator-studio-compose .cs-decision-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+    #creator-studio-compose .cs-decision-option { display:flex; align-items:flex-start; gap:10px; min-height:72px; padding:12px; border:1px solid var(--line); border-radius:11px; background:#fff; color:var(--ink); text-align:left; cursor:pointer; }
+    #creator-studio-compose .cs-decision-option span { width:22px; height:22px; flex:0 0 auto; display:grid; place-items:center; border:1.5px solid #bbc4d2; border-radius:50%; color:transparent; }
+    #creator-studio-compose .cs-decision-option b { display:block; font-size:12.5px; }
+    #creator-studio-compose .cs-decision-option small { display:block; margin-top:4px; color:var(--muted); font-size:11px; line-height:1.45; }
+    #creator-studio-compose .cs-decision-option.active { border-color:var(--blue); background:var(--blue-soft); box-shadow:0 0 0 2px rgba(77,91,255,.08); }
+    #creator-studio-compose .cs-decision-option.active span { border-color:var(--blue); background:var(--blue); color:#fff; }
+    #creator-studio-compose .cs-decision-option:disabled { opacity:.48; cursor:not-allowed; }
+    #creator-studio-compose .cs-video-settings { display:grid; gap:14px; }
+    #creator-studio-compose .cs-video-settings.hidden, #creator-studio-compose .cs-cta-bar.hidden { display:none; }
     #creator-studio-compose .cs-linkbtn { background:none; border:none; color:var(--blue); font-weight:800; font-size:12px; cursor:pointer; padding:0; }
     #creator-studio-compose .cs-linkbtn:hover { text-decoration:underline; }
     .badge-violet { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; background:var(--blue-soft); color:var(--blue); font-size:11px; font-weight:800; }
@@ -1573,7 +1597,7 @@
         </div>
         <div class="employee-tile figma-staff-card" data-staff-card="creator" onclick="openEmployeeDetail('creator')">
           <img class="figma-staff-avatar" src="assets/figma-sync/employee-green-crop.png" alt="生视频员工">
-          <div class="figma-staff-copy"><span class="figma-work-status" id="creator-status">工作中</span><h2>生视频员工</h2><p class="staff-space-name">杭州国际数字人展会</p><span class="figma-role-pill">🎬 视频运营</span><div class="figma-card-line"></div><div class="figma-bound-row">素材库：本地 / 网络检索</div></div>
+          <div class="figma-staff-copy"><span class="figma-work-status" id="creator-status">工作中</span><h2>生视频员工</h2><p class="staff-space-name">杭州国际数字人展会</p><span class="figma-role-pill">🎬 视频运营</span><div class="figma-card-line"></div><div class="figma-bound-row">当前展会素材库</div></div>
         </div>
         <div class="employee-tile figma-staff-card" data-staff-card="buyer" onclick="openEmployeeDetail('buyer')">
           <img class="figma-staff-avatar" src="assets/figma-sync/employee-blue-crop.png" alt="投放员工">
@@ -1665,62 +1689,62 @@
         <div class="cs-two">
           <div class="cs-composer">
             <div class="cs-composer-scroll">
-              <!-- 1. 展会信息（替代参考的“添加商品”） -->
-              <div class="cs-block">
-                <div class="cs-block-head"><h3>展会信息 <small>选填</small></h3><span class="badge-violet">✨ 自动生成口播稿</span></div>
-                <div class="cs-grid2">
-                  <div><label class="cs-label">展会名</label><input id="cs-exhibition-name" placeholder="例如：华南国际新能源产业展" oninput="syncStudioExpoInfo()"></div>
-                  <div><label class="cs-label">展会类别</label><input id="cs-exhibition-category" placeholder="例如：新能源产业 / B2B 专业展" oninput="syncStudioExpoInfo()"></div>
-                </div>
-                <div style="margin-top:12px"><button class="cs-linkbtn" onclick="generateStudioSellingScript()">✨ 用展会信息生成口播稿 →</button></div>
-              </div>
+              <div class="cs-expo-context"><span>当前展会</span><b id="cs-current-exhibition-name">正在读取展会档案…</b><span id="cs-current-exhibition-category"></span><span class="cs-preloaded-badge" title="已作为口播稿生成的内置参考，不单独创建任务">客户画像已内置</span><small>无需重复填写</small></div>
 
-              <!-- 2. 素材内容 -->
+              <!-- 2. 是否制作视频：不默认选择，最终是否提交由用户明确确认。 -->
               <div class="cs-block">
-                <div class="cs-block-head"><h3>素材来源</h3><div class="cs-block-tools"><button class="cs-linkbtn" onclick="showMaterialLibrary('creator')">↗ 去素材库上传</button><button class="cs-linkbtn" onclick="clearStudioClips()">🗑 清空</button></div></div>
-                <p class="cs-hint">选择走当前展会的本地素材库，还是通过网络检索获取通用补充素材。</p>
-                <div class="cs-source-toggle cs-source-binary">
-                  <button class="active" data-studio-source="local" onclick="selectCreatorStudioMaterial('local')">📁 本地素材库</button>
-                  <button data-studio-source="pexels" onclick="selectCreatorStudioMaterial('pexels')">🌐 网络检索</button>
-                </div>
-                <div id="cs-material-grid" class="cs-material-grid">
-                  <div class="cs-add-tile" onclick="showMaterialLibrary('creator')">＋</div>
-                </div>
-                <div id="cs-material-online" class="cs-hint" style="display:none;margin-top:10px">网络检索素材：生成时按脚本主题自动搜索通用补充素材，无需手动挑选，不写入你的素材库。</div>
-                <div id="cs-material-total" class="cs-material-total">未选择素材片段</div>
-                <div id="creator-studio-material-summary" class="creator-material-summary" style="display:none"></div>
-              </div>
-
-              <!-- 3. AI 自动补充 -->
-              <div class="cs-block">
-                <div class="cs-supplement-head">
-                  <label class="switch"><input type="checkbox" id="cs-ai-supplement" onchange="toggleStudioSupplement(this.checked)"><span class="track"></span></label>
-                  <div><b>AI 自动补充</b><div class="cs-hint" style="margin:2px 0 0">素材不足时用 AI 生成的画面补齐镜头。</div></div>
-                </div>
-                <div id="cs-supplement-subs" class="cs-supplement-subs disabled">
-                  <label class="cs-check"><input type="checkbox" data-supplement="avatar" disabled>数字人<span class="cs-soon">即将上线</span></label>
-                  <label class="cs-check"><input type="checkbox" data-supplement="aivideo" disabled>AI 视频<span class="cs-soon">即将上线</span></label>
-                  <label class="cs-check"><input type="checkbox" data-supplement="intro" disabled>前贴<span class="cs-soon">即将上线</span></label>
+                <div class="cs-block-head"><h3>1. 是否制作视频</h3><span id="creator-video-decision-status" class="status blue">待选择</span></div>
+                <p class="cs-hint">系统不会自动开始视频任务。你可以先生成、修改口播稿，再决定是否制作视频。</p>
+                <div class="cs-decision-options">
+                  <button class="cs-decision-option" data-studio-decision="video" onclick="chooseStudioOutput('video')"><span>✓</span><div><b>继续制作推广视频</b><small>完成口播和素材配置后，手动点击“开始生成视频”。</small></div></button>
+                  <button class="cs-decision-option" data-studio-decision="report" onclick="chooseStudioOutput('report')"><span>✓</span><div><b>暂不制作视频</b><small>只保留当前客户画像和口播稿草稿，不提交成片任务。</small></div></button>
                 </div>
               </div>
 
-              <!-- 4. 脚本（多 tab） -->
+              <!-- 原 5 已前置：先生成口播稿，再选择素材和最终口播。 -->
               <div class="cs-block">
-                <div class="cs-block-head"><h3>脚本</h3><span id="creator-studio-script-status" class="status">待开始</span></div>
+                <div class="cs-block-head"><h3>2. 生成口播稿</h3><span id="creator-studio-script-status" class="status">待生成</span></div>
+                <p class="cs-hint">点击一次只生成可编辑的口播稿草稿；生成后可以继续修改、切换脚本，再选择素材并提交最终视频。</p>
                 <div id="cs-script-tabs" class="cs-script-tabs"></div>
                 <div class="creator-studio-mode" style="margin-bottom:10px"><button id="creator-studio-mode-ai" class="active" onclick="setCreatorStudioInputMode('ai')">AI 生成</button><button id="creator-studio-mode-manual" onclick="setCreatorStudioInputMode('manual')">已有文案</button></div>
                 <div class="creator-reference-picker" id="creator-reference-picker"><div class="creator-reference-head"><div><b>参考案例</b><small>可选：只复用爆款逻辑，不复制原文</small></div><button type="button" onclick="loadEmployeeRecords()">刷新</button></div><div id="creator-reference-options"></div></div>
                 <input id="creator-studio-topic" type="hidden">
-                <label class="cs-label" for="creator-studio-script">口播稿 <small>一句一段</small></label>
-                <textarea id="creator-studio-script" class="cs-script" placeholder="流量贵得让人头疼。&#10;你是否还在硬扛。&#10;不如换个思路试试。&#10;……（一句一行；也可点上方按钮用展会信息生成）" oninput="onStudioScriptInput(this.value)"></textarea>
+                <label class="cs-label" for="creator-studio-script">生成结果 / 口播稿 <small>一句一段，可继续编辑</small></label>
+                <textarea id="creator-studio-script" class="cs-script" placeholder="点击“生成口播稿”后显示；也可以切换到“已有文案”直接填写。" oninput="onStudioScriptInput(this.value)"></textarea>
                 <div class="cs-inline-row">
                   <div><label class="cs-label" for="creator-studio-copy-length">目标时长</label><select id="creator-studio-copy-length" onchange="syncCreatorStudioDuration(this.value)"><option value="15">约 15 秒</option><option value="20">约 20 秒</option><option value="30" selected>约 30 秒</option><option value="45">约 45 秒</option><option value="60">约 60 秒</option></select></div>
-                  <div><label class="cs-label">预估</label><div id="creator-studio-duration-estimate" class="cs-duration">等待文案</div></div>
+                  <div><label class="cs-label">预估</label><div id="creator-studio-duration-estimate" class="cs-duration">等待口播稿</div></div>
                 </div>
-                <div style="margin-top:12px"><button class="cs-linkbtn" onclick="createCreatorStudioCopy()">✨ 让 AI 生成/优化当前脚本</button></div>
+                <div style="margin-top:12px"><button class="cs-linkbtn" onclick="createCreatorStudioCopy()">✨ 生成口播稿</button></div>
+              </div>
+
+              <div id="creator-studio-video-settings" class="cs-video-settings">
+                <!-- 原 3：当前展会素材 -->
+                <div class="cs-block">
+                  <div class="cs-block-head"><h3>3. 选择当前展会素材</h3><div class="cs-block-tools"><button class="cs-linkbtn" onclick="showMaterialLibrary('creator')">↗ 去素材库上传</button><button class="cs-linkbtn" onclick="clearStudioClips()">🗑 清空</button></div></div>
+                  <p class="cs-hint">仅使用当前展会的本地素材库。未手动选择时，系统会在本展会素材中自动配片。</p>
+                  <div id="cs-material-grid" class="cs-material-grid">
+                    <div class="cs-add-tile" onclick="showMaterialLibrary('creator')">＋</div>
+                  </div>
+                  <div id="cs-material-total" class="cs-material-total">未选择素材片段</div>
+                  <div id="creator-studio-material-summary" class="creator-material-summary" style="display:none"></div>
+                </div>
+
+                <!-- 原 4：AI 自动补充 -->
+                <div class="cs-block">
+                  <div class="cs-supplement-head">
+                    <label class="switch"><input type="checkbox" id="cs-ai-supplement" onchange="toggleStudioSupplement(this.checked)"><span class="track"></span></label>
+                    <div><b>4. AI 自动补充</b><div class="cs-hint" style="margin:2px 0 0">素材不足时用 AI 生成画面补齐镜头，默认关闭。</div></div>
+                  </div>
+                  <div id="cs-supplement-subs" class="cs-supplement-subs disabled">
+                    <label class="cs-check"><input type="checkbox" data-supplement="avatar" disabled>数字人<span class="cs-soon">即将上线</span></label>
+                    <label class="cs-check"><input type="checkbox" data-supplement="aivideo" disabled>AI 视频<span class="cs-soon">即将上线</span></label>
+                    <label class="cs-check"><input type="checkbox" data-supplement="intro" disabled>前贴<span class="cs-soon">即将上线</span></label>
+                </div>
               </div>
             </div>
-            <div class="cs-cta-bar"><button class="btn-violet" id="cs-generate-btn" onclick="startCreatorStudioPipeline()">立即生成</button></div>
+            </div>
+            <div id="creator-studio-generate-bar" class="cs-cta-bar hidden"><button class="btn-violet" id="cs-generate-btn" onclick="startCreatorStudioPipeline()">开始生成视频</button></div>
           </div>
 
           <div class="cs-status">
@@ -1768,8 +1792,8 @@
       </section>
       <section id="creator-stage-copy" class="flow-stage" data-stage="copy"><div class="stage-head"><div><div class="stage-title"><span class="stage-num">02</span>确认文案和声音</div></div><span id="creator-copy-status" class="status">等待文案</span></div><label>最终口播稿</label><textarea id="final-copy" oninput="updateCopyDurationEstimate()" placeholder="生成完成后显示纯口播稿"></textarea><div class="copy-target-strip"><div><span>目标时长</span><b id="copy-target-display">约 30 秒</b></div><div id="copy-duration-summary" class="copy-duration-summary"><b id="copy-duration-estimate">等待口播稿</b><small id="copy-length-hint">生成后显示实际预估时长</small></div></div><div style="margin-top:14px"><label>结尾行动引导</label><input id="video-cta" oninput="updateCopyDurationEstimate()" value="点击下方链接，立即报名吧"></div><input id="tts-service" type="hidden" value="qwen"><div style="margin-top:14px"><label>配音音色</label><select id="tts-voice"></select></div><div class="stage-actions"><button id="create-tts-button" class="primary" onclick="createTts()">生成并试听语音</button><button id="confirm-copy-button" onclick="confirmCreatorCopy()">跳过试听，进入素材配置</button></div><div id="tts-preview" class="media-preview hidden" style="margin-top:14px"></div></section>
       <section id="creator-stage-material" class="flow-stage" data-stage="material">
-        <div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>选择素材来源</div><p class="stage-help">任务页只选择素材来源；上传、标签和展会归属统一在素材库管理。</p></div><span id="creator-material-status" class="status">待配置</span></div>
-        <div class="grid two" id="material-source-choices"><div class="source-choice active" data-source="local" onclick="chooseMaterialSource('local')"><b>当前展会素材库</b><p>使用归属于当前展会的内部视频与图片。</p></div><div class="source-choice" data-source="pexels" onclick="chooseMaterialSource('pexels')"><b>网络检索素材</b><p>通过公开素材接口搜索并下载通用补充素材。</p></div></div>
+        <div class="stage-head"><div><div class="stage-title"><span class="stage-num">03</span>确认当前展会素材</div><p class="stage-help">视频仅使用归属于当前展会的素材；上传、标签和展会归属统一在素材库管理。</p></div><span id="creator-material-status" class="status">待配置</span></div>
+        <div id="material-source-choices"><div class="source-choice active" data-source="local" onclick="chooseMaterialSource('local')"><b>当前展会素材库</b><p>使用归属于当前展会的内部视频与图片。</p></div></div>
         <div id="local-material-settings" class="material-source-summary"><div><span>当前素材目录</span><b id="creator-material-dir-label">等待读取</b><small id="creator-material-library-count">正在读取当前展会素材数量…</small></div><button onclick="showMaterialLibrary('creator')">管理当前展会素材</button></div>
         <input id="material-dir" type="hidden"><input id="competitor-dir" type="hidden"><input id="highlight-words" type="hidden" value="">
         <textarea id="batch-copy-list" class="hidden" aria-hidden="true"></textarea>
@@ -1972,6 +1996,7 @@
     const employeeWorkspace = {hunter:'tasks', creator:'tasks', buyer:'tasks'};
     let appConfig = {};
     let lastCompletedSearch = '';
+    let lastCompletedClientReport = '';
     let lastCompletedCopy = '';
     let lastCompletedTts = '';
     let lastCompletedRender = '';
@@ -2008,6 +2033,8 @@
     };
     let selectedCreatorDirection = 'impact';
     let selectedCreatorInputMode = 'ai';
+    let latestCreatorClientReport = null;
+    let selectedStudioOutput = '';
     let activeVideoProjectId = '';
     let selectedMaterialSource = 'local';
     let hasHydratedTasks = false;
@@ -2207,11 +2234,27 @@
 
     let currentExhibitionId = '新能源';
     const exhibitionNameMap = {新能源:'华南国际新能源产业展', 数字人:'杭州国际数字人展会'};
+    const exhibitionProfileMap = {
+      新能源: {name:'华南国际新能源产业展', category:'新能源产业 / B2B 专业展', location:'广州 · 中国进出口商品交易会展馆', start_date:'2026-06-02', end_date:'2026-08-21', customer_profile:{audience:'新能源设备、储能、光伏、汽车及工业应用企业的负责人、采购和渠道角色', pain:'方案信息分散，供应商难比较，现场适配性验证成本高', value:'在现场集中了解方案、比较产品、直接沟通并验证业务适配性', angle:'客户决策痛点 → 现场比较路径 → 进一步了解展会'}},
+      数字人: {name:'杭州国际数字人展会', category:'数字人 / 人工智能专业展', location:'杭州国际博览中心', start_date:'', end_date:'', customer_profile:{audience:'数字人、人工智能和企业服务相关的负责人、采购及合作伙伴', pain:'技术方案更新快，信息难筛选，实际适配性不容易判断', value:'集中了解应用方案、现场交流并验证业务场景适配度', angle:'技术变化 → 场景判断 → 现场连接与验证'}},
+    };
     let currentExpoWorkspace = 'delivery-overview';
     let materialLibraryReturnToExpo = false;
     let materialLibraryReturnTarget = '';
     function currentExhibitionName() {
       return exhibitionNameMap[currentExhibitionId] || currentExhibitionId || '当前展会';
+    }
+    function currentExhibitionProfile() {
+      const saved = exhibitionProfileMap[currentExhibitionId] || {};
+      return {
+        id:String(currentExhibitionId || ''),
+        name:saved.name || currentExhibitionName(),
+        category:saved.category || '专业会展',
+        location:saved.location || '',
+        start_date:saved.start_date || '',
+        end_date:saved.end_date || '',
+        customer_profile:saved.customer_profile || {},
+      };
     }
     let currentHunterStage = 'config';
     let currentBuyerStage = 'materials';
@@ -2341,6 +2384,7 @@
       if (!name || !address || !start || !end) return;
       const id = `expo-${Date.now()}`;
       exhibitionNameMap[id] = name;
+      exhibitionProfileMap[id] = {name, category:'专业会展', location:address, start_date:start, end_date:end};
       const list = document.querySelector('.figma-expo-list');
       if (list) list.insertAdjacentHTML('afterbegin', `<div class="expo-card figma-expo-card" onclick="openExhibition('${id}')"><img class="expo-thumb" src="assets/figma-sync/expo-thumb.png" alt="展会封面"><div class="expo-copy"><span class="figma-status soon">筹备中</span><h2>${escapeHtml(name)}</h2><p>${escapeHtml(address)}</p><small>${escapeHtml(start)} 至 ${escapeHtml(end)}</small></div><div class="expo-divider"></div><div class="expo-meta figma-expo-meta"><span><b>0</b><small>对话</small></span><span><b>3个</b><small>投放能力</small></span><span><b>0</b><small>素材产出</small></span></div></div>`);
       closeExhibitionDraft();
@@ -2435,7 +2479,7 @@
     let currentEmployeeModal = 'hunter';
     const employeeModalModels = {
       hunter: {title:'找爆款员工详情', name:'Jerome Bell', role:'爆款运营', state:'工作中', accountType:'抖音 / 小红书', accountState:'未登录', accountName:'未登录', accountId:'未登录', badge:'🔎', avatar:'assets/figma-sync/employee-modal-cow-clean.png'},
-      creator: {title:'生视频员工详情', name:'小金', role:'视频运营', state:'工作中', accountType:'素材库 / TTS', accountState:'已配置', accountName:'本地素材 + 网络检索', accountId:'Edge / Qwen TTS', badge:'🎬', avatar:'assets/figma-sync/employee-modal-cow-clean.png'},
+      creator: {title:'生视频员工详情', name:'小金', role:'视频运营', state:'工作中', accountType:'素材库 / TTS', accountState:'已配置', accountName:'当前展会素材库', accountId:'Edge / Qwen TTS', badge:'🎬', avatar:'assets/figma-sync/employee-modal-cow-clean.png'},
       buyer: {title:'投放员工详情', name:'投放员', role:'多平台投放', state:'待授权', accountType:'抖音 / 小红书 / 视频号', accountState:'未授权', accountName:'未绑定广告主', accountId:'未获取', badge:'📈', avatar:'assets/figma-sync/employee-modal-cow-clean.png'},
     };
     function openEmployeeDetail(id) {
@@ -2482,7 +2526,7 @@
         return;
       }
       if (id === 'creator') {
-        box.innerHTML = `<div class="figma-modal-bind-card"><div class="figma-info-row"><span>素材来源</span><b>本地素材库 / 网络检索链路</b><span></span></div><div class="figma-info-row"><span>配音服务</span><b>Edge TTS / Qwen TTS</b><span></span></div><div class="figma-info-row"><span>状态</span><b>已配置</b><span></span></div></div>`;
+        box.innerHTML = `<div class="figma-modal-bind-card"><div class="figma-info-row"><span>素材来源</span><b>当前展会素材库</b><span></span></div><div class="figma-info-row"><span>配音服务</span><b>Edge TTS / Qwen TTS</b><span></span></div><div class="figma-info-row"><span>状态</span><b>已配置</b><span></span></div></div>`;
         return;
       }
       const st = latestOceanStatus || {};
@@ -2760,7 +2804,7 @@
       if (employee === 'creator') {
         const box = document.getElementById('creator-settings-content');
         if (!box) return;
-        box.innerHTML = `<div class="grid two"><div><label>本地素材库</label><b>${escapeHtml(appConfig.material_dir || '未配置')}</b><p>当前可用素材 ${Number(appConfig.material_count || 0)} 个</p></div><div><label>网络检索</label><b>${appConfig.online_stock_configured ? '已配置' : '未配置'}</b><p>公开素材接口搜索链路</p></div><div><label>文本生成</label><b>${appConfig.text_llm_configured ? `Qwen ${escapeHtml(appConfig.text_llm_model || 'qwen3.6-plus')} 已连接` : '需要配置'}</b></div><div><label>配音与渲染</label><b>Qwen TTS / Edge 备用 / ${escapeHtml(appConfig.render_engine || 'internal')}</b></div></div>`;
+        box.innerHTML = `<div class="grid two"><div><label>当前展会素材库</label><b>${escapeHtml(appConfig.material_dir || '未配置')}</b><p>当前可用素材 ${Number(appConfig.material_count || 0)} 个</p></div><div><label>文本生成</label><b>${appConfig.text_llm_configured ? `Qwen ${escapeHtml(appConfig.text_llm_model || 'qwen3.6-plus')} 已连接` : '需要配置'}</b></div><div><label>配音与渲染</label><b>Qwen TTS / Edge 备用 / ${escapeHtml(appConfig.render_engine || 'internal')}</b></div></div>`;
         return;
       }
       const box = document.getElementById('buyer-settings-content');
@@ -3200,6 +3244,7 @@
       creatorSessionTaskIds.clear();
       sessionStorage.setItem('creatorSessionTaskIds', '[]');
       lastCompletedCopy = '';
+      lastCompletedClientReport = '';
       lastCompletedTts = '';
       lastCompletedRender = '';
       lastCompletedPipeline = '';
@@ -3209,6 +3254,8 @@
       activeCreatorRenderTaskId = '';
       activeCreatorRenderSummary = null;
       activeVideoProjectId = '';
+      latestCreatorClientReport = buildCreatorClientProfile();
+      selectedStudioOutput = '';
       captionPreviewState = {summary:null, sourceTaskId:'', taskId:'', template:'viral', animation:'pop', fontType:'template', fontScale:100, verticalPosition:28, maxCharsPerLine:10, alignment:'center', capColor:'default', capFill:'', capStroke:'', activeTool:'basic', currentIndex:-1, currentToken:-1, editable:true, locked:false, live:false};
       creatorCompletedSteps.clear();
       selectedSample = null;
@@ -3216,7 +3263,7 @@
       selectedCreatorReferenceSampleIndex = 0;
       activeCreatorSourceArtifactId = '';
 
-      ['copy-topic','brief-subject','brief-audience','brief-pain','brief-selling','brief-tone','cs-exhibition-name','cs-exhibition-category','manual-copy-input','final-copy','creator-studio-topic','creator-studio-script','competitor-dir','highlight-words','batch-copy-list','publish-video'].forEach(id => {
+      ['copy-topic','brief-subject','brief-audience','brief-pain','brief-selling','brief-tone','manual-copy-input','final-copy','creator-studio-topic','creator-studio-script','competitor-dir','highlight-words','batch-copy-list','publish-video'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -3235,6 +3282,11 @@
       refreshCreatorMaterialSource();
       chooseCaptionTemplate('viral');
       selectedCaptionAnimation = 'pop';
+      document.getElementById('creator-studio-generate-bar')?.classList.add('hidden');
+      const decisionStatus = document.getElementById('creator-video-decision-status');
+      if (decisionStatus) { decisionStatus.textContent = '待选择'; decisionStatus.className = 'status blue'; }
+      document.querySelectorAll('[data-studio-decision]').forEach(item => item.classList.remove('active'));
+      renderCreatorClientReport(latestCreatorClientReport);
 
       setCreatorStatus('creator-brief-status', '待确认');
       setCreatorStatus('creator-copy-status', '等待文案');
@@ -3286,10 +3338,10 @@
       focusCreatorStep('material');
     }
     function chooseMaterialSource(source) {
-      selectedMaterialSource = source === 'pexels' ? 'pexels' : 'local';
+      selectedMaterialSource = 'local';
       document.querySelectorAll('#material-source-choices .source-choice').forEach(el => el.classList.toggle('active', el.dataset.source === selectedMaterialSource));
-      document.getElementById('local-material-settings')?.classList.toggle('hidden', selectedMaterialSource !== 'local');
-      if (selectedMaterialSource === 'local') refreshCreatorMaterialSource();
+      document.getElementById('local-material-settings')?.classList.remove('hidden');
+      refreshCreatorMaterialSource();
     }
     function setCreatorStudioMode(mode = 'compose') {
       const editor = document.getElementById('creator-studio-editor');
@@ -3302,9 +3354,15 @@
     }
     let studioComposerReady = false;
     function initStudioComposer() {
+      if (!latestCreatorClientReport || latestCreatorClientReport.exhibition_name !== currentExhibitionName()) {
+        latestCreatorClientReport = buildCreatorClientProfile();
+        selectedStudioOutput = '';
+      }
+      syncStudioExpoInfo();
+      renderCreatorClientReport(latestCreatorClientReport);
       renderStudioScriptTabs();
       renderCreatorReferencePicker();
-      if (selectedMaterialSource === 'local') renderStudioMaterialGrid();
+      renderStudioMaterialGrid();
       syncStudioAvatarAvailability();
       studioComposerReady = true;
     }
@@ -3374,6 +3432,7 @@
       return {topic, script, duration:Number(duration)};
     }
     function createCreatorStudioCopy() {
+      if (!latestCreatorClientReport) latestCreatorClientReport = buildCreatorClientProfile();
       const {topic, script} = syncCreatorStudioToWorkflow();
       if (script) {
         setCreatorStudioInputMode('manual');
@@ -3382,10 +3441,10 @@
         document.getElementById('creator-copy-status').className = 'status succeeded';
         const status = document.getElementById('creator-studio-script-status');
         if (status) { status.textContent = '已确认'; status.className = 'status succeeded'; }
-        notify('已使用当前口播稿，可以继续选择素材并生成视频。');
+        notify('已使用当前口播稿。你可以继续修改，再选择素材并生成视频。');
         return;
       }
-      if (!topic) return notify('请填写创作主题，或直接粘贴已有口播稿', 'error');
+      if (!topic) return notify('当前展会缺少可用的创作主题，请返回展会后重试', 'error');
       setCreatorStudioInputMode('ai');
       document.getElementById('brief-subject').value = topic;
       document.getElementById('brief-audience').value ||= '展会相关企业负责人、采购商和专业观众';
@@ -3402,15 +3461,13 @@
 
     function selectCreatorStudioMaterial(source) {
       if (source === 'upload') { showMaterialLibrary('creator'); return; }
-      const normalized = source === 'pexels' ? 'pexels' : 'local';
-      selectedMaterialSource = normalized;
-      chooseMaterialSource(normalized);
+      selectedMaterialSource = 'local';
+      chooseMaterialSource('local');
       document.querySelectorAll('#creator-studio-compose [data-studio-source]').forEach(el =>
-        el.classList.toggle('active', el.dataset.studioSource === source));
-      document.getElementById('cs-material-grid').style.display = normalized === 'local' ? '' : 'none';
-      document.getElementById('cs-material-online').style.display = normalized === 'local' ? 'none' : '';
-      document.getElementById('cs-material-total').style.display = normalized === 'local' ? '' : 'none';
-      if (normalized === 'local') renderStudioMaterialGrid();
+        el.classList.toggle('active', el.dataset.studioSource === 'local'));
+      document.getElementById('cs-material-grid')?.style.removeProperty('display');
+      document.getElementById('cs-material-total')?.style.removeProperty('display');
+      renderStudioMaterialGrid();
     }
     async function renderStudioMaterialGrid() {
       const grid = document.getElementById('cs-material-grid');
@@ -3457,33 +3514,133 @@
       const m = Math.floor(sec / 60), s = sec % 60;
       return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     }
+    function buildCreatorClientProfile() {
+      const profile = currentExhibitionProfile();
+      const preset = profile.customer_profile || {};
+      const audience = String(preset.audience || '展会相关企业负责人、采购商和专业观众').trim();
+      const pain = String(preset.pain || '信息分散，方案难以集中比较，适配性验证成本较高').trim();
+      const value = String(preset.value || '在现场集中了解方案、比较产品并验证业务适配性').trim();
+      const angle = String(preset.angle || '客户决策痛点 → 现场解决路径 → 展会价值').trim();
+      return {
+        version:'ui-preloaded',
+        report_type:'exhibition_client_profile',
+        exhibition_name:profile.name,
+        exhibition_category:profile.category,
+        target_customers:[audience],
+        customer_pain_points:[pain],
+        exhibition_values:[value],
+        content_opportunities:[angle, '用具体的比较、沟通和验证动作承接客户疑虑'],
+        video_recommendation:{recommended:true, reason:'这是随当前展会预置的创作参考，不会自动创建视频任务。', preferred_angle:angle},
+        content_brief:{audience, pain, selling:value, tone:'专业、克制、具体；不虚构展会规模、买家、订单或效果数据'},
+        evidence_note:'客户画像来自当前展会前端档案，仅作为口播稿生成参考；未提供的信息不会作为事实写入。',
+      };
+    }
+    function clientReportList(items) {
+      return (Array.isArray(items) ? items : []).map(item => `<li>${escapeHtml(item)}</li>`).join('');
+    }
+    function applyClientReportToCreator(report) {
+      const profile = currentExhibitionProfile();
+      const brief = report?.content_brief || {};
+      document.getElementById('brief-subject').value = profile.name;
+      document.getElementById('brief-audience').value = brief.audience || '';
+      document.getElementById('brief-pain').value = brief.pain || '';
+      document.getElementById('brief-selling').value = brief.selling || '';
+      document.getElementById('brief-tone').value = brief.tone || '';
+      const topic = studioExpoTopic();
+      document.getElementById('creator-studio-topic').value = topic;
+      document.getElementById('copy-topic').value = topic;
+    }
+    function renderCreatorClientReport(report) {
+      latestCreatorClientReport = report || buildCreatorClientProfile();
+      const empty = document.getElementById('creator-client-report-empty');
+      const result = document.getElementById('creator-client-report-result');
+      const status = document.getElementById('creator-client-report-status');
+      const buttons = document.querySelectorAll('[data-studio-decision]');
+      const profile = latestCreatorClientReport;
+      const recommendation = profile.video_recommendation || {};
+      if (empty) empty.classList.add('hidden');
+      if (status) {
+        status.textContent = profile.report_type === 'exhibition_client_profile' ? '已加载' : '已生成';
+        status.className = 'status succeeded';
+      }
+      if (result) {
+        result.classList.remove('hidden');
+        result.innerHTML = `
+          <div class="cs-report-summary">${escapeHtml(profile.executive_summary || '已根据当前展会档案加载客户画像，后续口播会围绕目标客户、决策痛点和现场价值展开。')}</div>
+          <div class="cs-report-grid">
+            <div class="cs-report-section"><b>目标客户</b><ul>${clientReportList(profile.target_customers)}</ul></div>
+            <div class="cs-report-section"><b>决策痛点</b><ul>${clientReportList(profile.customer_pain_points)}</ul></div>
+            <div class="cs-report-section"><b>展会价值</b><ul>${clientReportList(profile.exhibition_values)}</ul></div>
+            <div class="cs-report-section"><b>内容机会</b><ul>${clientReportList(profile.content_opportunities)}</ul></div>
+          </div>
+          <div class="cs-report-recommendation"><b>建议角度：</b>${escapeHtml(recommendation.preferred_angle || '客户决策痛点 → 现场解决路径 → 展会价值')}<br><small>${escapeHtml(profile.evidence_note || '')}</small></div>`;
+      }
+      buttons.forEach(button => { button.disabled = false; });
+      const decisionStatus = document.getElementById('creator-video-decision-status');
+      if (decisionStatus && !selectedStudioOutput) {
+        decisionStatus.textContent = '待选择';
+        decisionStatus.className = 'status blue';
+      }
+      applyClientReportToCreator(profile);
+    }
+    function createCreatorClientReport() {
+      // 保留旧入口的兼容函数：新链路不再为客户画像创建异步报告任务。
+      latestCreatorClientReport = buildCreatorClientProfile();
+      renderCreatorClientReport(latestCreatorClientReport);
+      notify('客户画像已随当前展会加载，无需单独生成报告。');
+      return latestCreatorClientReport;
+    }
+    function chooseStudioOutput(choice) {
+      if (!latestCreatorClientReport) latestCreatorClientReport = buildCreatorClientProfile();
+      selectedStudioOutput = choice === 'video' ? 'video' : 'report';
+      document.querySelectorAll('[data-studio-decision]').forEach(button => {
+        button.classList.toggle('active', button.dataset.studioDecision === selectedStudioOutput);
+      });
+      const video = selectedStudioOutput === 'video';
+      document.getElementById('creator-studio-generate-bar')?.classList.toggle('hidden', !video);
+      const status = document.getElementById('creator-video-decision-status');
+      if (status) {
+        status.textContent = video ? '制作视频' : '仅保留画像与口播';
+        status.className = `status ${video ? 'blue' : 'succeeded'}`;
+      }
+      selectedMaterialSource = 'local';
+      chooseMaterialSource('local');
+      if (video) {
+        applyClientReportToCreator(latestCreatorClientReport);
+        renderStudioMaterialGrid();
+        notify('已选择制作视频。请确认口播稿和素材后，手动点击“开始生成视频”。');
+      } else {
+        notify('已暂不制作视频；口播稿仍可继续生成和编辑。');
+      }
+    }
     function syncStudioExpoInfo() {
+      const profile = currentExhibitionProfile();
+      const name = document.getElementById('cs-current-exhibition-name');
+      const category = document.getElementById('cs-current-exhibition-category');
+      if (name) name.textContent = profile.name;
+      if (category) category.textContent = profile.category ? `· ${profile.category}` : '';
       const topic = studioExpoTopic();
       const hiddenTopic = document.getElementById('creator-studio-topic');
       if (hiddenTopic) hiddenTopic.value = topic;
     }
     function studioExpoTopic() {
-      const exhibitionName = valueOf('cs-exhibition-name'), category = valueOf('cs-exhibition-category');
-      const parts = [];
-      if (exhibitionName) parts.push(`展会名：${exhibitionName}`);
-      if (category) parts.push(`展会类别：${category}`);
-      return parts.join('；');
+      const profile = currentExhibitionProfile();
+      const report = latestCreatorClientReport || {};
+      const brief = report.content_brief || {};
+      return [
+        `展会主题：${profile.name}`,
+        `展会类别：${profile.category}`,
+        profile.location ? `举办地点：${profile.location}` : '',
+        brief.audience ? `目标受众：${brief.audience}` : '',
+        brief.pain ? `目标受众痛点：${brief.pain}` : '',
+        brief.selling ? `展会解决路径：${brief.selling}` : '',
+        brief.tone ? `补充要求：${brief.tone}` : '',
+      ].filter(Boolean).join('\n');
     }
     function generateStudioSellingScript() {
-      const topic = studioExpoTopic();
-      if (!topic) return notify('请先填写展会名或展会类别', 'error');
-      document.getElementById('creator-studio-topic').value = topic;
-      const exhibitionName = valueOf('cs-exhibition-name');
-      const category = valueOf('cs-exhibition-category');
-      document.getElementById('brief-subject').value = exhibitionName || category;
-      document.getElementById('brief-audience').value ||= '展会主办方、拟参展企业和专业观众';
-      document.getElementById('brief-pain').value ||= '展会价值不够清晰，难以让目标企业和专业观众快速判断是否值得参加';
-      document.getElementById('brief-selling').value ||= '通过清晰呈现展会定位、行业范围和现场连接价值，降低参展与到场决策成本';
-      document.getElementById('brief-tone').value ||= '站在展会主办方角度表达，突出展会定位、参展价值和到场理由，不虚构规模、品牌或数据';
-      setCreatorStudioInputMode('ai');
-      document.getElementById('copy-topic').value = creatorBriefTopic ? creatorBriefTopic() : topic;
-      notify('正在用展会信息生成主办方口播稿…');
-      return createCopy();
+      if (!latestCreatorClientReport) latestCreatorClientReport = buildCreatorClientProfile();
+      chooseStudioOutput('video');
+      return createCreatorStudioCopy();
     }
     // 多脚本
     function renderStudioScriptTabs() {
@@ -3538,13 +3695,15 @@
       });
     }
     function startCreatorStudioPipeline() {
+      if (!latestCreatorClientReport) latestCreatorClientReport = buildCreatorClientProfile();
+      if (selectedStudioOutput !== 'video') return notify('请先在第 1 步明确选择“继续制作推广视频”', 'error');
+      selectedMaterialSource = 'local';
       studioScripts[studioActiveScript] = valueOf('creator-studio-script');
       syncCreatorStudioToWorkflow();
       const scripts = studioScripts.map(s => String(s || '').trim()).filter(Boolean);
       if (!scripts.length && !valueOf('final-copy')) return notify('请先生成或填写口播稿', 'error');
-      const localMode = selectedMaterialSource === 'local';
-      const selected = localMode ? studioSelectedClips.map(c => c.name) : [];
-      if (localMode && studioSelectedClips.length) {
+      const selected = studioSelectedClips.map(c => c.name);
+      if (studioSelectedClips.length) {
         const total = studioSelectedClips.reduce((s,c) => s + (c.kind === 'video' ? Number(c.duration||0) : 3), 0);
         if (total < 10) return notify('所选素材总时长需超过 10 秒，请再添加素材', 'error');
         if (total > 600) return notify('所选素材总时长不能超过 10 分钟，请精简素材', 'error');
@@ -3567,13 +3726,14 @@
       const task = await createTask('creator-pipeline', {
         video_project_id: projectId,
         topic: (studioExpoTopic() || valueOf('creator-studio-topic') || '展会推广').slice(0, 120),
+        client_report: latestCreatorClientReport || {},
         creative_direction: selectedCreatorDirection,
         target_duration_seconds: Number(valueOf('creator-studio-copy-length') || 30),
         sample: selectedSample || {},
         reference_logic: selectedCreatorReferenceLogic(),
         reference_artifact_id: selectedCreatorReferenceArtifact?.id || '',
         script: finalScript,
-        material_source: selectedMaterialSource,
+        material_source: 'local',
         material_dir: valueOf('material-dir'),
         selected_clips: selectedClips,
         supplement_avatar: wantAvatar,
@@ -3616,12 +3776,14 @@
       const cancelling = Boolean(task.cancel_requested);
       const stage = cancelling ? '正在取消' : (task.stage || (task.status === 'queued' ? '排队中' : '处理中'));
       const eta = (!cancelling && task.estimated_remaining_seconds != null) ? formatEta(task.estimated_remaining_seconds) : '';
-      const title = task.payload?.topic || task.payload?.keyword || '智能成片';
+      const isClientReport = task.kind === 'customer-report';
+      const title = task.payload?.exhibition_name || task.payload?.topic || task.payload?.keyword || (isClientReport ? '客户报告' : '智能成片');
+      const actionLabel = isClientReport ? '正在生成客户报告' : '正在生成视频';
       const idTail = String(task.id || '').slice(-10);
       const fb = (window.__studioFeedback || {})[task.id] || '';
       return `<div class="cs-job" data-task="${escapeAttr(task.id)}">
         <div class="cs-job-top">
-          <div><b>正在生成视频，${eta || '正在排队'}…</b>
+          <div><b>${actionLabel}，${eta || '正在排队'}…</b>
             <p class="cs-job-meta">${escapeHtml(String(title).slice(0,32))} · ${escapeHtml(task.created_at || '')} · ID ${escapeHtml(idTail)}</p></div>
         </div>
         <div class="cs-job-preview"><div class="cs-orb"></div></div>
@@ -3630,7 +3792,7 @@
           <div class="cs-progress-row"><span class="cs-stage">${escapeHtml(stage)}……</span><span class="cs-pct">${progress}%</span></div>
         </div>
         <div class="cs-job-actions">
-          <button class="cs-cancel" onclick="cancelCreatorTask('${escapeAttr(task.id)}')" ${cancelling ? 'disabled' : ''}>${cancelling ? '取消中…' : '取消生成'}</button>
+          <button class="cs-cancel" onclick="cancelCreatorTask('${escapeAttr(task.id)}')" ${cancelling ? 'disabled' : ''}>${cancelling ? '取消中…' : (isClientReport ? '取消报告' : '取消生成')}</button>
           <span class="cs-feedback"><button class="${fb === 'up' ? 'on' : ''}" onclick="submitStudioFeedback('${escapeAttr(task.id)}','up',event)">👍</button><button class="${fb === 'down' ? 'on' : ''}" onclick="submitStudioFeedback('${escapeAttr(task.id)}','down',event)">👎</button></span>
         </div>
       </div>`;
@@ -3788,7 +3950,7 @@
 
     async function createTask(kind, payload, stay = true) {
       try {
-        const creatorKinds = ['copy','tts','render','caption-style','creator-pipeline'];
+        const creatorKinds = ['customer-report','copy','tts','render','caption-style','creator-pipeline'];
         const buyerKinds = ['publish','delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch'];
         const sourceArtifactIds = creatorKinds.includes(kind) && activeCreatorSourceArtifactId
           ? [activeCreatorSourceArtifactId]
@@ -3797,7 +3959,7 @@
             : (payload.source_artifact_ids || []);
         const taskPayload = {...payload, expo_id:currentExpoRecordId(), source_artifact_ids:sourceArtifactIds};
         const task = await api(`/api/tasks/${kind}`, { method:'POST', body: JSON.stringify(taskPayload) });
-        if (task?.id && ['copy','tts','render','caption-style','creator-pipeline'].includes(kind)) rememberCreatorTask(task);
+        if (task?.id && ['customer-report','copy','tts','render','caption-style','creator-pipeline'].includes(kind)) rememberCreatorTask(task);
         if (task?.id && ['search','import-links','sample-analysis'].includes(kind)) {
           // Persist the server task id as soon as POST returns.  The user can
           // leave this page before the follow-up loadTasks() request finishes;
@@ -3805,7 +3967,7 @@
           currentHunterTaskId = task.id;
           sessionStorage.setItem('currentHunterTaskId', currentHunterTaskId);
         }
-        notify(['search','import-links','sample-analysis','download','copy','tts','render','caption-style','creator-pipeline'].includes(kind)
+        notify(['search','import-links','sample-analysis','download','customer-report','copy','tts','render','caption-style','creator-pipeline'].includes(kind)
           ? '任务已提交；即使返回其他页面，员工也会在服务端后台继续执行，稍后可在员工进程页查看状态。'
           : '任务已提交，员工正在后台处理。');
         if (task?.id) startTaskPolling(task.id, kind);
@@ -5516,7 +5678,7 @@
       if (!box) return;
       const employees = [
         {key:'hunter', name:'找爆款员工', kinds:['search','import-links','sample-analysis','download'], idle:'等待检索任务：输入主题后会自动抓取、去重并生成爆款逻辑。', action:'安排检索', section:'hunter'},
-        {key:'creator', name:'生视频员工', kinds:['creator-pipeline','copy','tts','render','caption-style'], idle:'等待生成任务：可从零创作，也可在脚本步骤选择爆款逻辑。', action:'生成视频', section:'creator'},
+        {key:'creator', name:'生视频员工', kinds:['customer-report','creator-pipeline','copy','tts','render','caption-style'], idle:'等待创作任务：先查看客户画像、生成口播稿，再决定是否制作视频。', action:'开始创作', section:'creator'},
         {key:'buyer', name:'投放员工', kinds:['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch','publish'], idle:'等待投放任务：绑定巨量账户后选择成片并创建安全投放草稿。', action:'配置投放', section:'buyer'},
       ];
       const taskCount = items.length;
@@ -5536,7 +5698,7 @@
       }).join('');
     }
     function taskKindLabel(kind) {
-      return ({search:'检索样本', 'import-links':'导入样本', 'sample-analysis':'反推爆款逻辑', download:'下载样本', copy:'生成口播', tts:'生成语音', 'creator-pipeline':'生成完整视频', render:'生成成片', 'caption-style':'应用字幕样式', publish:'账号发布', 'delivery-draft':'投放检查', 'delivery-report':'同步报表', 'ocean-video-upload':'上传视频', 'ocean-project-create':'创建项目', 'ocean-promotion-create':'创建推广', 'ocean-safe-launch':'安全投放草稿'})[kind] || kind;
+      return ({search:'检索样本', 'import-links':'导入样本', 'sample-analysis':'反推爆款逻辑', download:'下载样本', 'customer-report':'生成客户报告', copy:'生成口播', tts:'生成语音', 'creator-pipeline':'生成完整视频', render:'生成成片', 'caption-style':'应用字幕样式', publish:'账号发布', 'delivery-draft':'投放检查', 'delivery-report':'同步报表', 'ocean-video-upload':'上传视频', 'ocean-project-create':'创建项目', 'ocean-promotion-create':'创建推广', 'ocean-safe-launch':'安全投放草稿'})[kind] || kind;
     }
     function renderEmployeeActivity(employee, kinds, items) {
       const box = document.getElementById(`${employee}-activity`);
@@ -5558,7 +5720,7 @@
     function renderEmployeeWork(items) {
       const groups = {
         hunter:['search','import-links','sample-analysis','download'],
-        creator:['creator-pipeline','copy','tts','render','caption-style'],
+        creator:['customer-report','creator-pipeline','copy','tts','render','caption-style'],
         buyer:['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch','publish'],
       };
       Object.entries(groups).forEach(([employee, kinds]) => {
@@ -5651,7 +5813,7 @@
       }
       const groups = [
         {name:'找爆款员工', desc:'负责检索案例并生成爆款逻辑时间线。', kinds:['search','import-links','sample-analysis','download'], section:'hunter'},
-        {name:'生视频员工', desc:'负责口播、配音和最终成片。', kinds:['creator-pipeline','copy','tts','render','caption-style'], section:'creator'},
+        {name:'生视频员工', desc:'先查看预置客户画像，生成口播稿后再确认是否制作视频。', kinds:['customer-report','creator-pipeline','copy','tts','render','caption-style'], section:'creator'},
         {name:'投放员工', desc:'负责绑定巨量、创建草稿和同步数据。', kinds:['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch','publish'], section:'buyer'},
       ];
       const stateLabel = {queued:'排队中', running:'执行中', succeeded:'已完成', failed:'需处理'};
@@ -5684,6 +5846,28 @@
       box.innerHTML = `<div class="task-center-grid">${groupHtml}</div>`;
     }
     function hydrateLatestResults(items) {
+      const latestClientReportTask = items.find(t => isCreatorSessionTask(t) && t.kind === 'customer-report');
+      if (latestClientReportTask?.status === 'succeeded' && latestClientReportTask.result?.report && latestClientReportTask.id !== lastCompletedClientReport) {
+        lastCompletedClientReport = latestClientReportTask.id;
+        const button = document.getElementById('creator-client-report-button');
+        if (button) button.disabled = false;
+        renderCreatorClientReport(latestClientReportTask.result.report);
+        if (hasHydratedTasks) notify('客户报告已生成。请查看报告后选择是否制作视频。');
+      }
+      if (latestClientReportTask && ['queued','running'].includes(latestClientReportTask.status)) {
+        const status = document.getElementById('creator-client-report-status');
+        const button = document.getElementById('creator-client-report-button');
+        if (status) { status.textContent = latestClientReportTask.status === 'queued' ? '排队中' : '生成中'; status.className = 'status running'; }
+        if (button) button.disabled = true;
+      }
+      if (latestClientReportTask?.status === 'failed' && latestClientReportTask.id !== lastCompletedClientReport) {
+        lastCompletedClientReport = latestClientReportTask.id;
+        const status = document.getElementById('creator-client-report-status');
+        const button = document.getElementById('creator-client-report-button');
+        if (status) { status.textContent = '生成失败'; status.className = 'status failed'; }
+        if (button) button.disabled = false;
+        if (hasHydratedTasks) notify(taskBusinessMessage(latestClientReportTask) || '客户报告生成失败。', 'error');
+      }
       const latestCopy = items.find(t => isCreatorSessionTask(t) && t.kind === 'copy' && t.status === 'succeeded' && t.result?.copy);
       if (latestCopy && latestCopy.id !== lastCompletedCopy) {
         lastCompletedCopy = latestCopy.id;
@@ -5833,7 +6017,7 @@
     function renderCreatorHistory(items = []) {
       const boxes = [document.getElementById('creator-history'), document.getElementById('creator-history-page'), document.getElementById('creator-history-overview'), document.getElementById('creator-studio-history')].filter(Boolean);
       if (!boxes.length) return;
-      const creatorKinds = ['creator-pipeline','render','caption-style','tts','copy'];
+      const creatorKinds = ['customer-report','creator-pipeline','render','caption-style','tts','copy'];
       const running = items.filter(task => creatorKinds.includes(task.kind) && ['queued','running'].includes(task.status)).slice(0, 6);
       // 屏A 右列：富进度卡（进度条/ETA/取消/点赞点踩）+ 最近取消横幅
       const studioActive = document.getElementById('creator-studio-active-jobs');
@@ -6037,7 +6221,7 @@
       const creatorOutcome = recordsForCurrentExpo(latestArtifacts).some(item => item.employee === 'creator');
       const buyerOutcome = recordsForCurrentExpo(latestArtifacts).some(item => item.employee === 'buyer');
       const runningHunter = items.some(t => ['search','import-links','sample-analysis'].includes(t.kind) && ['queued','running'].includes(t.status));
-      const runningCreator = items.some(t => ['creator-pipeline','copy','tts','render','caption-style'].includes(t.kind) && ['queued','running'].includes(t.status));
+      const runningCreator = items.some(t => ['customer-report','creator-pipeline','copy','tts','render','caption-style'].includes(t.kind) && ['queued','running'].includes(t.status));
       const runningBuyer = items.some(t => ['publish','delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch'].includes(t.kind) && ['queued','running'].includes(t.status));
       setStatus('hunter-status', runningHunter ? '工作中' : hunterOutcome ? '已有成果' : hasSamples ? '待整理成果' : '空闲中', runningHunter ? 'running' : hunterOutcome ? 'succeeded' : hasSamples ? 'blue' : '');
       setStatus('creator-status', runningCreator ? '工作中' : creatorOutcome ? '已有成果' : hasVideo ? '待保存成果' : hasCopy ? '已有文案' : '空闲中', runningCreator ? 'running' : creatorOutcome ? 'succeeded' : hasVideo || hasCopy ? 'blue' : '');
@@ -6086,6 +6270,7 @@
         const timelineCount = task.result?.viral_logic?.timeline?.length || task.result?.timeline_json?.length || 0;
         return task.result?.artifact_id ? `爆款逻辑已生成，包含 ${timelineCount} 段时间线` : '爆款逻辑分析已完成';
       }
+      if (task.kind === 'customer-report') return '历史客户报告任务已完成；新任务使用进入展会时预置的客户画像';
       if (task.kind === 'copy') return '口播稿已回填到生视频员工面板';
       if (task.kind === 'tts') return `语音已生成，音色：${task.result.voice || ''}${task.result.fallback_used ? `（已自动切换到 ${task.result.service}）` : ''}`;
       if (task.kind === 'render') return task.result.summary?.final_video ? '成片已生成，可在生视频员工面板预览' : '成片任务已完成';

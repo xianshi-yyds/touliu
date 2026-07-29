@@ -45,6 +45,7 @@ RESUMABLE_TASK_KINDS = {
     "import-links",
     "download",
     "creator-pipeline",
+    "customer-report",
     "copy",
     "tts",
     "render",
@@ -2281,6 +2282,7 @@ _CURRENT_JOB = threading.local()
 # delivery workbench progress card.  Real elapsed time refines it at read time.
 TASK_DURATION_BUDGET = {
     "creator-pipeline": 660,
+    "customer-report": 35,
     "render": 240,
     "caption-style": 90,
     "tts": 45,
@@ -2406,7 +2408,7 @@ def request_task_cancel(task_id: str) -> dict[str, Any]:
 def employee_for_task(kind: str) -> str:
     if kind in {"search", "import-links", "download", "sample-analysis"}:
         return "hunter"
-    if kind in {"copy", "tts", "render", "caption-style", "creator-pipeline"}:
+    if kind in {"customer-report", "copy", "tts", "render", "caption-style", "creator-pipeline"}:
         return "creator"
     if kind in {
         "publish",
@@ -2560,6 +2562,32 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
         urls = payload.get("urls") or []
         limit = int(payload.get("limit") or len(urls) or 1)
         return submit(lambda: social.download_selected(platform, keyword, urls, limit=limit))
+    if kind == "customer-report":
+        exhibition_name = require_text(payload, "exhibition_name", "展会名称")
+        exhibition_category = str(payload.get("exhibition_category") or "").strip()
+        exhibition_context = payload.get("exhibition_context")
+        if not isinstance(exhibition_context, dict):
+            exhibition_context = {}
+
+        def customer_report_job() -> dict[str, Any]:
+            report_progress(15, "读取展会档案")
+            check_cancel()
+            report_progress(38, "分析目标客户与决策痛点")
+            report = qwen.generate_client_report(
+                exhibition_name,
+                exhibition_category,
+                exhibition_context=exhibition_context,
+            )
+            check_cancel()
+            report_progress(88, "整理客户报告")
+            return {
+                "report": report,
+                "exhibition_name": exhibition_name,
+                "exhibition_category": exhibition_category,
+                "video_started": False,
+            }
+
+        return submit(customer_report_job)
     if kind == "creator-pipeline":
         topic = require_text(payload, "topic", "视频需求")
         sample = payload.get("sample") or {}

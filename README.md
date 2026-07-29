@@ -5,6 +5,138 @@
 真正可迁移的轻量版展会短视频工作台。默认不依赖父目录里的
 `MoneyPrinterTurbo`、`new_video_download` 或 `social-auto-upload`。
 
+## 服务器访问与项目位置
+
+当前数字员工服务部署在独立服务器上，和旧服务器上的生图及其他项目隔离。
+
+| 项目 | 当前值 |
+| --- | --- |
+| 服务器公网 IP | `3.136.217.101` |
+| SSH 用户 | `ec2-user` |
+| 本机 SSH 私钥 | `~/Downloads/xianshi.pem` |
+| 服务器项目目录 | `/opt/exhibitflow-lite` |
+| 线上地址 | `https://employee.xianshi.icu/` |
+| API 内部端口 | `127.0.0.1:8501` |
+| 前端内部端口 | `127.0.0.1:5173` |
+
+### SSH 登录
+
+在本机终端执行：
+
+```bash
+chmod 400 ~/Downloads/xianshi.pem
+
+ssh -o IdentitiesOnly=yes \
+  -i ~/Downloads/xianshi.pem \
+  ec2-user@3.136.217.101
+```
+
+登录后进入项目：
+
+```bash
+cd /opt/exhibitflow-lite
+```
+
+私钥只保存在本机，不要上传到服务器、提交到 Git 或写入 README。
+
+### 服务状态与健康检查
+
+服务器使用 `systemd` 守护前后端服务，Nginx 将域名请求转发到这两个本机端口：
+
+```bash
+# 查看服务状态
+sudo systemctl status exhibitflow-api --no-pager
+sudo systemctl status exhibitflow-frontend --no-pager
+
+# API 健康检查
+curl -fsS http://127.0.0.1:8501/api/health
+
+# 检查公网入口
+curl -I https://employee.xianshi.icu/
+```
+
+常用运维命令：
+
+```bash
+# 重启服务
+sudo systemctl restart exhibitflow-api
+sudo systemctl restart exhibitflow-frontend
+
+# 查看实时日志
+sudo journalctl -u exhibitflow-api -f
+sudo journalctl -u exhibitflow-frontend -f
+
+# 查看项目日志
+tail -f /opt/exhibitflow-lite/storage/logs/api-server.log
+tail -f /opt/exhibitflow-lite/storage/logs/frontend-server.log
+```
+
+服务器项目的主要目录：
+
+```text
+/opt/exhibitflow-lite/
+├── api_server.py                  后端 API、异步任务和回调
+├── frontend/index.html            SaaS 前端页面
+├── frontend/serve_frontend.py     前端静态服务
+├── exhibitflow_lite/              文案、TTS、素材、渲染和平台适配
+├── materials/                     展会和品牌素材
+├── storage/                       任务、历史、媒体、日志和平台状态
+├── vendor/                        可选的抓取/外部链路
+├── .env                           服务器私有配置，不提交
+└── .venv/                         Python 虚拟环境
+```
+
+本地修改同步到服务器前，先备份服务器对应文件；不要覆盖服务器上的 `.env`、授权状态和 `storage/`。同步后通常执行：
+
+```bash
+sudo systemctl restart exhibitflow-api
+sudo systemctl restart exhibitflow-frontend
+curl -fsS http://127.0.0.1:8501/api/health
+```
+
+如页面仍显示旧版本，使用浏览器强制刷新：macOS 按 `Command + Shift + R`。
+
+## 当前项目功能
+
+ExhibitFlow Lite 是按“展会”组织业务的数字员工 SaaS 工作台。进入某个展会后，用户可以在同一个展会上下文中管理素材、生产视频并准备投放。
+
+### 1. 展会与素材库
+
+- 展会列表：新建或进入已有展会。
+- 展会级隔离：不同展会的素材、任务、历史版本和产出互不混用。
+- 素材库：上传展会图片、视频和品牌素材，作为后续生视频的本地素材来源。
+- 客户画像：根据当前展会内置加载，仅作为生成口播稿的上下文，不要求用户重复填写独立任务。
+
+### 2. 找爆款员工
+
+- 通过 TikHub 检索抖音公开内容，也支持小红书 Rnote 公开检索或手动导入链接。
+- 创建异步检索任务，后台执行搜索、去重、互动分计算和样本整理。
+- 按点赞、评论、转发等互动数据生成推荐样本包。
+- 支持查看检索历史、样本详情，并将参考样本用于后续视频创作。
+
+### 3. 生视频员工
+
+- 根据当前展会信息、客户画像、参考样本和素材生成口播稿。
+- 选择音色并生成配音，口播稿同时作为字幕和时长计算的文本源。
+- 支持本地素材库或网络素材检索两种素材来源。
+- 使用 FFmpeg 生成竖屏推广视频，并保存无字幕基底、字幕时间轴和成片历史。
+- 在成片前实时预览字幕效果，可切换视觉预设、字体、入场动画、字幕大小和位置。
+- 未保存到视频创作包的历史版本仍可重新编辑字幕；保存后版本锁定。
+
+### 4. 投放员工
+
+- 通过巨量引擎 OAuth 绑定广告账号。
+- 从生视频员工的历史产出中选择视频，配置投放目标、预算、时间、人群和落地页。
+- 默认创建安全草稿，不会未经确认直接产生真实消耗。
+- 预留小红书、视频号/腾讯广告等平台扩展接口；当前腾讯广告适配以只读创意接口为主。
+
+### 5. 后台任务与数据持久化
+
+- API 负责检索、AI、TTS、视频渲染、字幕后处理和投放任务。
+- 前端通过任务接口轮询真实状态，不依赖页面停留；离开页面后任务仍会在服务器继续执行。
+- 任务状态、日志、媒体文件、历史版本和平台绑定状态保存在服务器 `storage/` 中。
+- 页面刷新或重新进入员工后，可以继续查看进行中、已完成和失败的任务。
+
 ## 内置能力
 
 - 手动导入抖音/小红书链接作为参考样本

@@ -467,6 +467,165 @@ def generate_copy(
     return last_copy
 
 
+def _clean_report_list(value: Any, fallback: list[str], limit: int = 5) -> list[str]:
+    if not isinstance(value, list):
+        return fallback
+    items = [str(item).strip()[:160] for item in value if str(item).strip()]
+    return items[:limit] or fallback
+
+
+def _fallback_client_report(
+    exhibition_name: str,
+    exhibition_category: str = "",
+    exhibition_context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    context = exhibition_context or {}
+    category = str(exhibition_category or context.get("category") or "专业会展").strip()
+    name = str(exhibition_name or context.get("name") or "当前展会").strip()
+    return {
+        "version": "1.0",
+        "report_type": "exhibition_client_report",
+        "exhibition_name": name,
+        "exhibition_category": category,
+        "executive_summary": f"{name}面向与{category}相关的参展企业、采购与渠道角色，内容传播应优先解释参会对象、现场可比较的内容以及参与决策依据。",
+        "target_customers": ["拟参展企业负责人", "采购或业务决策人员", "渠道与行业合作方"],
+        "customer_pain_points": ["行业信息与供应商选择分散", "线上资料难以验证方案适配性", "参展或到场价值缺少清晰判断依据"],
+        "exhibition_values": ["集中了解行业方案", "现场比较产品与服务", "直接沟通并验证业务适配性"],
+        "content_opportunities": ["从目标客户的决策难点切入", "用现场比较与沟通价值承接痛点", "以进一步了解展会作为自然行动收束"],
+        "video_recommendation": {
+            "recommended": True,
+            "reason": "适合用短视频快速说明目标客户、决策痛点和到场价值；是否制作仍由用户确认。",
+            "preferred_angle": "客户决策痛点 → 现场解决路径 → 展会价值",
+        },
+        "content_brief": {
+            "audience": "展会相关企业负责人、采购商和专业观众",
+            "pain": "信息分散，方案难以集中比较，适配性验证成本较高",
+            "selling": "在展会现场集中了解方案、连接相关角色并验证业务适配度",
+            "tone": "专业、克制、具体，不虚构规模、买家、订单或效果数据",
+        },
+        "evidence_note": "当前报告基于展会档案生成；未提供的数据不会作为事实写入。",
+    }
+
+
+def _normalise_client_report(
+    raw: Any,
+    exhibition_name: str,
+    exhibition_category: str = "",
+    exhibition_context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    fallback = _fallback_client_report(exhibition_name, exhibition_category, exhibition_context)
+    if not isinstance(raw, dict):
+        return fallback
+    result = dict(fallback)
+    for key in (
+        "executive_summary",
+        "evidence_note",
+    ):
+        if str(raw.get(key) or "").strip():
+            result[key] = str(raw[key]).strip()[:600]
+    for key in ("target_customers", "customer_pain_points", "exhibition_values", "content_opportunities"):
+        result[key] = _clean_report_list(raw.get(key), fallback[key])
+    recommendation = raw.get("video_recommendation")
+    if isinstance(recommendation, dict):
+        result["video_recommendation"] = {
+            "recommended": bool(recommendation.get("recommended", True)),
+            "reason": str(recommendation.get("reason") or fallback["video_recommendation"]["reason"]).strip()[:300],
+            "preferred_angle": str(
+                recommendation.get("preferred_angle") or fallback["video_recommendation"]["preferred_angle"]
+            ).strip()[:180],
+        }
+    brief = raw.get("content_brief")
+    if isinstance(brief, dict):
+        result["content_brief"] = {
+            key: str(brief.get(key) or fallback["content_brief"][key]).strip()[:400]
+            for key in ("audience", "pain", "selling", "tone")
+        }
+    result["exhibition_name"] = str(exhibition_name or fallback["exhibition_name"]).strip()
+    result["exhibition_category"] = str(exhibition_category or fallback["exhibition_category"]).strip()
+    return result
+
+
+def generate_client_report(
+    exhibition_name: str,
+    exhibition_category: str = "",
+    *,
+    exhibition_context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Generate a reusable exhibition client report before any video work starts."""
+    context = exhibition_context if isinstance(exhibition_context, dict) else {}
+    name = str(exhibition_name or context.get("name") or "").strip()
+    if not name:
+        raise ValueError("缺少展会名称，无法生成客户报告")
+    category = str(exhibition_category or context.get("category") or "").strip()
+    fallback = _fallback_client_report(name, category, context)
+    system_prompt = """
+你是会展业务研究员工。你需要根据系统中已有的展会档案，先生成一份客户报告，帮助用户判断是否值得制作推广视频。
+报告必须区分“档案中明确提供的信息”和“基于行业常识的条件性判断”。禁止虚构参展商、采购商、规模、订单、效果、政策、价格或到场承诺。
+只输出符合要求的 JSON，不要输出 Markdown、解释或思考过程。
+""".strip()
+    prompt = f"""
+请为以下展会生成客户报告：
+{json.dumps({"name": name, "category": category, **context}, ensure_ascii=False, indent=2)}
+
+JSON 结构：
+{{
+  "executive_summary": "报告摘要",
+  "target_customers": ["目标客户角色，3-5项"],
+  "customer_pain_points": ["这些角色真实或条件性的决策痛点，3-5项"],
+  "exhibition_values": ["展会可以提供的过程价值，3-5项"],
+  "content_opportunities": ["适合对外传播的内容机会，3-5项"],
+  "video_recommendation": {{
+    "recommended": true,
+    "reason": "是否适合制作短视频的判断依据",
+    "preferred_angle": "如果制作视频，建议采用的一个核心角度"
+  }},
+  "content_brief": {{
+    "audience": "供后续口播生成使用的目标受众",
+    "pain": "供后续口播生成使用的痛点",
+    "selling": "供后续口播生成使用的解决路径",
+    "tone": "表达边界与语气"
+  }},
+  "evidence_note": "明确说明报告依据与缺失信息"
+}}
+
+要求：
+1. 报告面向展会主办方，重点回答“客户是谁、为什么犹豫、展会能帮助其完成什么判断”。
+2. 解决方案只能写集中了解、现场比较、直接沟通、验证适配、连接相关角色等过程价值，不能承诺成交或获客。
+3. 如果档案信息不足，使用“可能、通常、需要确认”等条件性表达，并在 evidence_note 中说明。
+4. video_recommendation 只是建议，系统不会自动开始生成视频。
+5. 场馆名称只代表举办地址，不能据此推导展会的规模、级别、影响力、号召力或往届效果；“中国进出口商品交易会展馆”也不代表当前活动就是广交会。
+""".strip()
+    payload = {
+        "model": settings.text_llm_model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt},
+        ],
+        "stream": False,
+        "enable_thinking": settings.text_llm_enable_thinking,
+        "temperature": 0.25,
+        "max_tokens": 1600,
+    }
+    response = post_json_with_retry(
+        settings.text_llm_base_url.rstrip("/") + "/chat/completions",
+        headers={"Authorization": f"Bearer {require_text_llm_key()}", "Content-Type": "application/json"},
+        payload=payload,
+        timeout=(8, 60),
+        attempts=3,
+    )
+    if response.status_code >= 400:
+        raise RuntimeError(f"Qwen client report generation failed: HTTP {response.status_code} {response.text[:800]}")
+    try:
+        content = str(response.json()["choices"][0]["message"].get("content") or "").strip()
+        content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content, flags=re.I).strip()
+        start = content.find("{")
+        end = content.rfind("}")
+        raw = json.loads(content[start:end + 1]) if start >= 0 and end > start else None
+    except (ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError):
+        raw = None
+    return _normalise_client_report(raw, name, category, context) if raw else fallback
+
+
 VISUAL_ROLE_DEFAULTS: dict[str, dict[str, Any]] = {
     "venue": {
         "ratio": 0.30,
