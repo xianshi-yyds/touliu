@@ -11,12 +11,16 @@ import requests
 from .config import settings
 
 
-def _best_video_file(files: list[dict[str, Any]]) -> dict[str, Any] | None:
+def _best_video_file(files: list[dict[str, Any]], orientation: str = "portrait") -> dict[str, Any] | None:
     candidates = [item for item in files if item.get("link") and item.get("width") and item.get("height")]
     if not candidates:
         return None
-    portrait = [item for item in candidates if int(item["height"]) >= int(item["width"])]
-    pool = portrait or candidates
+    wanted = str(orientation or "portrait").strip().lower()
+    if wanted == "landscape":
+        preferred = [item for item in candidates if int(item["width"]) >= int(item["height"])]
+    else:
+        preferred = [item for item in candidates if int(item["height"]) >= int(item["width"])]
+    pool = preferred or candidates
     return max(pool, key=lambda item: min(int(item["width"]), 1080) * min(int(item["height"]), 1920))
 
 
@@ -28,12 +32,27 @@ def _exact_portrait_file(files: list[dict[str, Any]]) -> dict[str, Any] | None:
     return _best_video_file(files)
 
 
-def search_pexels(term: str, minimum_duration: int = 5, per_page: int = 20) -> list[dict[str, Any]]:
+def _exact_landscape_file(files: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Prefer a 1920x1080 landscape source, then fall back safely."""
+    for item in files:
+        if item.get("link") and int(item.get("width") or 0) >= int(item.get("height") or 0):
+            if int(item.get("width") or 0) >= 1280:
+                return item
+    return _best_video_file(files, orientation="landscape")
+
+
+def search_pexels(
+    term: str,
+    minimum_duration: int = 5,
+    per_page: int = 20,
+    orientation: str = "portrait",
+) -> list[dict[str, Any]]:
     if not settings.pexels_api_key:
         raise RuntimeError("网络检索素材未配置 PEXELS_API_KEY")
+    wanted = "landscape" if str(orientation or "portrait").strip().lower() == "landscape" else "portrait"
     response = requests.get(
         "https://api.pexels.com/videos/search",
-        params={"query": term, "per_page": per_page, "orientation": "portrait"},
+        params={"query": term, "per_page": per_page, "orientation": wanted},
         headers={"Authorization": settings.pexels_api_key},
         timeout=(20, 60),
     )
@@ -43,13 +62,19 @@ def search_pexels(term: str, minimum_duration: int = 5, per_page: int = 20) -> l
         duration = int(video.get("duration") or 0)
         if duration < minimum_duration:
             continue
-        media = _exact_portrait_file(video.get("video_files") or [])
+        files = video.get("video_files") or []
+        media = _exact_landscape_file(files) if wanted == "landscape" else _exact_portrait_file(files)
         if media:
             results.append({"provider": "pexels", "term": term, "duration": duration, "url": media["link"]})
     return results
 
 
-def search_pixabay(term: str, minimum_duration: int = 5, per_page: int = 50) -> list[dict[str, Any]]:
+def search_pixabay(
+    term: str,
+    minimum_duration: int = 5,
+    per_page: int = 50,
+    orientation: str = "portrait",
+) -> list[dict[str, Any]]:
     """Use the Pixabay branch when a Pixabay key is configured."""
     if not settings.pixabay_api_key:
         raise RuntimeError("网络检索 Pixabay 未配置 PIXABAY_API_KEY")
@@ -65,10 +90,13 @@ def search_pixabay(term: str, minimum_duration: int = 5, per_page: int = 50) -> 
         if duration < minimum_duration:
             continue
         choices = video.get("videos") or {}
-        media = next(
-            (item for item in choices.values() if item.get("url") and int(item.get("width") or 0) >= 1080),
-            None,
-        )
+        wanted = "landscape" if str(orientation or "portrait").strip().lower() == "landscape" else "portrait"
+        candidates = [item for item in choices.values() if item.get("url") and item.get("width") and item.get("height")]
+        preferred = [
+            item for item in candidates
+            if (int(item.get("width") or 0) >= int(item.get("height") or 0)) == (wanted == "landscape")
+        ]
+        media = max(preferred or candidates, key=lambda item: int(item.get("width") or 0), default=None)
         if media:
             results.append({"provider": "pixabay", "term": term, "duration": duration, "url": media["url"]})
     return results
@@ -76,7 +104,7 @@ def search_pixabay(term: str, minimum_duration: int = 5, per_page: int = 50) -> 
 
 def download_moneyprinter_materials(
     search_terms: list[str], output_dir: str | Path, target_duration: float = 35.0,
-    source: str = "pexels", max_clip_duration: int = 5,
+    source: str = "pexels", max_clip_duration: int = 5, orientation: str = "portrait",
 ) -> dict[str, Any]:
     """Network search/download: terms, duration filter, dedupe and capped clip duration."""
     output = Path(output_dir)
@@ -86,7 +114,7 @@ def download_moneyprinter_materials(
     total_duration = 0.0
     for term in search_terms:
         searcher = search_pixabay if source == "pixabay" else search_pexels
-        for item in searcher(term, minimum_duration=max_clip_duration):
+        for item in searcher(term, minimum_duration=max_clip_duration, orientation=orientation):
             if item["url"] in seen:
                 continue
             seen.add(item["url"])
@@ -117,6 +145,7 @@ def download_moneyprinter_visual_plan(
     target_duration: float = 35.0,
     source: str = "pexels",
     max_clip_duration: int = 5,
+    orientation: str = "portrait",
 ) -> dict[str, Any]:
     """Retrieve a balanced exhibition footage pool by visual role.
 
@@ -150,7 +179,7 @@ def download_moneyprinter_visual_plan(
         search_errors: list[str] = []
         for term in query_terms:
             try:
-                result_lists.append(searcher(term, minimum_duration=max_clip_duration))
+                result_lists.append(searcher(term, minimum_duration=max_clip_duration, orientation=orientation))
             except Exception as exc:
                 search_errors.append(f"{term}: {exc}")
         selected: list[dict[str, Any]] = []
@@ -206,6 +235,7 @@ def download_moneyprinter_visual_plan(
         "duration": round(sum(min(float(item["duration"]), max_clip_duration) for item in all_selected), 2),
         "source": source,
         "max_clip_duration": max_clip_duration,
+        "orientation": orientation,
         "strategy": "moneyprinter_exhibition_visual_plan",
         "role_dirs": role_dirs,
         "groups": group_results,

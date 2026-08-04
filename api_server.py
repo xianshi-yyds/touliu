@@ -24,7 +24,7 @@ from uuid import uuid4
 
 import requests
 
-from exhibitflow_lite import avatar, pipeline, platforms, publisher, qwen, render, social, stock, tencent_ads, tts
+from exhibitflow_lite import avatar, pipeline, platforms, publisher, qwen, render, social, stock, tencent_ads, topic_video, tts, video_agent
 from exhibitflow_lite.config import settings
 from exhibitflow_lite.storage import ensure_storage, latest_manifest, manifest_path, safe_stem, write_json
 
@@ -36,6 +36,8 @@ HANDOFF_DIR = settings.storage_dir / "handoffs"
 BROWSER_WORKER_DIR = settings.storage_dir / "browser_workers"
 MATERIAL_INDEX_FILE = settings.storage_dir / "material_index.json"
 MATERIAL_THUMB_DIR = settings.storage_dir / "material_thumbs"
+BGM_ROOT = settings.storage_dir / "bgms"
+DIGITAL_HUMAN_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 TASKS: dict[str, dict[str, Any]] = {}
 TASK_LOCK = threading.Lock()
 RECORD_LOCK = threading.Lock()
@@ -744,7 +746,8 @@ def decorate_task_for_client(task: dict[str, Any]) -> dict[str, Any]:
             summary["caption_template"] = (client_task.get("payload") or {}).get("caption_template") or "viral"
         if not summary.get("caption_animation"):
             summary["caption_animation"] = (client_task.get("payload") or {}).get("caption_animation") or "pop"
-        if not summary.get("caption_timeline") and summary.get("script") and summary.get("audio_file"):
+        dynamic_topic_video = summary.get("render_engine") == "remotion-topic" or summary.get("template") == "AutoPartsKinetic"
+        if not dynamic_topic_video and not summary.get("caption_timeline") and summary.get("script") and summary.get("audio_file"):
             try:
                 audio_path = Path(str(summary["audio_file"])).expanduser()
                 raw_highlights = (client_task.get("payload") or {}).get("highlight_words") or []
@@ -774,7 +777,10 @@ def decorate_task_for_client(task: dict[str, Any]) -> dict[str, Any]:
     )
     client_task["saved_to_video_package"] = saved
     client_task["saved_artifact_id"] = str(package.get("id") or "") if package else ""
-    client_task["editable_captions"] = bool(client_task.get("status") == "succeeded" and has_edit_source and not saved)
+    dynamic_topic_video = summary.get("render_engine") == "remotion-topic" or summary.get("template") == "AutoPartsKinetic"
+    client_task["editable_captions"] = bool(
+        not dynamic_topic_video and client_task.get("status") == "succeeded" and has_edit_source and not saved
+    )
     client_task["caption_editable"] = client_task["editable_captions"]
     return client_task
 
@@ -904,6 +910,7 @@ def public_config() -> dict[str, Any]:
     dashscope_status = dashscope_health()
     text_health = text_llm_health()
     ocean_status = ocean_config_public()
+    remotion_bin = settings.project_root / "remotion_exhibition_promo" / "node_modules" / ".bin" / "remotion"
     return {
         "project_root": str(settings.project_root),
         "storage_dir": str(settings.storage_dir),
@@ -913,6 +920,13 @@ def public_config() -> dict[str, Any]:
         "publisher_configured": publisher.sau_available(),
         "avatar": avatar.avatar_status(),
         "render_engine": settings.render_engine,
+        "topic_video": {
+            "configured": remotion_bin.is_file(),
+            "template": "AutoPartsKinetic",
+            "orientation": "landscape",
+            "tts": "edge",
+            "network_stock": bool(settings.pexels_api_key or settings.pixabay_api_key),
+        },
         "caption_templates": {
             key: {
                 "label": str(value.get("label") or key),
@@ -943,7 +957,7 @@ def public_config() -> dict[str, Any]:
         "dashscope_configured": bool(dashscope_status.get("valid")),
         "dashscope_status": dashscope_status.get("status"),
         "material_count": len(materials),
-        "online_stock_configured": bool(settings.pexels_api_key),
+        "online_stock_configured": bool(settings.pexels_api_key or settings.pixabay_api_key),
         "moneyprint_stock_configured": bool(settings.pexels_api_key),
         "pixabay_stock_configured": bool(settings.pixabay_api_key),
         "ffmpeg_configured": bool(shutil.which("ffmpeg") and shutil.which("ffprobe")),
@@ -986,6 +1000,7 @@ def infer_material_tags(filename: str) -> list[str]:
 
 
 MATERIAL_VIDEO_EXTS = {".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi"}
+BGM_EXTENSIONS = {".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac"}
 
 
 def _ensure_material_thumb(path: Path, signature: str) -> str:
@@ -1075,6 +1090,78 @@ def list_materials(expo_id: str = "") -> dict[str, Any]:
             _save_material_index(index)
         except OSError:
             pass
+    return {"count": len(items), "items": items, "expo_id": expo_id}
+
+
+def _bgm_scope(expo_id: str) -> str:
+    return safe_stem(str(expo_id or "").strip()) or "global"
+
+
+def list_bgms(expo_id: str = "") -> dict[str, Any]:
+    """List BGM files without mixing them into the video material picker."""
+    BGM_ROOT.mkdir(parents=True, exist_ok=True)
+    scopes = []
+    if str(expo_id or "").strip():
+        scopes.append(_bgm_scope(expo_id))
+    scopes.append("global")
+    items: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for scope in scopes:
+        directory = BGM_ROOT / scope
+        if not directory.is_dir():
+            continue
+        for path in sorted(directory.iterdir()):
+            if not path.is_file() or path.suffix.lower() not in BGM_EXTENSIONS:
+                continue
+            asset_id = path.relative_to(BGM_ROOT).as_posix()
+            if asset_id in seen:
+                continue
+            seen.add(asset_id)
+            try:
+                duration = round(float(render.duration(path)) or 0.0, 2)
+            except Exception:
+                duration = 0.0
+            items.append({
+                "id": asset_id,
+                "name": path.name,
+                "scope": scope,
+                "size": path.stat().st_size,
+                "duration": duration,
+                "url": media_url(path),
+            })
+    return {"count": len(items), "items": items, "expo_id": expo_id}
+
+
+def _digital_human_scope(expo_id: str) -> str:
+    return safe_stem(str(expo_id or "").strip()) or "global"
+
+
+def list_digital_human_images(expo_id: str = "") -> dict[str, Any]:
+    """List avatar images scoped to the current exhibition plus global images."""
+    root = avatar.digital_human_image_root()
+    scopes = [_digital_human_scope(expo_id)] if str(expo_id or "").strip() else []
+    if "global" not in scopes:
+        scopes.append("global")
+    items: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for scope in scopes:
+        directory = root / scope
+        if not directory.is_dir():
+            continue
+        for path in sorted(directory.iterdir(), key=lambda item: item.stat().st_mtime, reverse=True):
+            if not path.is_file() or path.suffix.lower() not in DIGITAL_HUMAN_IMAGE_EXTENSIONS:
+                continue
+            asset_id = path.relative_to(root).as_posix()
+            if asset_id in seen:
+                continue
+            seen.add(asset_id)
+            items.append({
+                "id": asset_id,
+                "name": path.name,
+                "scope": scope,
+                "size": path.stat().st_size,
+                "url": media_url(path),
+            })
     return {"count": len(items), "items": items, "expo_id": expo_id}
 
 
@@ -2451,7 +2538,16 @@ def enqueue(
             "progress": int(previous.get("progress") or 0),
             "stage": previous.get("stage") or "排队中",
             "cancel_requested": False,
-            "estimated_total_seconds": TASK_DURATION_BUDGET.get(kind, 0),
+            "estimated_total_seconds": TASK_DURATION_BUDGET.get(kind, 0)
+            + (
+                900
+                if kind == "creator-pipeline"
+                and (
+                    payload.get("supplement_avatar")
+                    or str(payload.get("production_mode") or "").strip().lower() in {"avatar", "hybrid"}
+                )
+                else 0
+            ),
             "payload": public_payload(payload),
         }
         if existing_task_id:
@@ -2623,14 +2719,170 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
             # 也会让手动文案链路误报为模型生成失败。
             report_progress(*CREATOR_STAGE_SCRIPT)
             manual_script = str(payload.get("script") or payload.get("manual_script") or "").strip()
-            generated_script = manual_script or qwen.generate_copy(
-                topic,
-                sample,
-                target_duration_seconds=target_duration_seconds,
-                creative_direction=creative_direction,
-                reference_logic=reference_logic if isinstance(reference_logic, dict) else None,
+            dynamic_engine = str(
+                payload.get("render_engine") or payload.get("video_template") or payload.get("template") or ""
+            ).strip().lower()
+            dynamic_mode = dynamic_engine in {"remotion-topic", "remotion", "autoparts-kinetic", "kinetic-exhibition"}
+            agent_mode = str(
+                payload.get("agent_mode") or ("internal-skill" if dynamic_mode else "legacy")
+            ).strip().lower()
+            copy_context = "\n".join(
+                str(value).strip()
+                for value in (
+                    topic,
+                    payload.get("background_context"),
+                    payload.get("theme_text"),
+                )
+                if str(value or "").strip()
             )
+            skill_plan: dict[str, Any] = {}
+            if dynamic_mode and agent_mode in {"internal-skill", "internal", "skill"}:
+                # The internal Agent is the only planner in this mode. It
+                # reads the project Skill, returns a constrained VideoPlan,
+                # and leaves the actual media work to the Remotion adapter.
+                skill_payload = dict(payload)
+                skill_payload["topic"] = topic
+                skill_payload["target_duration_seconds"] = target_duration_seconds
+                skill_plan = video_agent.generate_video_plan(skill_payload)
+                payload["skill_plan"] = skill_plan
+                payload["agent"] = skill_plan.get("agent") or {}
+                generated_script = manual_script or str(skill_plan.get("voiceover") or "").strip()
+            elif manual_script:
+                generated_script = manual_script
+            elif dynamic_mode:
+                # The topic renderer has a deterministic theme-document
+                # fallback when no text-model key is configured. Keep that
+                # fallback available instead of failing before the renderer
+                # receives the uploaded theme.
+                try:
+                    generated_script = qwen.generate_copy(
+                        copy_context,
+                        sample,
+                        target_duration_seconds=target_duration_seconds,
+                        creative_direction=creative_direction,
+                        reference_logic=reference_logic if isinstance(reference_logic, dict) else None,
+                    )
+                except Exception:
+                    generated_script = ""
+            else:
+                generated_script = qwen.generate_copy(
+                    copy_context,
+                    sample,
+                    target_duration_seconds=target_duration_seconds,
+                    creative_direction=creative_direction,
+                    reference_logic=reference_logic if isinstance(reference_logic, dict) else None,
+                )
+            if not generated_script and dynamic_mode:
+                generated_script = str(skill_plan.get("voiceover") or "").strip()
             script = final_script_with_cta(generated_script, cta_text)
+            if skill_plan:
+                # Store the exact script that went into TTS, including the
+                # configured CTA, so the persisted plan remains auditable.
+                skill_plan["voiceover"] = script
+                payload["skill_plan"] = skill_plan
+            if dynamic_engine in {"remotion-topic", "remotion", "autoparts-kinetic", "kinetic-exhibition"}:
+                # Keep the existing creator-pipeline task contract so old
+                # history, retry, cancellation and delivery handoff code keep
+                # working. Only the renderer behind this explicit mode changes.
+                def topic_progress(value: int, stage: str) -> None:
+                    report_progress(value, stage)
+                    check_cancel()
+
+                topic_payload = dict(payload)
+                topic_payload["topic"] = str(payload.get("event_name") or topic or "展会推广").strip()
+                topic_payload["script"] = script
+                topic_payload["cta_text"] = cta_text
+                topic_payload["video_project_id"] = video_project_id
+                if skill_plan:
+                    topic_payload["screen_copy"] = skill_plan.get("screen_copy") or []
+                    topic_payload["visual_plan"] = skill_plan.get("visual_plan") or {}
+                    topic_payload["skill_plan"] = skill_plan
+                    topic_payload["agent"] = skill_plan.get("agent") or {}
+                topic_result = topic_video.generate_topic_video(topic_payload, progress=topic_progress)
+                check_cancel()
+                report_progress(98, "整理动态主题成片")
+                final_video = Path(str(topic_result.get("final_video") or "")).resolve()
+                audio_path = Path(str(topic_result.get("audio_path") or "")).resolve()
+                if not final_video.is_file():
+                    raise FileNotFoundError(f"动态主题成片不存在：{final_video}")
+                manifest_data = topic_result.get("manifest_data") if isinstance(topic_result.get("manifest_data"), dict) else {}
+                tts_info = manifest_data.get("tts") if isinstance(manifest_data.get("tts"), dict) else {}
+                summary = {
+                    "final_video": str(final_video),
+                    "preview_url": media_url(final_video),
+                    "preview_base_url": media_url(final_video),
+                    "preview_base_video": str(final_video),
+                    "base_video": str(final_video),
+                    "combined_video": str(final_video),
+                    "audio_file": str(audio_path),
+                    "audio_preview_url": media_url(audio_path),
+                    "video_project_id": video_project_id,
+                    "template": topic_result.get("template") or "AutoPartsKinetic",
+                    "render_engine": "remotion-topic",
+                    "agent_mode": topic_result.get("agent_mode") or agent_mode,
+                    "agent": manifest_data.get("agent") or payload.get("agent") or {},
+                    "skill": manifest_data.get("skill") or {},
+                    "video_plan": topic_result.get("video_plan") or "",
+                    "duration_seconds": topic_result.get("duration_seconds") or 0,
+                    "aspect_ratio": manifest_data.get("aspectRatio") or payload.get("aspect_ratio") or "16:9",
+                    "font_style": manifest_data.get("fontStyle") or payload.get("font_style") or "impact",
+                    "transition": manifest_data.get("transition") or payload.get("transition") or "cut",
+                    "bgm": manifest_data.get("bgm") or None,
+                    "digital_human": manifest_data.get("digitalHuman") or {"enabled": False, "status": "disabled"},
+                    "production_plan": manifest_data.get("productionPlan") or {
+                        "requested": payload.get("production_mode") or "auto",
+                        "resolved": "montage",
+                    },
+                    "script": script,
+                    "voiceover_script": manifest_data.get("voiceoverScript") or script,
+                    "screen_copy": manifest_data.get("screenCopy") or [],
+                    "background_context": manifest_data.get("backgroundContext") or payload.get("background_context") or "",
+                    "manifest": topic_result.get("manifest") or "",
+                    "summary_markdown": topic_result.get("summary_markdown") or "",
+                    "manifest_url": media_url(topic_result.get("manifest") or ""),
+                    "summary_markdown_url": media_url(topic_result.get("summary_markdown") or ""),
+                    "network_search": topic_result.get("material") or {},
+                    "kinetic_text_animation": [
+                        "bottom-pop",
+                        "character-spring",
+                        "mask-wipe",
+                        "light-sweep",
+                        "numeric-counter-0.5s",
+                        "cta-pulse",
+                        "font-style",
+                        "scene-transition",
+                        "bgm-under-voiceover",
+                        "production-mode-routing",
+                        "digital-human-remotion-layer",
+                    ],
+                }
+                return {
+                    "copy": script,
+                    "audio_path": str(audio_path),
+                    "audio_preview_url": media_url(audio_path),
+                    "tts": {
+                        "requested_service": "edge",
+                        "used_service": tts_info.get("service") or "edge",
+                        "used_voice": tts_info.get("voice") or payload.get("voice") or tts.DEFAULT_EDGE_VOICE,
+                        "attempts": tts_info.get("attempts") or [],
+                    },
+                    "speech_segments": tts_info.get("sentences") or [],
+                    "summary": summary,
+                    "screen_copy": manifest_data.get("screenCopy") or [],
+                    "background_context": manifest_data.get("backgroundContext") or payload.get("background_context") or "",
+                    "video_project_id": video_project_id,
+                    "material": {
+                        "source": payload.get("material_source") or payload.get("network_source") or "pexels",
+                        **(topic_result.get("material") if isinstance(topic_result.get("material"), dict) else {}),
+                    },
+                    "cta_text": cta_text,
+                    "caption_template": "kinetic",
+                    "caption_animation": "bottom-pop",
+                    "target_duration_seconds": target_duration_seconds,
+                    "aspect_ratio": manifest_data.get("aspectRatio") or payload.get("aspect_ratio") or "16:9",
+                    "render_engine": "remotion-topic",
+                    **voiceover_stats(script),
+                }
             check_cancel()
             report_progress(*CREATOR_STAGE_VOICE)
             audio, active_tts_service, active_voice, tts_attempts, speech_segments = synthesize_script_resilient(
@@ -2696,9 +2948,9 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
                         "expo_scoped": bool(payload.get("expo_id")),
                     })
 
-            # AI 自动补充 · 数字人（dormant seam）：only fires when a client
-            # explicitly opts in.  Raises a readable error if unconfigured so the
-            # greyed UI never silently produces a talking-head-less video.
+            # Legacy renderer compatibility seam. The current Remotion topic
+            # path handles the digital-human PiP in topic_video.py; this branch
+            # remains for older direct creator-pipeline callers.
             avatar_clip_files: list[str] = []
             if payload.get("supplement_avatar"):
                 check_cancel()
@@ -2764,6 +3016,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
         return submit(creator_pipeline_job)
     if kind == "copy":
         topic = str(payload.get("topic") or payload.get("keyword") or "").strip()
+        background_context = str(payload.get("background_context") or payload.get("theme_text") or "").strip()
         sample = payload.get("sample") or {}
         target_duration_seconds = normalize_target_duration(payload.get("target_duration_seconds"))
         creative_direction = str(payload.get("creative_direction") or "").strip()
@@ -2775,7 +3028,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
         def copy_job() -> dict[str, Any]:
             copy = final_script_with_cta(
                 qwen.generate_copy(
-                    topic,
+                    "\n".join(value for value in (topic, background_context) if value),
                     sample,
                     target_duration_seconds=target_duration_seconds,
                     creative_direction=creative_direction,
@@ -3153,6 +3406,14 @@ class Handler(BaseHTTPRequestHandler):
             query = parse_qs(parsed.query)
             self.send_json(list_materials((query.get("expo_id") or [""])[0]))
             return
+        if path == "/api/bgms":
+            query = parse_qs(parsed.query)
+            self.send_json(list_bgms((query.get("expo_id") or [""])[0]))
+            return
+        if path == "/api/digital-human/images":
+            query = parse_qs(parsed.query)
+            self.send_json(list_digital_human_images((query.get("expo_id") or [""])[0]))
+            return
         if path == "/api/social/bindings":
             self.send_json({"ok": True, "items": social.public_bindings()})
             return
@@ -3339,6 +3600,85 @@ class Handler(BaseHTTPRequestHandler):
                     "size": target.stat().st_size,
                     "expo_id": expo_id,
                     "tags": index[target.name]["tags"],
+                }, status=201)
+                return
+            if path == "/api/bgms/upload":
+                query = parse_qs(parsed.query)
+                filename = Path((query.get("name") or [""])[0]).name
+                expo_id = str((query.get("expo_id") or [""])[0]).strip()
+                if not filename or Path(filename).suffix.lower() not in BGM_EXTENSIONS:
+                    raise ValueError("BGM 仅支持 MP3、WAV、M4A、AAC、OGG 或 FLAC")
+                length = int(self.headers.get("Content-Length") or 0)
+                if length <= 0:
+                    raise ValueError("BGM 文件为空")
+                if length > 80 * 1024 * 1024:
+                    raise ValueError("BGM 文件不能超过 80MB")
+                target_dir = BGM_ROOT / _bgm_scope(expo_id)
+                target_dir.mkdir(parents=True, exist_ok=True)
+                target = target_dir / filename
+                if target.exists():
+                    target = target.with_name(f"{target.stem}-{uuid4().hex[:6]}{target.suffix.lower()}")
+                with target.open("wb") as handle:
+                    remaining = length
+                    while remaining:
+                        chunk = self.rfile.read(min(1024 * 1024, remaining))
+                        if not chunk:
+                            break
+                        handle.write(chunk)
+                        remaining -= len(chunk)
+                if remaining:
+                    target.unlink(missing_ok=True)
+                    raise ValueError("BGM 上传未完成")
+                try:
+                    duration = round(float(render.duration(target)) or 0.0, 2)
+                except Exception:
+                    duration = 0.0
+                self.send_json({
+                    "ok": True,
+                    "id": target.relative_to(BGM_ROOT).as_posix(),
+                    "name": target.name,
+                    "path": str(target),
+                    "size": target.stat().st_size,
+                    "duration": duration,
+                    "expo_id": expo_id,
+                }, status=201)
+                return
+            if path == "/api/digital-human/images/upload":
+                query = parse_qs(parsed.query)
+                filename = Path((query.get("name") or [""])[0]).name
+                expo_id = str((query.get("expo_id") or [""])[0]).strip()
+                if not filename or Path(filename).suffix.lower() not in DIGITAL_HUMAN_IMAGE_EXTENSIONS:
+                    raise ValueError("数字人形象仅支持 JPG、PNG 或 WEBP")
+                length = int(self.headers.get("Content-Length") or 0)
+                if length <= 0:
+                    raise ValueError("数字人形象文件为空")
+                if length > 10 * 1024 * 1024:
+                    raise ValueError("数字人形象不能超过 10MB")
+                image_root = avatar.digital_human_image_root()
+                target_dir = image_root / _digital_human_scope(expo_id)
+                target_dir.mkdir(parents=True, exist_ok=True)
+                target = target_dir / filename
+                if target.exists():
+                    target = target.with_name(f"{target.stem}-{uuid4().hex[:6]}{target.suffix.lower()}")
+                with target.open("wb") as handle:
+                    remaining = length
+                    while remaining:
+                        chunk = self.rfile.read(min(1024 * 1024, remaining))
+                        if not chunk:
+                            break
+                        handle.write(chunk)
+                        remaining -= len(chunk)
+                if remaining:
+                    target.unlink(missing_ok=True)
+                    raise ValueError("数字人形象上传未完成")
+                self.send_json({
+                    "ok": True,
+                    "id": target.relative_to(image_root).as_posix(),
+                    "name": target.name,
+                    "path": str(target),
+                    "url": media_url(target),
+                    "size": target.stat().st_size,
+                    "expo_id": expo_id,
                 }, status=201)
                 return
             payload = self.read_payload()

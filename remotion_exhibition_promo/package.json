@@ -1,0 +1,39 @@
+{
+  "name": "remotion_exhibition_promo",
+  "version": "1.0.0",
+  "description": "My Remotion video",
+  "repository": {},
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@remotion/captions": "4.0.500",
+    "@remotion/cli": "4.0.500",
+    "@remotion/media": "4.0.500",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.500",
+    "@remotion/tailwind-v4": "4.0.500",
+    "tailwindcss": "4.0.0"
+  },
+  "devDependencies": {
+    "@remotion/eslint-config-flat": "4.0.500",
+    "@types/react": "19.2.7",
+    "@types/web": "0.0.166",
+    "eslint": "9.19.0",
+    "prettier": "3.8.1",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "prepare:promo": "if [ -x ../.venv/bin/python ]; then ../.venv/bin/python scripts/prepare_promo.py; else python3 scripts/prepare_promo.py; fi",
+    "dev": "remotion studio",
+    "render:promo": "remotion render src/index.ts ExhibitionPromo out/exhibition-promo.mp4",
+    "render:kinetic": "remotion render src/index.ts AutoPartsKinetic out/auto-parts-reference-style.mp4",
+    "still:promo": "remotion still ExhibitionPromo --scale=0.25 --frame=30 out/exhibition-promo-still.png",
+    "build": "remotion bundle",
+    "upgrade": "remotion upgrade",
+    "lint": "eslint src && tsc"
+  },
+  "sideEffects": [
+    "*.css"
+  ]
+}

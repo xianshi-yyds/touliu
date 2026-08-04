@@ -19,4 +19,10 @@ else
   echo "ffmpeg/ffprobe: MISSING (仅影响视频合成)"
 fi
 
+if [ -x "$ROOT_DIR/remotion_exhibition_promo/node_modules/.bin/remotion" ]; then
+  echo "Remotion 主题动态成片：OK"
+else
+  echo "Remotion 主题动态成片：MISSING (请在 remotion_exhibition_promo 运行 npm ci)"
+fi
+
 echo "ExhibitFlow Lite 安装检查完成。"

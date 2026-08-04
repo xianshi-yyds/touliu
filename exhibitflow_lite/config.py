@@ -125,10 +125,13 @@ class Settings:
     tencent_ads_client_id: str = os.getenv("TENCENT_ADS_CLIENT_ID", "").strip()
     tencent_ads_client_secret: str = os.getenv("TENCENT_ADS_CLIENT_SECRET", "").strip()
     tencent_ads_account_id: str = os.getenv("TENCENT_ADS_ACCOUNT_ID", "").strip()
-    # Digital-human / AI-video supplement ("AI 自动补充"). Optional third-party
-    # avatar providers; the feature stays dormant (UI greyed "即将上线") until a
-    # provider and its credentials are supplied here.
-    avatar_provider: str = os.getenv("AVATAR_PROVIDER", "").strip().lower()
+    # Digital-human / AI-video supplement ("AI 自动补充"). Provider credentials
+    # stay server-side; the browser only receives a compact configured flag.
+    avatar_provider: str = (
+        os.getenv("AVATAR_PROVIDER", "").strip().lower()
+        or ("runninghub" if os.getenv("RUNNINGHUB_API_KEY", "").strip() else "")
+        or ("heygen" if os.getenv("HEYGEN_API_KEY", "").strip() else "")
+    )
     heygen_api_key: str = os.getenv("HEYGEN_API_KEY", "").strip()
     heygen_base_url: str = os.getenv("HEYGEN_BASE_URL", "https://api.heygen.com").strip().rstrip("/")
     heygen_avatar_id: str = os.getenv("HEYGEN_AVATAR_ID", "").strip()
@@ -136,6 +139,30 @@ class Settings:
     volc_avatar_base_url: str = os.getenv("VOLC_AVATAR_BASE_URL", "").strip().rstrip("/")
     volc_avatar_token: str = os.getenv("VOLC_AVATAR_TOKEN", "").strip()
     volc_avatar_id: str = os.getenv("VOLC_AVATAR_ID", "").strip()
+    # RunningHub digital-human workflow. The workflow receives the uploaded
+    # person/fusion image and the Edge-TTS audio as two external inputs.
+    runninghub_api_key: str = os.getenv("RUNNINGHUB_API_KEY", "").strip()
+    runninghub_api_url: str = os.getenv("RUNNINGHUB_API_URL", "https://www.runninghub.cn").strip().rstrip("/")
+    runninghub_digital_human_workflow_id: str = os.getenv(
+        "RUNNINGHUB_DIGITAL_HUMAN_WORKFLOW_ID", "2003717471859294210"
+    ).strip()
+    runninghub_instance_type: str = os.getenv("RUNNINGHUB_INSTANCE_TYPE", "plus").strip() or "plus"
+    runninghub_queue_maxed_retry_count: int = int(os.getenv("RUNNINGHUB_QUEUE_MAXED_RETRY_COUNT", "120") or 120)
+    runninghub_queue_maxed_retry_ms: int = int(os.getenv("RUNNINGHUB_QUEUE_MAXED_RETRY_MS", "10000") or 10000)
+    runninghub_digital_human_image_node_id: str = os.getenv(
+        "RUNNINGHUB_DIGITAL_HUMAN_IMAGE_NODE_ID", "133"
+    ).strip()
+    runninghub_digital_human_image_field: str = os.getenv(
+        "RUNNINGHUB_DIGITAL_HUMAN_IMAGE_FIELD", "image"
+    ).strip() or "image"
+    runninghub_digital_human_audio_node_id: str = os.getenv(
+        "RUNNINGHUB_DIGITAL_HUMAN_AUDIO_NODE_ID", "253"
+    ).strip()
+    runninghub_digital_human_audio_field: str = os.getenv(
+        "RUNNINGHUB_DIGITAL_HUMAN_AUDIO_FIELD", "audio"
+    ).strip() or "audio"
+    runninghub_digital_human_poll_seconds: int = int(os.getenv("RUNNINGHUB_DIGITAL_HUMAN_POLL_SECONDS", "2") or 2)
+    runninghub_digital_human_max_polls: int = int(os.getenv("RUNNINGHUB_DIGITAL_HUMAN_MAX_POLLS", "1200") or 1200)
 
 
 settings = Settings()

@@ -1016,6 +1016,55 @@ def mux_preview_video(video: Path, audio: Path, output: Path, total_duration: fl
     return output
 
 
+def overlay_circular_avatar(
+    video: Path,
+    avatar_video: Path,
+    output: Path,
+    total_duration: float,
+    *,
+    width: int,
+    height: int,
+) -> Path:
+    """Place a silent digital-human clip in a circular upper-right PiP.
+
+    RunningHub returns a normal video frame.  The main Remotion render remains
+    the source of truth for narration and duration; this final FFmpeg pass
+    crops the avatar into a circle and maps only the main video's audio, so the
+    provider's audio cannot double the Edge-TTS voiceover.
+    """
+    output.parent.mkdir(parents=True, exist_ok=True)
+    short_side = max(1, min(int(width or 1920), int(height or 1080)))
+    diameter = max(140, min(320, round(short_side * 0.22)))
+    margin = max(24, round(short_side * 0.045))
+    x = max(0, int(width or 1920) - diameter - margin)
+    y = margin
+    # Keep a small transparent edge around the circular crop.  The expression
+    # is quoted inside the filter graph so commas in ``if`` stay within geq.
+    radius = max(1, diameter // 2 - 4)
+    ring_radius = max(1, radius - 5)
+    distance = "(X-W/2)*(X-W/2)+(Y-H/2)*(Y-H/2)"
+    circle = (
+        f"[1:v]fps=30,scale={diameter}:{diameter}:force_original_aspect_ratio=increase,"
+        f"crop={diameter}:{diameter},format=rgba,"
+        f"geq=r='if(gte({distance},{ring_radius}*{ring_radius}),255,r(X,Y))':"
+        f"g='if(gte({distance},{ring_radius}*{ring_radius}),255,g(X,Y))':"
+        f"b='if(gte({distance},{ring_radius}*{ring_radius}),255,b(X,Y))':"
+        f"a='if(lte({distance},{radius}*{radius}),255,0)'[avatar];"
+        f"[0:v][avatar]overlay={x}:{y}:eof_action=repeat:format=auto[v]"
+    )
+    run(
+        [
+            ffmpeg_bin(), "-y", "-i", str(video), "-i", str(avatar_video),
+            "-filter_complex", circle,
+            "-map", "[v]", "-map", "0:a:0?", "-t", f"{max(total_duration, 0.1):.3f}",
+            "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "160k", "-ar", "44100", "-movflags", "+faststart",
+            str(output),
+        ]
+    )
+    return output
+
+
 def _pycaps_transcription(timeline: list[dict[str, Any]]) -> dict[str, Any]:
     """Convert our sentence timeline into PyCaps character-level JSON.
 

@@ -53,6 +53,16 @@ else
   echo "ffmpeg: $(ffmpeg -version | head -n 1)"
 fi
 
+REMOTION_DIR="$ROOT_DIR/remotion_exhibition_promo"
+if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1 && [ -f "$REMOTION_DIR/package-lock.json" ]; then
+  echo "安装主题动态成片的 Remotion 依赖..."
+  (cd "$REMOTION_DIR" && npm ci --no-audit --no-fund)
+  echo "Remotion 主题成片：OK"
+else
+  echo "提示：未检测到 Node.js/npm，主题动态成片暂不可用。"
+  echo "请安装 Node.js 18+ 后执行：cd remotion_exhibition_promo && npm ci"
+fi
+
 echo
 echo "安装完成。"
 echo "启动完整本地栈：./scripts/start-stack.sh"

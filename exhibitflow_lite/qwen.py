@@ -467,6 +467,189 @@ def generate_copy(
     return last_copy
 
 
+def generate_skill_json(
+    system_prompt: str,
+    user_prompt: str,
+    *,
+    temperature: float = 0.45,
+    max_tokens: int = 1800,
+) -> dict[str, Any]:
+    """Call the configured text model for a versioned internal Skill.
+
+    Skills must return data, not executable code.  Keep this helper separate
+    from ``generate_copy`` so an Agent can use one constrained JSON contract
+    while the legacy copy endpoint keeps its existing plain-text contract.
+    """
+    response = post_json_with_retry(
+        settings.text_llm_base_url.rstrip("/") + "/chat/completions",
+        headers={"Authorization": f"Bearer {require_text_llm_key()}", "Content-Type": "application/json"},
+        payload={
+            "model": settings.text_llm_model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "stream": False,
+            "enable_thinking": settings.text_llm_enable_thinking,
+            "temperature": max(0.0, min(1.0, float(temperature))),
+            "max_tokens": max(400, min(4000, int(max_tokens))),
+        },
+        timeout=(8, 60),
+        attempts=3,
+    )
+    if response.status_code >= 400:
+        raise RuntimeError(f"内部 Skill 模型调用失败：HTTP {response.status_code} {response.text[:800]}")
+    try:
+        content = str(response.json()["choices"][0]["message"].get("content") or "").strip()
+    except (ValueError, KeyError, IndexError, TypeError) as exc:
+        raise RuntimeError(f"内部 Skill 模型返回格式无效：{response.text[:800]}") from exc
+    content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content, flags=re.I).strip()
+    start = content.find("{")
+    end = content.rfind("}")
+    if start < 0 or end <= start:
+        raise RuntimeError("内部 Skill 模型没有返回 JSON 对象")
+    try:
+        value = json.loads(content[start : end + 1])
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"内部 Skill 模型返回的 JSON 无法解析：{content[:500]}") from exc
+    if not isinstance(value, dict):
+        raise RuntimeError("内部 Skill 模型返回的不是 JSON 对象")
+    return value
+
+
+def _fallback_screen_copy_plan(
+    topic: str,
+    highlights: list[str] | None = None,
+    *,
+    promo_focus: str = "",
+    audience: str = "",
+    max_items: int = 7,
+) -> list[dict[str, str]]:
+    """Build short on-screen phrases from facts already supplied by the user."""
+    values: list[dict[str, str]] = []
+
+    def add(text: Any, role: str) -> None:
+        clean = re.sub(r"\s+", " ", str(text or "")).strip().strip("。！？!?；;")
+        if not clean:
+            return
+        clean = clean[:28]
+        if any(item["text"] == clean for item in values):
+            return
+        values.append({"text": clean, "role": role})
+
+    add(topic, "title")
+    add(promo_focus, "value")
+    for highlight in highlights or []:
+        add(highlight, "data")
+    if audience:
+        add(f"面向：{audience}", "audience")
+    return values[:max_items]
+
+
+def generate_screen_copy_plan(
+    topic: str,
+    voiceover_script: str,
+    *,
+    background_context: str = "",
+    highlights: list[str] | None = None,
+    promo_focus: str = "",
+    audience: str = "",
+    max_items: int = 7,
+) -> list[dict[str, str]]:
+    """Generate concise visual copy that complements, rather than repeats, narration."""
+    fallback = _fallback_screen_copy_plan(
+        topic,
+        highlights,
+        promo_focus=promo_focus,
+        audience=audience,
+        max_items=max_items,
+    )
+    if not settings.text_llm_api_key:
+        return fallback
+    system_prompt = """
+你是会展宣传片的动态文字策划。请把完整口播压缩成少量屏幕短文案。
+屏幕短文案不是字幕，也不是旁白复述；它应该用标题、数据、受众标签和价值关键词补充旁白。
+只使用输入中明确出现的信息，不得创造规模、买家、订单、排名或效果承诺。
+只输出 JSON，不输出 Markdown、解释或镜头说明。
+""".strip()
+    prompt = f"""
+请为以下主题生成 3-{max_items} 条屏幕短文案。
+
+主题：{topic}
+想要宣传的点：{promo_focus}
+用户受众：{audience}
+已确认数字亮点：{json.dumps(highlights or [], ensure_ascii=False)}
+背景信息：{background_context[:6000]}
+旁白稿：{voiceover_script[:8000]}
+
+要求：
+1. 每条 4-18 个汉字或数字，最长不超过 28 个字符。
+2. 不要逐句改写旁白，不要出现“镜头、画面、字幕、配音、旁白”等制作词。
+3. 数字亮点必须尽量原样保留，方便做数字滚动动画。
+4. 文案要能独立叠加在复杂视频画面上，例如“2000+源头工厂”“8大应用场景”“面向海外采购”。
+5. role 只能是 title、value、data、audience、cta 之一。
+
+JSON 格式：
+{{"items":[{{"text":"短文案","role":"data"}}]}}
+""".strip()
+    payload = {
+        "model": settings.text_llm_model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt},
+        ],
+        "stream": False,
+        "enable_thinking": settings.text_llm_enable_thinking,
+        "temperature": 0.25,
+        "max_tokens": 700,
+    }
+    try:
+        response = post_json_with_retry(
+            settings.text_llm_base_url.rstrip("/") + "/chat/completions",
+            headers={"Authorization": f"Bearer {require_text_llm_key()}", "Content-Type": "application/json"},
+            payload=payload,
+            timeout=(8, 45),
+            attempts=2,
+        )
+        if response.status_code >= 400:
+            return fallback
+        content = str(response.json()["choices"][0]["message"].get("content") or "").strip()
+        content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content, flags=re.I).strip()
+        start = content.find("{")
+        end = content.rfind("}")
+        raw = json.loads(content[start:end + 1]) if start >= 0 and end > start else None
+        raw_items = raw.get("items") if isinstance(raw, dict) else raw
+        if not isinstance(raw_items, list):
+            return fallback
+        result: list[dict[str, str]] = []
+        for item in raw_items:
+            if isinstance(item, dict):
+                text = item.get("text")
+                role = str(item.get("role") or "value").strip().lower()
+            else:
+                text = item
+                role = "value"
+            clean = re.sub(r"\s+", " ", str(text or "")).strip().strip("。！？!?；;")[:28]
+            if not clean or role not in {"title", "value", "data", "audience", "cta"}:
+                continue
+            if any(word in clean for word in ("镜头", "画面", "字幕", "旁白", "配音")):
+                continue
+            if not any(existing["text"] == clean for existing in result):
+                result.append({"text": clean, "role": role})
+        # Preserve explicit numeric facts even when the model chose a more
+        # abstract phrase, because these facts drive the ticker animation.
+        highlight_items: list[dict[str, str]] = []
+        for highlight in highlights or []:
+            clean = re.sub(r"\s+", " ", str(highlight or "")).strip()[:28]
+            if clean and not any(existing["text"] == clean for existing in result) and not any(existing["text"] == clean for existing in highlight_items):
+                highlight_items.append({"text": clean, "role": "data"})
+        if highlight_items:
+            result = result[:max(1, max_items - len(highlight_items))] + highlight_items
+        return result[:max_items] or fallback
+    except (RuntimeError, TypeError, ValueError, KeyError, IndexError, json.JSONDecodeError, requests.RequestException):
+        return fallback
+
+
 def _clean_report_list(value: Any, fallback: list[str], limit: int = 5) -> list[str]:
     if not isinstance(value, list):
         return fallback

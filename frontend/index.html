@@ -1158,6 +1158,12 @@
     .overview-metric, .delivery-action-card, .material-library-card { border:1px solid #e1e5ed; border-radius:16px; background:#fff; padding:20px; }
     .overview-metric small { color:#7a8492; font-weight:800; } .overview-metric b { display:block; font-size:28px; margin:9px 0 4px; }
     .delivery-action-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .viral-monitor-shell { width:min(1180px,calc(100% - 40px)); margin:0 auto; }
+    .viral-monitor-host { min-height:520px; display:grid; place-items:center; padding:32px; border:1px dashed #cfd5de; border-radius:16px; background:#fff; text-align:center; }
+    .viral-monitor-placeholder { max-width:560px; }
+    .viral-monitor-placeholder h2 { margin:14px 0 8px; color:#20242b; font-size:26px; }
+    .viral-monitor-placeholder p { margin:0; color:#788393; line-height:1.8; }
+    .viral-monitor-placeholder code { display:inline-block; margin-top:16px; padding:7px 10px; border-radius:8px; background:#f3f5f8; color:#4d5969; font-size:12px; }
     .delivery-action-card h3 { margin:8px 0; font-size:19px; }.delivery-action-card p { min-height:46px; color:#747e8d; line-height:1.6; font-size:14px; }
     .material-library-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:20px; }
     .material-library-head h1 { margin:0 0 8px; }.material-library-head p { margin:0; color:#707a89; font-weight:700; }
@@ -1299,6 +1305,29 @@
     #creator-studio-compose .cs-inline-row { display:flex; align-items:flex-end; gap:12px; margin-top:12px; flex-wrap:wrap; }
     #creator-studio-compose .cs-inline-row > div { flex:1 1 140px; min-width:0; }
     #creator-studio-compose .cs-duration { padding:9px 12px; border-radius:10px; background:var(--soft); border:1px solid var(--line); color:#4a5261; font-size:12.5px; font-weight:800; text-align:center; }
+    #creator-studio-compose .cs-font-preview { margin-top:13px; padding:12px; border:1px solid var(--line); border-radius:12px; background:#f8f9ff; }
+    #creator-studio-compose .cs-font-preview-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    #creator-studio-compose .cs-font-preview-head b { color:var(--ink); font-size:12px; font-weight:850; }
+    #creator-studio-compose .cs-font-preview-head span { color:var(--blue); font-size:11px; font-weight:800; text-align:right; }
+    #creator-studio-compose .cs-font-preview-stage { --preview-base:#fff; --preview-sweep:#8deaff; --preview-core:#fff; position:relative; min-height:126px; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:14px 16px; border-radius:9px; background:linear-gradient(112deg,#08172d 0%,#102b55 54%,#071326 100%); isolation:isolate; }
+    #creator-studio-compose .cs-font-preview-stage::before { content:""; position:absolute; inset:0; opacity:.18; background:repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(255,255,255,.16) 4px); pointer-events:none; }
+    #creator-studio-compose .cs-font-preview-kicker { position:relative; z-index:1; color:#9cecff; font-family:"SFMono-Regular","Roboto Mono","Noto Sans Mono CJK SC",monospace; font-size:10px; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
+    #creator-studio-compose .cs-font-preview-title { position:relative; z-index:1; display:inline-block; width:max-content; max-width:100%; margin-top:8px; color:var(--preview-base); font-size:clamp(22px,3vw,31px); line-height:1.14; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 3px 0 rgba(3,13,36,.55),0 8px 16px rgba(0,0,0,.34); }
+    #creator-studio-compose .cs-font-preview-title::after { content:attr(data-text); position:absolute; inset:0; overflow:hidden; color:transparent; white-space:inherit; background-image:linear-gradient(108deg,transparent 32%,transparent 41%,rgba(255,255,255,.18) 45%,var(--preview-core) 50%,var(--preview-sweep) 54%,rgba(255,255,255,.12) 58%,transparent 64%); background-size:260% 100%; background-position:150% center; background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 0 9px var(--preview-sweep)); animation:cs-font-preview-sweep 3.5s infinite cubic-bezier(.8,0,.2,1); pointer-events:none; }
+    #creator-studio-compose .cs-font-preview-data { position:relative; z-index:1; display:inline-block; width:max-content; max-width:100%; margin-top:8px; padding:3px 8px; overflow:hidden; color:#fff; background:#f0332b; font-size:11px; font-weight:850; letter-spacing:.04em; white-space:nowrap; text-overflow:ellipsis; }
+    #creator-studio-compose .cs-font-preview-meta { display:flex; justify-content:space-between; gap:10px; margin-top:8px; color:#7a8595; font-size:10.5px; font-weight:750; }
+    #creator-studio-compose .cs-font-preview-meta span:last-child { color:#566273; text-align:right; }
+    #creator-studio-compose .cs-font-preview-stage[data-font-preview-style="impact"] { --preview-base:#fff; --preview-sweep:#65dfff; --preview-core:#fff; }
+    #creator-studio-compose .cs-font-preview-stage[data-font-preview-style="impact"] .cs-font-preview-title { font-family:"Arial Black",Arial,"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif; font-weight:900; letter-spacing:-.045em; }
+    #creator-studio-compose .cs-font-preview-stage[data-font-preview-style="tech"] { --preview-base:rgba(255,255,255,.18); --preview-sweep:#00f0ff; --preview-core:#fff; }
+    #creator-studio-compose .cs-font-preview-stage[data-font-preview-style="tech"] .cs-font-preview-title { font-family:"Arial Narrow","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif; font-weight:800; letter-spacing:-.02em; }
+    #creator-studio-compose .cs-font-preview-stage[data-font-preview-style="editorial"] { --preview-base:#7b5b18; --preview-sweep:#ffdf00; --preview-core:#fffae6; }
+    #creator-studio-compose .cs-font-preview-stage[data-font-preview-style="editorial"] .cs-font-preview-title { font-family:"Noto Serif SC","Songti SC",STSong,SimSun,serif; font-weight:800; letter-spacing:-.025em; }
+    #creator-studio-compose .cs-font-preview-stage[data-font-preview-style="mono"] { --preview-base:#d8f5ff; --preview-sweep:#9cecff; --preview-core:#fff; }
+    #creator-studio-compose .cs-font-preview-stage[data-font-preview-style="mono"] .cs-font-preview-title { font-family:"SFMono-Regular","Roboto Mono","Noto Sans Mono CJK SC",monospace; font-weight:800; letter-spacing:-.015em; }
+    @keyframes cs-font-preview-sweep { 0%,8% { background-position:150% center; opacity:0; } 17% { opacity:1; } 52% { background-position:-45% center; opacity:1; } 78%,100% { background-position:-45% center; opacity:0; } }
+    @media (prefers-reduced-motion: reduce) { #creator-studio-compose .cs-font-preview-title::after { animation:none; opacity:.72; background-position:50% center; } }
+    @media (max-width:640px) { #creator-studio-compose .cs-font-preview-meta { flex-direction:column; gap:3px; } #creator-studio-compose .cs-font-preview-meta span:last-child { text-align:left; } }
     /* 素材来源 + 缩略图网格 */
     #creator-studio-compose .cs-source-toggle { display:inline-flex; gap:4px; margin-bottom:8px; background:var(--soft); border:1px solid var(--line); border-radius:10px; padding:3px; flex-wrap:wrap; max-width:100%; }
     #creator-studio-compose .cs-source-toggle button { background:none; border:none; color:#6b7280; font-weight:800; font-size:12px; padding:7px 13px; border-radius:8px; cursor:pointer; }
@@ -1332,6 +1361,12 @@
     #creator-studio-compose .cs-check { display:inline-flex; align-items:center; gap:6px; color:#4a5261; font-size:12.5px; font-weight:700; cursor:pointer; }
     #creator-studio-compose .cs-check input { width:auto; }
     #creator-studio-compose .cs-soon { font-size:10px; color:var(--muted); border:1px solid var(--line); border-radius:5px; padding:0 4px; margin-left:2px; }
+    #creator-studio-compose .cs-avatar-config { margin-top:12px; padding:12px; border:1px solid #dce3f1; border-radius:11px; background:#f8faff; }
+    #creator-studio-compose .cs-avatar-config.hidden { display:none; }
+    #creator-studio-compose .cs-avatar-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    #creator-studio-compose .cs-avatar-preview { width:58px; height:58px; border-radius:50%; object-fit:cover; background:#e9edf5; border:3px solid #fff; box-shadow:0 2px 8px rgba(34,48,80,.12); }
+    #creator-studio-compose .cs-avatar-preview.empty { display:grid; place-items:center; color:#8a96aa; font-size:22px; }
+    #creator-studio-compose .cs-avatar-status { color:#657187; font-size:12px; line-height:1.55; }
     /* 多脚本 tab */
     #creator-studio-compose .cs-script-tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
     #creator-studio-compose .cs-script-tab { display:inline-flex; align-items:center; gap:6px; background:var(--soft); border:1px solid var(--line); color:#57606f; border-radius:9px; padding:6px 11px; font-size:12px; font-weight:800; cursor:pointer; }
@@ -1505,6 +1540,119 @@
       .cap-editor > .cap-footer { grid-column:1; grid-row:auto; }
     }
 
+    /* ============ 生视频员工 · VisionAI 风格视觉重构 ============
+       只覆盖 creator 页面外观，保留原有字段 id、事件和生成链路。 */
+    #creator { --creator-bg:#f5f5f5; --creator-card:#fff; --creator-border:#e1e1e1; --creator-ink:#1a1b1f; --creator-muted:#858585; --creator-soft:#f7f7f7; background:var(--creator-bg); }
+    #creator > .shell { min-height:calc(100vh - 56px) !important; border:0 !important; border-radius:0 !important; background:var(--creator-bg) !important; overflow:visible; }
+    #creator .employee-page-head { padding:24px 32px 18px !important; background:#fff; border-bottom:1px solid #e6e6e6; }
+    #creator .employee-page-head .back-link { min-height:38px; padding:0 13px; border:1px solid #e1e1e1; border-radius:9px; background:#fafafa; color:#303136; font-size:13px; font-weight:850; }
+    #creator .employee-page-head .back-link:hover { border-color:#bdbdbd; background:#fff; }
+    #creator .employee-scope-path { color:#777; font-size:12px; font-weight:700; }
+    #creator .employee-scope-path .employee-expo-crumb { color:#242529; font-weight:850; }
+    #creator .employee-page-head h1 { margin:12px 0 6px; color:var(--creator-ink); font-size:28px; line-height:1.2; letter-spacing:-.02em; }
+    #creator .employee-page-head p { margin:0; color:#858585; font-size:14px; line-height:1.55; font-weight:650; }
+    #creator .employee-head-actions { padding-top:2px; }
+    #creator .employee-head-actions .status.blue { background:#f6edd6; border-color:#ecdcae; color:#805f16; }
+    #creator .employee-head-actions .primary { min-height:42px; border:1px solid #17191f; border-radius:9px; background:#17191f; color:#fff; box-shadow:none; font-size:14px; }
+    #creator .employee-head-actions .primary:hover { background:#000; transform:none; }
+    #creator .employee-tabbar { width:min(1120px,calc(100% - 64px)); max-width:none; margin:18px auto 16px; padding:5px; border:1px solid #e1e1e1; border-radius:11px; background:#f0f0f0; box-shadow:none; }
+    #creator .employee-tabbar button { min-height:40px; padding:0 20px; border-radius:8px; color:#818181; font-size:14px; }
+    #creator .employee-tabbar button.active { background:#17191f; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,.12); }
+    #creator .creator-entry[data-creator-page="menu"] { width:min(1120px,calc(100% - 64px)); margin:0 auto 112px; }
+    #creator-studio-compose.cs-shell { width:100%; max-width:none; padding:0; background:transparent; }
+    #creator-studio-compose .cs-topbar { min-height:36px; padding:0 0 12px; }
+    #creator-studio-compose .cs-topbar-actions { gap:8px; }
+    #creator-studio-compose .cs-topbar-actions button { min-height:34px; padding:0 12px; border:1px solid #e0e0e0; border-radius:8px; background:#fff; color:#595959; font-size:12px; box-shadow:none; }
+    #creator-studio-compose .cs-topbar-actions button:hover { border-color:#b9b9b9; background:#fff; color:#17191f; }
+    #creator-studio-compose .cs-two { grid-template-columns:minmax(0,2fr) minmax(320px,1fr); gap:20px; align-items:start; }
+    #creator-studio-compose .cs-composer-scroll { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    #creator-studio-compose .cs-composer-scroll > .cs-expo-context,
+    #creator-studio-compose .cs-composer-scroll > #topic-video-theme-block,
+    #creator-studio-compose .cs-composer-scroll > .cs-block:not(#creator-studio-material-import):not(#creator-studio-ai-supplement) { grid-column:1/-1; }
+    #creator-studio-compose .cs-expo-context { min-height:48px; padding:10px 14px; border:1px solid #dedede; border-radius:10px; background:#fafafa; color:#777; }
+    #creator-studio-compose .cs-expo-context b { color:#242529; font-size:14px; }
+    #creator-studio-compose .cs-expo-context small { color:#555; font-size:11px; }
+    #creator-studio-compose .cs-preloaded-badge { background:#eaf5df; color:#3d7827; }
+    #creator-studio-compose .cs-block { padding:20px; border:1px solid var(--creator-border); border-radius:12px; background:var(--creator-card); box-shadow:0 1px 2px rgba(0,0,0,.025); }
+    #creator-studio-compose .cs-block-head { margin-bottom:16px; }
+    #creator-studio-compose .cs-block-head h3 { color:var(--creator-ink); font-size:18px; letter-spacing:-.01em; }
+    #creator-studio-compose .cs-block-head .status.blue { background:#f6edd6; border-color:#ecdcae; color:#805f16; }
+    #creator-studio-compose label.cs-label,
+    #creator-studio-compose #topic-video-theme-block label { color:#696969; font-size:12px; font-weight:800; }
+    #creator-studio-compose input,
+    #creator-studio-compose textarea,
+    #creator-studio-compose select { min-height:42px; padding:10px 12px; border-color:#dcdcdc; border-radius:8px; background:#fff; color:#242529; font-size:13px; box-shadow:none; }
+    #creator-studio-compose textarea { min-height:94px; line-height:1.65; resize:vertical; }
+    #creator-studio-compose textarea.cs-script { min-height:154px; margin-top:2px; background:#fcfcfc; line-height:1.8; }
+    #creator-studio-compose input:focus,
+    #creator-studio-compose textarea:focus,
+    #creator-studio-compose select:focus { border-color:#8c8c8c; box-shadow:0 0 0 2px rgba(0,0,0,.06); }
+    #creator-studio-compose .creator-studio-mode { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; margin-bottom:14px !important; padding:4px; border:1px solid #e2e2e2; border-radius:9px; background:#f3f3f3; }
+    #creator-studio-compose .creator-studio-mode button { min-height:36px; border:0; border-radius:7px; background:transparent; color:#777; font-size:13px; font-weight:800; }
+    #creator-studio-compose .creator-studio-mode button.active { background:#17191f; color:#fff; box-shadow:0 2px 6px rgba(0,0,0,.12); }
+    #creator-studio-compose .creator-reference-picker { margin-bottom:14px; padding:12px; border:1px solid #e4e4e4; border-radius:9px; background:#fafafa; }
+    #creator-studio-compose .creator-reference-head b { color:#303136; font-size:13px; }
+    #creator-studio-compose .creator-reference-head small { color:#999; }
+    #creator-studio-compose .cs-inline-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; gap:12px; margin-top:14px; }
+    #creator-studio-compose .cs-inline-row > div { min-width:0; width:auto; flex:none; }
+    #creator-studio-compose .cs-duration { min-height:42px; padding:11px 12px; border-color:#dcdcdc; border-radius:8px; background:#f7f7f7; color:#5f5f5f; }
+    #creator-studio-compose .cs-font-preview { margin-top:16px; border-color:#e1e1e1; background:#f7f7f7; }
+    #creator-studio-compose .cs-hint { color:#909090; }
+    #creator-studio-compose .cs-linkbtn { color:#555; }
+    #creator-studio-compose .cs-linkbtn:hover { color:#17191f; }
+    #creator-studio-compose .cs-block-tools { gap:14px; }
+    #creator-studio-compose .cs-block-tools .cs-linkbtn { color:#555; }
+    #creator-studio-compose .btn-violet { min-height:44px; border-radius:9px; background:#17191f; box-shadow:none; font-size:14px; }
+    #creator-studio-compose .btn-violet:hover { background:#000; transform:none; }
+    #creator-studio-compose .cs-cta-bar { position:sticky; bottom:12px; z-index:10; padding:12px 0 0; background:linear-gradient(180deg,rgba(245,245,245,0),rgba(245,245,245,.96) 38%); }
+    #creator-studio-compose #cs-generate-btn { min-height:52px; border-radius:10px; background:#17191f; font-size:16px; box-shadow:0 8px 18px rgba(0,0,0,.13); }
+    #creator-studio-compose #cs-generate-btn:hover { background:#000; }
+    #creator-studio-compose #creator-studio-material-import,
+    #creator-studio-compose #creator-studio-ai-supplement { min-height:100%; }
+    #creator-studio-compose #creator-studio-material-import .cs-material-grid { grid-template-columns:repeat(auto-fill,minmax(76px,1fr)); }
+    #creator-studio-compose .cs-add-tile { border-color:#cfcfcf; border-radius:9px; background:#fafafa; }
+    #creator-studio-compose .cs-material-total { color:#888; }
+    #creator-studio-compose .cs-supplement-head { padding:0 0 4px; }
+    #creator-studio-compose .cs-supplement-head b { color:#303136; font-size:16px; }
+    #creator-studio-compose .cs-supplement-subs { gap:10px; padding-top:10px; border-top:1px solid #ededed; }
+    #creator-studio-compose .cs-check { color:#5f5f5f; }
+    #creator-studio-compose .cs-avatar-config { border-color:#e1e1e1; background:#fafafa; }
+    #creator-studio-compose .cs-status { position:sticky; top:64px; height:calc(100vh - 118px); min-height:520px; max-height:760px; border:1px solid var(--creator-border); border-radius:12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.025); }
+    #creator-studio-compose .cs-status-head { padding:17px 18px; border-bottom:1px solid #e7e7e7; background:#fff; }
+    #creator-studio-compose .cs-status-head h3 { color:var(--creator-ink); font-size:18px; }
+    #creator-studio-compose .cs-search { width:150px; min-height:34px; padding:8px 10px; border-color:#e0e0e0; border-radius:8px; background:#fafafa; }
+    #creator-studio-compose .cs-status-body { flex:1; min-height:0; overflow:auto; padding:16px 18px; background:#fafafa; }
+    #creator-studio-compose .cs-record-label { display:block; margin-bottom:8px; color:#888; font-size:11px; letter-spacing:.3px; }
+    #creator-studio-compose .cs-status-body > div + div { margin-top:18px; }
+    #creator-studio-compose .cs-status-body .result-empty { padding:24px 14px; border:1px dashed #d9d9d9; border-radius:10px; background:#fff; color:#999; }
+    #creator-studio-compose .creator-studio-history { display:grid; gap:9px; }
+    #creator-studio-compose .creator-studio-history .history-item { padding:12px; border-color:#e1e1e1; border-radius:10px; background:#fff; }
+    #creator-studio-compose .creator-studio-history .history-item b { color:#303136; font-size:13px; }
+    #creator-studio-compose .creator-studio-history .history-item p { color:#929292; }
+    #creator-studio-compose .creator-studio-history .history-item .actions { gap:6px; }
+    #creator-studio-compose .creator-studio-history .history-item .actions button { min-height:31px; border:1px solid #dedede; border-radius:7px; background:#fff; color:#4f4f4f; font-size:11px; }
+    #creator-studio-compose .creator-studio-history .history-item .actions button:first-child { border-color:#17191f; background:#17191f; color:#fff; }
+    #creator-studio-compose .cs-disclaimer { padding:12px 18px; border-top:1px solid #e7e7e7; background:#fff; color:#a0a0a0; }
+    @media (max-width:1000px) {
+      #creator .creator-entry[data-creator-page="menu"], #creator .employee-tabbar { width:calc(100% - 32px); }
+      #creator-studio-compose .cs-two { grid-template-columns:1fr; }
+      #creator-studio-compose .cs-status { position:static; height:auto; max-height:none; min-height:0; }
+    }
+    @media (max-width:680px) {
+      #creator .employee-page-head { padding:18px 16px 14px !important; }
+      #creator .employee-page-head { flex-direction:column; }
+      #creator .employee-head-actions { width:100%; justify-content:flex-start; }
+      #creator .creator-entry[data-creator-page="menu"], #creator .employee-tabbar { width:calc(100% - 24px); }
+      #creator-studio-compose .cs-composer-scroll { grid-template-columns:1fr; }
+      #creator-studio-compose .cs-composer-scroll > .cs-expo-context,
+      #creator-studio-compose .cs-composer-scroll > #topic-video-theme-block,
+      #creator-studio-compose .cs-composer-scroll > .cs-block:not(#creator-studio-material-import):not(#creator-studio-ai-supplement),
+      #creator-studio-compose #creator-studio-material-import,
+      #creator-studio-compose #creator-studio-ai-supplement { grid-column:1; }
+      #creator-studio-compose .cs-inline-row { grid-template-columns:1fr; }
+      #creator-studio-compose .cs-block { padding:15px; }
+    }
+
   </style>
 </head>
 <body>
@@ -1521,7 +1669,7 @@
       <button class="figma-nav context-group" data-context-group="marketing" onclick="toggleExpoContextGroup('marketing')"><svg class="context-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 17-6v14L3 13v-2Zm4 3 1.5 5H12l-1.5-4"/></svg><b>AI 营销</b><svg class="context-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
       <div class="context-children" data-context-children="marketing"><button data-context-nav="marketing-leads" onclick="openExpoWorkspace('marketing-leads')">营销线索</button><button data-context-nav="marketing-sales" onclick="openExpoWorkspace('marketing-sales')">销售线索</button></div>
       <button class="figma-nav context-group" data-context-group="delivery" onclick="toggleExpoContextGroup('delivery')"><svg class="context-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/><path d="M12 3V1m0 22v-2M3 12H1m22 0h-2"/></svg><b>AI 投放</b><svg class="context-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
-      <div class="context-children" data-context-children="delivery"><button data-context-nav="delivery-overview" onclick="openExpoWorkspace('delivery-overview')">数据总览</button><button data-context-nav="delivery-start" onclick="openExpoWorkspace('delivery-start')">开始投放</button><button data-context-nav="delivery-production" onclick="openExpoWorkspace('delivery-production')">素材产出</button></div>
+      <div class="context-children" data-context-children="delivery"><button data-context-nav="delivery-overview" onclick="openExpoWorkspace('delivery-overview')">数据总览</button><button data-context-nav="delivery-start" onclick="openExpoWorkspace('delivery-start')">开始投放</button><button data-context-nav="delivery-production" onclick="openExpoWorkspace('delivery-production')">素材产出</button><button data-context-nav="delivery-viral-monitor" onclick="openExpoWorkspace('delivery-viral-monitor')">爆款监控</button></div>
     </div>
     <div class="figma-side-spacer"></div>
     <div class="figma-usage-card"><span>积分用量</span><b>2.3k / 4k</b><i><em></em></i></div>
@@ -1578,7 +1726,7 @@
         <button class="figma-black-btn" onclick="openExhibition(currentExhibitionId,'delivery-overview')">进入 AI 投放 →</button>
       </div>
       <div class="employee-board figma-employee-board employee-overview-board">
-        <article class="employee-tile figma-staff-card" onclick="openExhibition(currentExhibitionId, 'delivery-production')"><img class="figma-staff-avatar" src="assets/figma-sync/employee-blue-crop.png" alt="找爆款员工"><div class="figma-staff-copy"><span class="figma-work-status" id="overview-hunter-status">空闲中</span><h2>找爆款员工</h2><p class="staff-space-name">所属展会：<span class="employee-overview-expo">华南国际新能源产业展</span></p><span class="figma-role-pill">🔎 爆款运营</span><div class="figma-card-line"></div><div class="figma-bound-row">内容检索 / 样本分析</div></div></article>
+        <article class="employee-tile figma-staff-card" onclick="openExhibition(currentExhibitionId, 'delivery-viral-monitor')"><img class="figma-staff-avatar" src="assets/figma-sync/employee-blue-crop.png" alt="爆款监控"><div class="figma-staff-copy"><span class="figma-work-status" id="overview-hunter-status">待接入</span><h2>爆款监控</h2><p class="staff-space-name">所属展会：<span class="employee-overview-expo">华南国际新能源产业展</span></p><span class="figma-role-pill">🔎 爆款监控</span><div class="figma-card-line"></div><div class="figma-bound-row">外部检索模块接入口</div></div></article>
         <article class="employee-tile figma-staff-card" onclick="openExhibition(currentExhibitionId, 'delivery-production')"><img class="figma-staff-avatar" src="assets/figma-sync/employee-green-crop.png" alt="生视频员工"><div class="figma-staff-copy"><span class="figma-work-status" id="overview-creator-status">空闲中</span><h2>生视频员工</h2><p class="staff-space-name">所属展会：<span class="employee-overview-expo">华南国际新能源产业展</span></p><span class="figma-role-pill">🎬 视频运营</span><div class="figma-card-line"></div><div class="figma-bound-row">文案 / 配音 / 成片生成</div></div></article>
         <article class="employee-tile figma-staff-card" onclick="openExhibition(currentExhibitionId, 'delivery-start')"><img class="figma-staff-avatar" src="assets/figma-sync/employee-blue-crop.png" alt="投放员工"><div class="figma-staff-copy"><span class="figma-work-status" id="overview-buyer-status">待授权</span><h2>投放员工</h2><p class="staff-space-name">所属展会：<span class="employee-overview-expo">华南国际新能源产业展</span></p><span class="figma-role-pill">📈 多平台投放</span><div class="figma-card-line"></div><div class="figma-bound-row">抖音 / 小红书 / 视频号</div></div></article>
       </div>
@@ -1614,11 +1762,10 @@
       <div class="expo-module" data-expo-module="service"><div class="empty-module"><b>AI 客服</b><p>客服能力将按咨询接待、线索收集和会后跟进继续细分。</p></div></div>
       <div class="expo-module" data-expo-module="marketing"><div class="empty-module"><b>AI 营销</b><p>营销活动、内容分发和线索运营将在此展会维度内管理。</p></div></div>
       <div class="expo-module active" data-expo-module="delivery">
-        <div class="delivery-hero"><span class="status blue">展会独立投放空间</span><h1>AI 投放</h1><p>以当前展会为边界管理素材、投放草稿和数据。找爆款、生视频仅服务于当前展会的素材产出，完成后由你决定是否进入投放。</p><div class="delivery-channel-board" id="delivery-channel-board"><div><div class="delivery-channel-board-title"><span class="status blue">已部署</span>多平台投放能力</div><small>先选择渠道，再进入对应的检索、素材和投放准备流程。</small></div><div class="delivery-channel-statuses" id="delivery-channel-statuses"><span class="delivery-channel-status">正在读取渠道状态…</span></div><button class="primary" onclick="openEmployee('buyer'); switchEmployeeWorkspace('buyer','settings')">配置渠道</button></div></div>
-        <div class="delivery-subtabs"><button class="active" data-delivery-tab="overview" onclick="switchDeliveryWorkspace('overview')">数据总览</button><button data-delivery-tab="launch" onclick="switchDeliveryWorkspace('launch')">开始投放</button><button data-delivery-tab="production" onclick="switchDeliveryWorkspace('production')">素材产出</button></div>
+        <div class="delivery-hero"><span class="status blue">展会独立投放空间</span><h1>AI 投放</h1><p>以当前展会为边界管理素材、投放草稿和数据。素材产出可直接生成视频，爆款监控通过独立入口接入参考案例。</p><div class="delivery-channel-board" id="delivery-channel-board"><div><div class="delivery-channel-board-title"><span class="status blue">已部署</span>多平台投放能力</div><small>先选择渠道，再进入对应的检索、素材和投放准备流程。</small></div><div class="delivery-channel-statuses" id="delivery-channel-statuses"><span class="delivery-channel-status">正在读取渠道状态…</span></div><button class="primary" onclick="openEmployee('buyer'); switchEmployeeWorkspace('buyer','settings')">配置渠道</button></div></div>
+        <div class="delivery-subtabs"><button class="active" data-delivery-tab="overview" onclick="switchDeliveryWorkspace('overview')">数据总览</button><button data-delivery-tab="launch" onclick="switchDeliveryWorkspace('launch')">开始投放</button><button data-delivery-tab="production" onclick="openExpoWorkspace('delivery-production')">素材产出</button></div>
         <div class="delivery-panel active" data-delivery-panel="overview"><div class="delivery-overview-grid"><div class="overview-metric"><small>累计消耗</small><b>¥ 0</b><span>Mock 数据 · 连接巨量后同步</span></div><div class="overview-metric"><small>投放素材</small><b id="expo-material-count">0</b><span>仅统计当前展会素材</span></div><div class="overview-metric"><small>待处理线索</small><b>0</b><span>Mock 数据 · 后续接入客服</span></div></div><div class="empty-module" style="margin-top:16px"><b>投放数据看板准备中</b><p>当前先提供数据展示框架；真实消耗、展示、点击和转化数据将在巨量账号连接后同步。</p></div></div>
         <div class="delivery-panel" data-delivery-panel="launch"><div class="delivery-action-card"><span class="status queued">巨量投放</span><h3>开始一条投放任务</h3><p>在材料预检中选择当前展会已经产出的成片，或从当前展会素材库选择视频。素材与投放记录不会跨展会混用。</p><button class="primary" onclick="openEmployee('buyer')">进入投放工作台</button></div></div>
-        <div class="delivery-panel" data-delivery-panel="production"><div class="delivery-action-grid"><div class="delivery-action-card"><span class="status blue">01 · 找爆款</span><h3>检索爆款参考</h3><p>检索公开案例，筛选后反推开头、痛点、价值和行动的结构时间线。</p><button class="primary" onclick="openEmployee('hunter')">开始找爆款</button></div><div class="delivery-action-card"><span class="status blue">02 · 生视频</span><h3>生成投放视频</h3><p>在脚本步骤主动选择爆款逻辑，也可以从零创作，再生成配音、素材和成片。</p><button class="primary" onclick="openEmployee('creator')">开始生视频</button></div></div><div class="material-library-card" style="margin-top:16px"><b>当前展会素材库</b><p style="color:#707a89">素材库中的内容已经按展会隔离，可在视频生成和投放时直接选用。</p><button onclick="showMaterialLibrary()">管理当前展会素材</button></div></div>
       </div>
       <div class="compat-hidden" aria-hidden="true">
         <div id="kpis"></div><div id="ops-snapshot"></div><div id="asset-chain"></div><span id="asset-package-status"></span>
@@ -1633,6 +1780,23 @@
 
       <section id="materials" class="section">
         <div class="shell"><div class="material-library-head"><div><button id="material-back-to-expo" class="back-link hidden" onclick="returnFromMaterialLibrary()">← 返回当前展会</button><h1>素材库</h1><p id="material-library-description">上传内部视频和图片，系统会自动初步打标；素材可按展会隔离使用。</p></div><button class="figma-black-btn" onclick="document.getElementById('material-file-input').click()">＋ 上传素材</button></div><div class="material-upload-zone"><b>上传企业内部素材</b><p>支持 MP4、MOV、JPG、PNG、WEBP。上传后自动打上汽车、食品、科技或待识别等标签。</p><button onclick="document.getElementById('material-file-input').click()">选择文件</button><input id="material-file-input" type="file" multiple accept="video/*,image/*" onchange="uploadMaterialFiles(this.files)"></div><div id="material-library-list" class="material-grid"></div></div>
+      </section>
+
+      <section id="viral-monitor" class="section">
+        <div class="viral-monitor-shell">
+          <div class="employee-page-head">
+            <div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">华南国际新能源产业展</span><i></i><span>爆款监控</span></div><h1>爆款监控</h1><p>用于挂载外部的抖音、小红书爆款检索与详情模块。</p></div>
+            <div class="employee-head-actions"><span class="status blue">外部模块接入口</span></div>
+          </div>
+          <div id="viral-monitor-mount" class="viral-monitor-host" data-integration="viral-monitor" data-contract-version="1.0">
+            <div class="viral-monitor-placeholder">
+              <span class="status blue">接口已预留</span>
+              <h2>等待爆款监控模块接入</h2>
+              <p>外部模块可挂载到当前容器，并通过宿主桥接方法把选中的参考视频送入生成视频页面。</p>
+              <code>window.ExhibitFlowViralMonitorHost</code>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section id="hunter" class="section">
@@ -1689,23 +1853,26 @@
         <div class="cs-two">
           <div class="cs-composer">
             <div class="cs-composer-scroll">
-              <div class="cs-expo-context"><span>当前展会</span><b id="cs-current-exhibition-name">正在读取展会档案…</b><span id="cs-current-exhibition-category"></span><span class="cs-preloaded-badge" title="已作为口播稿生成的内置参考，不单独创建任务">客户画像已内置</span><small>无需重复填写</small></div>
+              <div class="cs-expo-context"><span>当前展会</span><b id="cs-current-exhibition-name">正在读取展会档案…</b><span id="cs-current-exhibition-category"></span><span class="cs-preloaded-badge" title="当前展会画像会作为默认参考，也可以在下方补充本次视频的宣传重点和受众">客户画像已加载</span><small>可补充本次信息</small></div>
 
-              <!-- 2. 是否制作视频：不默认选择，最终是否提交由用户明确确认。 -->
-              <div class="cs-block">
-                <div class="cs-block-head"><h3>1. 是否制作视频</h3><span id="creator-video-decision-status" class="status blue">待选择</span></div>
-                <p class="cs-hint">系统不会自动开始视频任务。你可以先生成、修改口播稿，再决定是否制作视频。</p>
-                <div class="cs-decision-options">
-                  <button class="cs-decision-option" data-studio-decision="video" onclick="chooseStudioOutput('video')"><span>✓</span><div><b>继续制作推广视频</b><small>完成口播和素材配置后，手动点击“开始生成视频”。</small></div></button>
-                  <button class="cs-decision-option" data-studio-decision="report" onclick="chooseStudioOutput('report')"><span>✓</span><div><b>暂不制作视频</b><small>只保留当前客户画像和口播稿草稿，不提交成片任务。</small></div></button>
+              <div class="cs-block" id="topic-video-theme-block">
+                <div class="cs-block-head"><h3>展会信息</h3><span class="status blue">信息输入</span></div>
+                <div class="grid two">
+                  <div><label>本次视频主题 / 活动名称</label><input id="topic-video-title" placeholder="例如：2026 国际智能制造展" oninput="updateTopicVideoFontPreview()"></div>
+                  <div><label for="creator-studio-promo-focus">想要宣传的点</label><textarea id="creator-studio-promo-focus" placeholder="例如：突出源头工厂、产品比较和海外采购对接价值" oninput="updateTopicVideoFontPreview()"></textarea></div>
+                </div>
+                <div style="margin-top:12px"><label>展会补充信息</label><textarea id="topic-video-brief" placeholder="填写日期、地点、核心痛点、展会事实和卖点。"></textarea></div>
+                <div class="grid two" style="margin-top:12px">
+                  <div><label for="creator-studio-audience">用户受众</label><textarea id="creator-studio-audience" placeholder="例如：海外采购、汽配经销商、渠道商和专业观众"></textarea></div>
+                  <div><label>数字亮点（可选）</label><input id="topic-video-highlights" placeholder="例如：2000+源头工厂, 8大品类, 60000㎡" oninput="updateTopicVideoFontPreview()"></div>
+                </div>
+                <div class="grid two" style="margin-top:12px">
+                  <div><label>网络检索词（可选）</label><input id="topic-video-visual-terms" placeholder="例如：smart factory, robotics expo, industry exhibition"></div>
                 </div>
               </div>
 
-              <!-- 原 5 已前置：先生成口播稿，再选择素材和最终口播。 -->
               <div class="cs-block">
-                <div class="cs-block-head"><h3>2. 生成口播稿</h3><span id="creator-studio-script-status" class="status">待生成</span></div>
-                <p class="cs-hint">点击一次只生成可编辑的口播稿草稿；生成后可以继续修改、切换脚本，再选择素材并提交最终视频。</p>
-                <div id="cs-script-tabs" class="cs-script-tabs"></div>
+                <div class="cs-block-head"><h3>视频参数</h3><span id="creator-studio-script-status" class="status">待生成</span></div>
                 <div class="creator-studio-mode" style="margin-bottom:10px"><button id="creator-studio-mode-ai" class="active" onclick="setCreatorStudioInputMode('ai')">AI 生成</button><button id="creator-studio-mode-manual" onclick="setCreatorStudioInputMode('manual')">已有文案</button></div>
                 <div class="creator-reference-picker" id="creator-reference-picker"><div class="creator-reference-head"><div><b>参考案例</b><small>可选：只复用爆款逻辑，不复制原文</small></div><button type="button" onclick="loadEmployeeRecords()">刷新</button></div><div id="creator-reference-options"></div></div>
                 <input id="creator-studio-topic" type="hidden">
@@ -1713,36 +1880,64 @@
                 <textarea id="creator-studio-script" class="cs-script" placeholder="点击“生成口播稿”后显示；也可以切换到“已有文案”直接填写。" oninput="onStudioScriptInput(this.value)"></textarea>
                 <div class="cs-inline-row">
                   <div><label class="cs-label" for="creator-studio-copy-length">目标时长</label><select id="creator-studio-copy-length" onchange="syncCreatorStudioDuration(this.value)"><option value="15">约 15 秒</option><option value="20">约 20 秒</option><option value="30" selected>约 30 秒</option><option value="45">约 45 秒</option><option value="60">约 60 秒</option></select></div>
+                  <div><label class="cs-label" for="topic-video-aspect-ratio">视频比例</label><select id="topic-video-aspect-ratio"><option value="16:9">16:9 横屏</option><option value="9:16">9:16 竖屏</option><option value="1:1">1:1 方形</option></select></div>
+                  <div id="topic-video-material-source-field" style="display:none"><label class="cs-label" for="topic-video-material-source">网络素材来源</label><select id="topic-video-material-source"><option value="pexels">Pexels（推荐）</option><option value="pixabay">Pixabay</option></select></div>
+                  <div><label class="cs-label" for="topic-video-voice">Edge TTS 音色</label><select id="topic-video-voice"><option value="zh-CN-XiaoxiaoNeural">晓晓 · 女声</option><option value="zh-CN-XiaoyiNeural">晓伊 · 女声</option><option value="zh-CN-YunjianNeural">云健 · 男声</option><option value="zh-CN-YunxiNeural">云希 · 男声</option></select></div>
                   <div><label class="cs-label">预估</label><div id="creator-studio-duration-estimate" class="cs-duration">等待口播稿</div></div>
                 </div>
-                <div style="margin-top:12px"><button class="cs-linkbtn" onclick="createCreatorStudioCopy()">✨ 生成口播稿</button></div>
+                <div class="cs-inline-row">
+                  <div><label class="cs-label" for="topic-video-production-mode">成片方式</label><select id="topic-video-production-mode" onchange="updateStudioProductionMode(this.value)"><option value="auto" selected>智能判断（推荐）</option><option value="montage">素材混剪</option><option value="avatar">数字人口播</option><option value="hybrid">混合成片</option></select></div>
+                  <div><label class="cs-label" for="topic-video-font-style">字体样式</label><select id="topic-video-font-style" onchange="updateTopicVideoFontPreview()"><option value="impact">冲击粗体 · 展会大字</option><option value="tech">科技窄体 · 数据感</option><option value="editorial">杂志衬线 · 品牌感</option><option value="mono">等宽数据 · 工业感</option></select></div>
+                  <div><label class="cs-label" for="topic-video-transition">镜头转场</label><select id="topic-video-transition"><option value="wipe">横向擦除</option><option value="fade">淡入淡出</option><option value="flash">闪白切换</option><option value="cut">直接切换</option></select></div>
+                  <div><label class="cs-label" for="topic-video-bgm">BGM</label><select id="topic-video-bgm" onchange="updateTopicVideoBgmStatus(this.value)"><option value="">无 BGM</option></select></div>
+                  <div><label class="cs-label" for="topic-video-bgm-volume">BGM 音量</label><select id="topic-video-bgm-volume"><option value="0.10">低 · 10%</option><option value="0.16" selected>中 · 16%</option><option value="0.22">高 · 22%</option></select></div>
+                  <div style="display:flex;align-items:flex-end;gap:8px"><button type="button" class="cs-linkbtn" style="min-height:38px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:#fff" onclick="document.getElementById('topic-video-bgm-file').click()">上传 BGM</button><input id="topic-video-bgm-file" type="file" accept="audio/*" style="display:none" onchange="uploadTopicVideoBgm(this.files)"></div>
+                </div>
+                <div id="topic-video-font-preview" class="cs-font-preview" aria-live="polite">
+                  <div class="cs-font-preview-head"><b>生成前字体样式预览</b><span id="topic-video-font-preview-label">冲击粗体 · 展会大字</span></div>
+                  <div id="topic-video-font-preview-stage" class="cs-font-preview-stage" data-font-preview-style="impact">
+                    <span class="cs-font-preview-kicker">EXHIBITION / LIVE 2026</span>
+                    <strong id="topic-video-font-preview-title" class="cs-font-preview-title" data-text="现场比较 · 立即连接">现场比较 · 立即连接</strong>
+                    <span id="topic-video-font-preview-data" class="cs-font-preview-data">2000+ 源头工厂</span>
+                  </div>
+                  <div class="cs-font-preview-meta"><span id="topic-video-font-preview-family">Arial Black / Noto Sans SC</span><span id="topic-video-font-preview-spec">900 · 紧凑字距</span></div>
+                  <div class="cs-hint" style="margin:7px 0 0">这里只预览字形、字重和扫光，不会触发渲染或消耗生成额度。</div>
+                </div>
+                <div id="topic-video-bgm-status" class="cs-hint" style="margin-top:8px">BGM 默认关闭；上传后可在这里选择，生成时会自动循环并压低音量。</div>
+                <div style="margin-top:12px"><button class="btn-violet" style="width:auto;min-height:42px;padding:0 22px;box-shadow:none" onclick="createCreatorStudioCopy()">生成口播稿</button></div>
               </div>
 
-              <div id="creator-studio-video-settings" class="cs-video-settings">
-                <!-- 原 3：当前展会素材 -->
-                <div class="cs-block">
-                  <div class="cs-block-head"><h3>3. 选择当前展会素材</h3><div class="cs-block-tools"><button class="cs-linkbtn" onclick="showMaterialLibrary('creator')">↗ 去素材库上传</button><button class="cs-linkbtn" onclick="clearStudioClips()">🗑 清空</button></div></div>
-                  <p class="cs-hint">仅使用当前展会的本地素材库。未手动选择时，系统会在本展会素材中自动配片。</p>
-                  <div id="cs-material-grid" class="cs-material-grid">
-                    <div class="cs-add-tile" onclick="showMaterialLibrary('creator')">＋</div>
-                  </div>
-                  <div id="cs-material-total" class="cs-material-total">未选择素材片段</div>
-                  <div id="creator-studio-material-summary" class="creator-material-summary" style="display:none"></div>
+              <div class="cs-block" id="creator-studio-material-import">
+                <div class="cs-block-head">
+                  <h3>素材导入</h3>
+                  <div class="cs-block-tools"><button class="cs-linkbtn" onclick="showMaterialLibrary('creator')">↗ 去素材库上传</button><button class="cs-linkbtn" onclick="clearStudioClips()">🗑 清空</button></div>
                 </div>
+                <p class="cs-hint">导入当前展会的内部图片和视频，素材会按展会隔离保存；不选择时仍按主题自动检索网络素材。</p>
+                <div id="cs-material-grid" class="cs-material-grid">
+                  <div class="cs-add-tile" onclick="showMaterialLibrary('creator')" title="上传更多素材">＋</div>
+                </div>
+                <div id="cs-material-total" class="cs-material-total">未选择素材片段</div>
+                <div id="creator-studio-material-summary" class="creator-material-summary" style="display:none"></div>
+              </div>
 
-                <!-- 原 4：AI 自动补充 -->
-                <div class="cs-block">
-                  <div class="cs-supplement-head">
-                    <label class="switch"><input type="checkbox" id="cs-ai-supplement" onchange="toggleStudioSupplement(this.checked)"><span class="track"></span></label>
-                    <div><b>4. AI 自动补充</b><div class="cs-hint" style="margin:2px 0 0">素材不足时用 AI 生成画面补齐镜头，默认关闭。</div></div>
+              <div class="cs-block" id="creator-studio-ai-supplement">
+                <div class="cs-supplement-head">
+                  <label class="switch"><input type="checkbox" id="cs-ai-supplement" onchange="toggleStudioSupplement(this.checked)"><span class="track"></span></label>
+                  <div><b>AI 补充</b><div class="cs-hint" style="margin:2px 0 0">可选加入数字人右上角画中画；默认关闭。</div></div>
+                </div>
+                <div id="cs-supplement-subs" class="cs-supplement-subs disabled">
+                  <label class="cs-check"><input type="checkbox" data-supplement="avatar" disabled onchange="toggleStudioAvatar(this.checked)">数字人<span class="cs-soon">需配置 RunningHub</span></label>
+                  <label class="cs-check"><input type="checkbox" data-supplement="aivideo" disabled>AI 视频<span class="cs-soon">即将上线</span></label>
+                  <label class="cs-check"><input type="checkbox" data-supplement="intro" disabled>前贴<span class="cs-soon">即将上线</span></label>
+                </div>
+                <div id="cs-digital-human-config" class="cs-avatar-config hidden">
+                  <div class="cs-avatar-row">
+                    <div id="cs-digital-human-preview" class="cs-avatar-preview empty">＋</div>
+                    <div style="flex:1;min-width:220px"><label class="cs-label" for="cs-digital-human-file">数字人形象 / 融合图</label><input id="cs-digital-human-file" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadStudioDigitalHumanImage(this.files)"><div id="cs-digital-human-status" class="cs-avatar-status">上传一张人物正面图；生成后系统会把本次 Edge TTS 口播音频和图片提交到 RunningHub，输出后放在成片右上角圆形画中画。</div></div>
                   </div>
-                  <div id="cs-supplement-subs" class="cs-supplement-subs disabled">
-                    <label class="cs-check"><input type="checkbox" data-supplement="avatar" disabled>数字人<span class="cs-soon">即将上线</span></label>
-                    <label class="cs-check"><input type="checkbox" data-supplement="aivideo" disabled>AI 视频<span class="cs-soon">即将上线</span></label>
-                    <label class="cs-check"><input type="checkbox" data-supplement="intro" disabled>前贴<span class="cs-soon">即将上线</span></label>
                 </div>
               </div>
-            </div>
+
             </div>
             <div id="creator-studio-generate-bar" class="cs-cta-bar hidden"><button class="btn-violet" id="cs-generate-btn" onclick="startCreatorStudioPipeline()">开始生成视频</button></div>
           </div>
@@ -1995,6 +2190,7 @@
     let pendingHandoff = null;
     const employeeWorkspace = {hunter:'tasks', creator:'tasks', buyer:'tasks'};
     let appConfig = {};
+    let studioDigitalHumanImage = null;
     let lastCompletedSearch = '';
     let lastCompletedClientReport = '';
     let lastCompletedCopy = '';
@@ -2297,7 +2493,10 @@
       setFigmaNav('expo');
     }
     function backToExhibitionDetail() {
-      openExhibition(currentExhibitionId, currentExpoWorkspace);
+      const returnWorkspace = ['delivery-production','delivery-viral-monitor'].includes(currentExpoWorkspace)
+        ? 'delivery-overview'
+        : currentExpoWorkspace;
+      openExhibition(currentExhibitionId, returnWorkspace);
     }
     function showEmployeeOverview() {
       document.body.classList.remove('expo-context');
@@ -2337,6 +2536,23 @@
       document.getElementById('employee-overview-view')?.classList.add('view-hidden');
       document.getElementById('expo-detail-view')?.classList.remove('view-hidden');
       document.body.classList.add('expo-context');
+      if (key === 'delivery-production') {
+        switchExpoProduct('delivery');
+        toggleExpoContextGroup('delivery', true);
+        setExpoContextActive(key);
+        openEmployee('creator');
+        return;
+      }
+      if (key === 'delivery-viral-monitor') {
+        switchExpoProduct('delivery');
+        toggleExpoContextGroup('delivery', true);
+        setExpoContextActive(key);
+        showSection('viral-monitor');
+        setFigmaNav('delivery', currentExhibitionName());
+        mountViralMonitorIntegration();
+        window.scrollTo({top:0, behavior:'smooth'});
+        return;
+      }
       if (key === 'employees') {
         switchExpoProduct('employees'); setExpoContextActive(key); return;
       }
@@ -2365,6 +2581,83 @@
       document.querySelectorAll('[data-delivery-panel]').forEach(el => el.classList.toggle('active', el.dataset.deliveryPanel === tab));
       if (tab === 'overview') loadExpoMaterialCount();
     }
+    function viralMonitorHostContext() {
+      return {
+        contract_version:'1.0',
+        expo_id:currentExpoRecordId(),
+        expo_name:currentExhibitionName(),
+        mount_id:'viral-monitor-mount',
+      };
+    }
+    function mountViralMonitorIntegration() {
+      const mount = document.getElementById('viral-monitor-mount');
+      if (!mount) return;
+      const context = viralMonitorHostContext();
+      mount.dataset.expoId = context.expo_id;
+      mount.dataset.expoName = context.expo_name;
+      window.dispatchEvent(new CustomEvent('exhibitflow:viral-monitor-open', {
+        detail:{...context, mount, bridge:window.ExhibitFlowViralMonitorHost},
+      }));
+      const externalApp = window.ExhibitFlowViralMonitorApp;
+      if (externalApp && typeof externalApp.mount === 'function' && mount.dataset.mountedExpo !== context.expo_id) {
+        mount.dataset.mountedExpo = context.expo_id;
+        Promise.resolve(externalApp.mount(mount, context, window.ExhibitFlowViralMonitorHost)).catch(error => {
+          mount.dataset.mountedExpo = '';
+          notify(`爆款监控模块加载失败：${error?.message || error}`, 'error');
+        });
+      }
+    }
+    function openCreatorFromViralMonitor(reference = {}) {
+      const raw = reference && typeof reference === 'object' ? reference : {};
+      const referenceId = String(raw.reference_case_id || raw.id || raw.aweme_id || raw.note_id || '').trim();
+      const referenceUrl = String(raw.video_url || raw.url || raw.share_url || '').trim();
+      if (!referenceId && !referenceUrl) {
+        notify('爆款监控没有提供参考视频 ID 或视频地址', 'error');
+        return {ok:false, error:'missing_reference'};
+      }
+      openEmployee('creator');
+      startNewCreatorTask();
+      const title = String(raw.title || raw.desc || '爆款监控参考视频').trim();
+      const sample = {
+        ...raw,
+        id:referenceId || referenceUrl,
+        title,
+        url:referenceUrl,
+        video_url:referenceUrl,
+        platform:String(raw.platform || '').trim(),
+        source:'viral-monitor',
+      };
+      const referenceLogic = raw.reference_logic || raw.viral_logic || raw.analysis?.viral_logic || {};
+      selectedSample = sample;
+      selectedCreatorReferenceSampleIndex = 0;
+      selectedCreatorReferenceArtifact = {
+        id:`viral-monitor:${referenceId || referenceUrl}`,
+        expo_id:currentExpoRecordId(),
+        employee:'hunter',
+        type:'sample_pack',
+        title,
+        integration_source:'viral-monitor',
+        data:{
+          keyword:String(raw.keyword || title).trim(),
+          platform:sample.platform,
+          samples:[sample],
+          viral_logic:referenceLogic,
+          reference_analysis_id:String(raw.reference_analysis_id || raw.analysis_id || '').trim(),
+        },
+      };
+      activeCreatorSourceArtifactId = selectedCreatorReferenceArtifact.id;
+      renderCreatorReferencePicker();
+      window.dispatchEvent(new CustomEvent('exhibitflow:viral-reference-attached', {
+        detail:{reference:sample, context:viralMonitorHostContext()},
+      }));
+      notify('参考视频已带入生成视频页面，可继续生成或编辑口播稿。');
+      return {ok:true, reference_case_id:referenceId, creator_section:'creator'};
+    }
+    window.ExhibitFlowViralMonitorHost = Object.freeze({
+      version:'1.0',
+      getContext:viralMonitorHostContext,
+      openCreator:openCreatorFromViralMonitor,
+    });
     function createExhibitionDraft() {
       const dialog = document.getElementById('expo-create-dialog');
       if (!dialog) return;
@@ -2464,6 +2757,110 @@
       notify(`已上传 ${all.length} 个素材，系统已完成初步打标。`);
       document.getElementById('material-file-input').value = '';
       loadMaterialLibrary();
+    }
+    function updateTopicVideoBgmStatus(value = '') {
+      const status = document.getElementById('topic-video-bgm-status');
+      if (!status) return;
+      if (!value) {
+        status.textContent = 'BGM 默认关闭；上传后可在这里选择，生成时会自动循环并压低音量。';
+        return;
+      }
+      const option = Array.from(document.querySelectorAll('#topic-video-bgm option')).find(item => item.value === String(value));
+      status.textContent = option ? `已选择 BGM：${option.textContent}；旁白仍保持主音量。` : '已选择 BGM。';
+    }
+    function renderStudioDigitalHumanImage() {
+      const preview = document.getElementById('cs-digital-human-preview');
+      const status = document.getElementById('cs-digital-human-status');
+      if (!preview || !status) return;
+      if (!studioDigitalHumanImage?.id) {
+        preview.className = 'cs-avatar-preview empty';
+        preview.textContent = '＋';
+        status.textContent = '上传一张人物正面图；生成后系统会把本次 Edge TTS 口播音频和图片提交到 RunningHub，输出后放在成片右上角圆形画中画。';
+        return;
+      }
+      preview.className = `cs-avatar-preview${studioDigitalHumanImage.url ? '' : ' empty'}`;
+      preview.innerHTML = studioDigitalHumanImage.url
+        ? `<img src="${escapeAttr(assetPath(studioDigitalHumanImage.url))}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+        : '人';
+      status.textContent = `已选择：${studioDigitalHumanImage.name || studioDigitalHumanImage.id}；生成时作为右上角圆形数字人。`;
+    }
+    function clearStudioDigitalHumanImage() {
+      studioDigitalHumanImage = null;
+      const input = document.getElementById('cs-digital-human-file');
+      if (input) input.value = '';
+      renderStudioDigitalHumanImage();
+    }
+    async function uploadStudioDigitalHumanImage(files) {
+      const file = Array.from(files || [])[0];
+      const input = document.getElementById('cs-digital-human-file');
+      const status = document.getElementById('cs-digital-human-status');
+      if (!file) return;
+      if (!/^image\/(jpeg|png|webp)$/i.test(file.type) || file.size > 10 * 1024 * 1024) {
+        if (status) status.textContent = '请上传 JPG、PNG 或 WEBP 图片，且不超过 10MB。';
+        if (input) input.value = '';
+        return notify('数字人形象必须是 JPG、PNG 或 WEBP，且不超过 10MB。', 'error');
+      }
+      if (status) status.textContent = `正在上传数字人形象：${file.name}…`;
+      try {
+        const response = await fetch(apiPath(`/api/digital-human/images/upload?name=${encodeURIComponent(file.name)}&expo_id=${encodeURIComponent(currentExpoRecordId())}`), {
+          method:'POST', headers:{'Content-Type':file.type || 'application/octet-stream'}, body:file,
+        });
+        const raw = await response.text();
+        let data = {};
+        try { data = raw ? JSON.parse(raw) : {}; } catch (_) { /* server returned plain text */ }
+        if (!response.ok) throw new Error(data.error || raw || '数字人形象上传失败');
+        studioDigitalHumanImage = {id:data.id, name:data.name || file.name, url:data.url || ''};
+        renderStudioDigitalHumanImage();
+        notify('数字人形象已上传。');
+      } catch (error) {
+        if (status) status.textContent = error.message || '数字人形象上传失败。';
+        if (input) input.value = '';
+        notify(error.message || '数字人形象上传失败', 'error');
+      }
+    }
+    async function loadTopicVideoBgms(preferred = '') {
+      const select = document.getElementById('topic-video-bgm');
+      if (!select) return;
+      const current = preferred || select.value || '';
+      try {
+        const data = await api(`/api/bgms?expo_id=${encodeURIComponent(currentExpoRecordId())}`);
+        const items = data.items || [];
+        select.innerHTML = '<option value="">无 BGM</option>' + items.map(item => {
+          const duration = Number(item.duration || 0);
+          const suffix = duration ? ` · ${formatClock(duration)}` : '';
+          return `<option value="${escapeAttr(item.id)}">${escapeHtml(item.name || item.id)}${suffix}</option>`;
+        }).join('');
+        if (current && items.some(item => item.id === current)) select.value = current;
+        updateTopicVideoBgmStatus(select.value);
+      } catch (error) {
+        select.innerHTML = '<option value="">无 BGM（素材库暂不可用）</option>';
+        updateTopicVideoBgmStatus('');
+      }
+    }
+    async function uploadTopicVideoBgm(files) {
+      const file = Array.from(files || [])[0];
+      const input = document.getElementById('topic-video-bgm-file');
+      if (!file) return;
+      const status = document.getElementById('topic-video-bgm-status');
+      if (status) status.textContent = `正在上传 BGM：${file.name}…`;
+      try {
+        const response = await fetch(apiPath(`/api/bgms/upload?name=${encodeURIComponent(file.name)}&expo_id=${encodeURIComponent(currentExpoRecordId())}`), {
+          method: 'POST',
+          headers: {'Content-Type': 'application/octet-stream'},
+          body: file,
+        });
+        const raw = await response.text();
+        let data = {};
+        try { data = raw ? JSON.parse(raw) : {}; } catch (_) { /* server returned plain text */ }
+        if (!response.ok) throw new Error(data.error || raw || 'BGM 上传失败');
+        await loadTopicVideoBgms(data.id || '');
+        notify(`BGM「${file.name}」已上传，可以在视频参数中选择。`);
+      } catch (error) {
+        updateTopicVideoBgmStatus('');
+        notify(error.message || 'BGM 上传失败', 'error');
+      } finally {
+        if (input) input.value = '';
+      }
     }
     function openEmployee(id) {
       showSection(id);
@@ -2682,6 +3079,65 @@
       window.__toastTimer = setTimeout(() => box.className = 'toast', 4200);
     }
     function valueOf(id) { return (document.getElementById(id)?.value || '').trim(); }
+    const TOPIC_VIDEO_FONT_PREVIEW_META = {
+      impact: { label: '冲击粗体 · 展会大字', family: 'Arial Black / Noto Sans SC', spec: '900 · 紧凑字距', title: '现场比较 · 立即连接', data: '2000+ 源头工厂' },
+      tech: { label: '科技窄体 · 数据感', family: 'Arial Narrow / Noto Sans SC', spec: '800 · -0.02em', title: '智能制造 / DATA FLOW', data: '8 CATEGORIES / LIVE' },
+      editorial: { label: '杂志衬线 · 品牌感', family: 'Noto Serif SC / Songti SC', spec: '800 · 品牌衬线', title: '在现场，找到下一条增长路径', data: 'THE NEXT CONNECTION' },
+      mono: { label: '等宽数据 · 工业感', family: 'SFMono / Roboto Mono', spec: '800 · -0.015em', title: '2000+ / 8 CATEGORIES', data: 'DATA VERIFIED / 2026' },
+    };
+    function previewText(value, fallback, maxLength = 30) {
+      const text = String(value || '').replace(/\s+/g, ' ').trim() || fallback;
+      const characters = Array.from(text);
+      return characters.length > maxLength ? `${characters.slice(0, maxLength - 1).join('')}…` : text;
+    }
+    function updateTopicVideoFontPreview() {
+      const select = document.getElementById('topic-video-font-style');
+      const stage = document.getElementById('topic-video-font-preview-stage');
+      if (!select || !stage) return;
+      const style = Object.prototype.hasOwnProperty.call(TOPIC_VIDEO_FONT_PREVIEW_META, select.value) ? select.value : 'impact';
+      const meta = TOPIC_VIDEO_FONT_PREVIEW_META[style];
+      const title = previewText(valueOf('topic-video-title'), meta.title, 30);
+      const focus = valueOf('topic-video-highlights') || valueOf('creator-studio-promo-focus');
+      const data = previewText(focus.split(/[\n,，;；]/)[0], meta.data, 28);
+      stage.dataset.fontPreviewStyle = style;
+      const label = document.getElementById('topic-video-font-preview-label');
+      const titleEl = document.getElementById('topic-video-font-preview-title');
+      const dataEl = document.getElementById('topic-video-font-preview-data');
+      const family = document.getElementById('topic-video-font-preview-family');
+      const spec = document.getElementById('topic-video-font-preview-spec');
+      if (label) label.textContent = meta.label;
+      if (titleEl) { titleEl.textContent = title; titleEl.dataset.text = title; }
+      if (dataEl) dataEl.textContent = data;
+      if (family) family.textContent = meta.family;
+      if (spec) spec.textContent = meta.spec;
+    }
+    async function collectTopicVideoTheme() {
+      const title = valueOf('topic-video-title') || currentExhibitionName() || '展会推广';
+      const brief = valueOf('topic-video-brief');
+      const promoFocus = valueOf('creator-studio-promo-focus');
+      const audience = valueOf('creator-studio-audience') || valueOf('brief-audience');
+      const themeText = [
+        promoFocus ? `想要宣传的点：${promoFocus}` : '',
+        audience ? `用户受众：${audience}` : '',
+        brief,
+      ].filter(Boolean).join('\n\n').slice(0, 16000);
+      return {
+        event_name: title,
+        theme_text: themeText,
+        promo_focus: promoFocus,
+        audience,
+        highlights: valueOf('topic-video-highlights'),
+        visual_terms: valueOf('topic-video-visual-terms'),
+        aspect_ratio: valueOf('topic-video-aspect-ratio') || '16:9',
+        material_source: valueOf('topic-video-material-source') || 'pexels',
+        voice: valueOf('topic-video-voice') || 'zh-CN-XiaoxiaoNeural',
+        font_style: valueOf('topic-video-font-style') || 'impact',
+        transition: valueOf('topic-video-transition') || 'wipe',
+        bgm: valueOf('topic-video-bgm'),
+        bgm_volume: Number(valueOf('topic-video-bgm-volume') || 0.16),
+        cta_text: valueOf('video-cta'),
+      };
+    }
     const VOICEOVER_CHARS_PER_SECOND = 3.8;
     const DEFAULT_COPY_PLACEHOLDER = '生成完成后显示纯口播稿；这里只保留配音员要说的内容';
     function countVoiceoverCharacters(text) {
@@ -2804,7 +3260,8 @@
       if (employee === 'creator') {
         const box = document.getElementById('creator-settings-content');
         if (!box) return;
-        box.innerHTML = `<div class="grid two"><div><label>当前展会素材库</label><b>${escapeHtml(appConfig.material_dir || '未配置')}</b><p>当前可用素材 ${Number(appConfig.material_count || 0)} 个</p></div><div><label>文本生成</label><b>${appConfig.text_llm_configured ? `Qwen ${escapeHtml(appConfig.text_llm_model || 'qwen3.6-plus')} 已连接` : '需要配置'}</b></div><div><label>配音与渲染</label><b>Qwen TTS / Edge 备用 / ${escapeHtml(appConfig.render_engine || 'internal')}</b></div></div>`;
+        const avatar = appConfig.avatar || {};
+        box.innerHTML = `<div class="grid two"><div><label>当前展会素材库</label><b>${escapeHtml(appConfig.material_dir || '未配置')}</b><p>当前可用素材 ${Number(appConfig.material_count || 0)} 个</p></div><div><label>文本生成</label><b>${appConfig.text_llm_configured ? `Qwen ${escapeHtml(appConfig.text_llm_model || 'qwen3.6-plus')} 已连接` : '需要配置'}</b></div><div><label>配音与渲染</label><b>Qwen TTS / Edge 备用 / ${escapeHtml(appConfig.render_engine || 'internal')}</b></div><div><label>数字人补充</label><b>${avatar.configured ? `${escapeHtml(avatar.provider || 'RunningHub')} 已连接` : '需配置 RunningHub'}</b><p>开启后使用本次 Edge TTS 音频，生成右上角圆形数字人。</p></div></div>`;
         return;
       }
       const box = document.getElementById('buyer-settings-content');
@@ -2882,6 +3339,10 @@
       const items = recordsForCurrentExpo(latestArtifacts)
         .filter(item => item.employee === 'hunter' && item.type === 'sample_pack')
         .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+      if (selectedCreatorReferenceArtifact?.integration_source === 'viral-monitor'
+          && !items.some(item => item.id === selectedCreatorReferenceArtifact.id)) {
+        items.unshift(selectedCreatorReferenceArtifact);
+      }
       if (!items.length) {
         box.innerHTML = '<div class="creator-reference-empty">暂无爆款逻辑成果。先在找爆款员工中完成检索并生成成果，之后可以在这里主动选择。</div>';
         return;
@@ -2903,7 +3364,8 @@
       box.innerHTML = `<div class="creator-reference-list">${cards}</div>${logicPreview}`;
     }
     function selectCreatorReferenceArtifact(artifactId, sampleIndex = 0) {
-      const artifact = recordsForCurrentExpo(latestArtifacts).find(item => item.id === artifactId && item.employee === 'hunter' && item.type === 'sample_pack');
+      const artifact = recordsForCurrentExpo(latestArtifacts).find(item => item.id === artifactId && item.employee === 'hunter' && item.type === 'sample_pack')
+        || (selectedCreatorReferenceArtifact?.id === artifactId ? selectedCreatorReferenceArtifact : null);
       if (!artifact) return notify('找不到这条爆款逻辑成果，请刷新后重试', 'error');
       selectedCreatorReferenceArtifact = artifact;
       activeCreatorSourceArtifactId = artifact.id || '';
@@ -3018,7 +3480,8 @@
       const videoFile = valueOf('publish-video');
       if (!videoFile) return notify('当前还没有可保存的成片', 'error');
       const summary = activeCreatorRenderSummary || captionPreviewState.summary || {};
-      if (summary.captions_hard_burned !== true) return notify('当前还是无字幕草稿。请先选择字幕样式并生成最终成片。', 'error');
+      const dynamicTopicVideo = summary.render_engine === 'remotion-topic' || summary.template === 'AutoPartsKinetic';
+      if (!dynamicTopicVideo && summary.captions_hard_burned !== true) return notify('当前还是无字幕草稿。请先选择字幕样式并生成最终成片。', 'error');
       const asset = latestRenderAssets.find(item => item.path === videoFile) || latestRenderAssets.find(item => item.task_id === activeCreatorRenderTaskId) || latestRenderAssets[0] || {};
       const title = valueOf('brief-subject') || valueOf('copy-topic') || asset.name || '未命名视频';
       const sourceTaskId = activeCreatorRenderTaskId || captionPreviewState.taskId || captionPreviewState.sourceTaskId || asset.task_id || '';
@@ -3038,7 +3501,7 @@
           reference_artifact_id:activeCreatorSourceArtifactId || selectedCreatorReferenceArtifact?.id || '',
           reference_logic:selectedCreatorReferenceLogic(),
           creative_direction:selectedCreatorDirection,
-          material_source:selectedMaterialSource,
+          material_source:dynamicTopicVideo ? (summary.network_search?.provider || valueOf('topic-video-material-source') || 'pexels') : selectedMaterialSource,
           caption_template:summary.caption_template || selectedCaptionTemplate,
           caption_animation:summary.caption_animation || selectedCaptionAnimation,
           caption_style_engine:summary.caption_style_engine || '',
@@ -3117,14 +3580,22 @@
       document.querySelectorAll('[data-creator-mode]').forEach(el => el.classList.toggle('active', el.dataset.creatorMode === selectedCreatorInputMode));
       document.querySelectorAll('[data-creator-mode-panel]').forEach(el => el.classList.toggle('active', el.dataset.creatorModePanel === selectedCreatorInputMode));
     }
+    function creatorBackgroundContext() {
+      const focus = valueOf('creator-studio-promo-focus');
+      const audience = valueOf('creator-studio-audience') || valueOf('brief-audience');
+      return [
+        focus ? `想要宣传的点：${focus}` : '',
+        audience ? `用户受众：${audience}` : '',
+      ].filter(Boolean).join('\n');
+    }
     function creatorBriefTopic() {
       return [
         `展会主题：${valueOf('brief-subject')}`,
-        `目标受众：${valueOf('brief-audience')}`,
+        creatorBackgroundContext(),
         `目标受众痛点：${valueOf('brief-pain')}`,
         `展会解决路径：${valueOf('brief-selling')}`,
         `补充要求：${valueOf('brief-tone')}`,
-      ].filter(line => !line.endsWith('：')).join('\n');
+      ].filter(line => line && !line.endsWith('：')).join('\n');
     }
     function submitCreatorBrief() {
       if (selectedCreatorInputMode === 'manual') {
@@ -3262,11 +3733,33 @@
       selectedCreatorReferenceArtifact = null;
       selectedCreatorReferenceSampleIndex = 0;
       activeCreatorSourceArtifactId = '';
+      studioSelectedClips = [];
+      clearStudioDigitalHumanImage();
+      const studioSupplement = document.getElementById('cs-ai-supplement');
+      if (studioSupplement) studioSupplement.checked = false;
+      toggleStudioSupplement(false);
 
-      ['copy-topic','brief-subject','brief-audience','brief-pain','brief-selling','brief-tone','manual-copy-input','final-copy','creator-studio-topic','creator-studio-script','competitor-dir','highlight-words','batch-copy-list','publish-video'].forEach(id => {
+      ['copy-topic','brief-subject','brief-audience','brief-pain','brief-selling','brief-tone','manual-copy-input','final-copy','creator-studio-topic','creator-studio-script','creator-studio-promo-focus','creator-studio-audience','topic-video-title','topic-video-brief','topic-video-highlights','topic-video-visual-terms','competitor-dir','highlight-words','batch-copy-list','publish-video'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
+      const aspectRatio = document.getElementById('topic-video-aspect-ratio');
+      if (aspectRatio) aspectRatio.value = '16:9';
+      const topicMaterialSource = document.getElementById('topic-video-material-source');
+      if (topicMaterialSource) topicMaterialSource.value = 'pexels';
+      const topicVoice = document.getElementById('topic-video-voice');
+      if (topicVoice) topicVoice.value = 'zh-CN-XiaoxiaoNeural';
+      const topicFontStyle = document.getElementById('topic-video-font-style');
+      if (topicFontStyle) topicFontStyle.value = 'impact';
+      updateTopicVideoFontPreview();
+      const topicTransition = document.getElementById('topic-video-transition');
+      if (topicTransition) topicTransition.value = 'wipe';
+      const topicBgm = document.getElementById('topic-video-bgm');
+      if (topicBgm) topicBgm.value = '';
+      const topicBgmVolume = document.getElementById('topic-video-bgm-volume');
+      if (topicBgmVolume) topicBgmVolume.value = '0.16';
+      updateTopicVideoBgmStatus('');
+      loadTopicVideoBgms();
       const cta = document.getElementById('video-cta');
       if (cta) cta.value = '点击下方链接，立即报名吧';
       const copyLength = document.getElementById('copy-length');
@@ -3363,17 +3856,26 @@
       renderStudioScriptTabs();
       renderCreatorReferencePicker();
       renderStudioMaterialGrid();
+      loadTopicVideoBgms();
       syncStudioAvatarAvailability();
+      updateTopicVideoFontPreview();
       studioComposerReady = true;
     }
     function syncStudioAvatarAvailability() {
-      // Un-grey the 数字人 sub-toggle only when a provider key is configured.
+      // Un-grey the digital-human sub-toggle only when a provider key is configured.
       const configured = Boolean(appConfig?.avatar?.configured);
       const avatarCheck = document.querySelector('#cs-supplement-subs [data-supplement="avatar"]');
       if (!avatarCheck) return;
       avatarCheck.disabled = !configured;
       const soon = avatarCheck.parentElement?.querySelector('.cs-soon');
-      if (soon) soon.style.display = configured ? 'none' : '';
+      if (soon) {
+        soon.style.display = configured ? 'none' : '';
+        soon.textContent = configured ? '' : '需配置 RunningHub';
+      }
+      if (!configured) {
+        avatarCheck.checked = false;
+        toggleStudioAvatar(false);
+      }
     }
     function setCreatorStudioInputMode(mode = 'ai') {
       selectedCreatorInputMode = mode === 'manual' ? 'manual' : 'ai';
@@ -3433,6 +3935,8 @@
     }
     function createCreatorStudioCopy() {
       if (!latestCreatorClientReport) latestCreatorClientReport = buildCreatorClientProfile();
+      selectedStudioOutput = 'video';
+      document.getElementById('creator-studio-generate-bar')?.classList.remove('hidden');
       const {topic, script} = syncCreatorStudioToWorkflow();
       if (script) {
         setCreatorStudioInputMode('manual');
@@ -3546,6 +4050,10 @@
       document.getElementById('brief-pain').value = brief.pain || '';
       document.getElementById('brief-selling').value = brief.selling || '';
       document.getElementById('brief-tone').value = brief.tone || '';
+      const audienceField = document.getElementById('creator-studio-audience');
+      const focusField = document.getElementById('creator-studio-promo-focus');
+      if (audienceField && !audienceField.value) audienceField.value = brief.audience || '';
+      if (focusField && !focusField.value) focusField.value = report.video_recommendation?.preferred_angle || brief.selling || '';
       const topic = studioExpoTopic();
       document.getElementById('creator-studio-topic').value = topic;
       document.getElementById('copy-topic').value = topic;
@@ -3610,7 +4118,7 @@
         renderStudioMaterialGrid();
         notify('已选择制作视频。请确认口播稿和素材后，手动点击“开始生成视频”。');
       } else {
-        notify('已暂不制作视频；口播稿仍可继续生成和编辑。');
+        notify('已保留口播稿；可随时补充宣传重点和用户受众后生成视频。');
       }
     }
     function syncStudioExpoInfo() {
@@ -3622,6 +4130,8 @@
       const topic = studioExpoTopic();
       const hiddenTopic = document.getElementById('creator-studio-topic');
       if (hiddenTopic) hiddenTopic.value = topic;
+      const topicTitle = document.getElementById('topic-video-title');
+      if (topicTitle && !topicTitle.value) topicTitle.value = profile.name || '';
     }
     function studioExpoTopic() {
       const profile = currentExhibitionProfile();
@@ -3686,7 +4196,32 @@
     }
     function toggleStudioSupplement(on) {
       document.getElementById('cs-supplement-subs')?.classList.toggle('disabled', !on);
-      if (on) notify('数字人 / AI 视频 / 前贴能力即将上线，当前生成暂不包含。');
+      const avatarCheck = document.querySelector('#cs-supplement-subs [data-supplement="avatar"]');
+      if (!on && avatarCheck) avatarCheck.checked = false;
+      toggleStudioAvatar(Boolean(on && avatarCheck?.checked));
+      if (on && !appConfig?.avatar?.configured) notify('数字人需要先在服务端配置 RunningHub；其他补充能力仍未接入。');
+    }
+    function toggleStudioAvatar(on) {
+      const box = document.getElementById('cs-digital-human-config');
+      const enabled = Boolean(on && document.getElementById('cs-ai-supplement')?.checked);
+      box?.classList.toggle('hidden', !enabled);
+      if (enabled) renderStudioDigitalHumanImage();
+    }
+    function updateStudioProductionMode(value) {
+      const mode = String(value || 'auto');
+      const needsAvatar = mode === 'avatar' || mode === 'hybrid';
+      const supplement = document.getElementById('cs-ai-supplement');
+      const avatarCheck = document.querySelector('#cs-supplement-subs [data-supplement="avatar"]');
+      if (needsAvatar) {
+        if (supplement) supplement.checked = true;
+        toggleStudioSupplement(true);
+        if (avatarCheck) avatarCheck.checked = true;
+        toggleStudioAvatar(true);
+        if (!appConfig?.avatar?.configured) notify('所选成片方式需要 RunningHub，当前未配置时会自动降级为素材混剪。');
+      } else if (mode === 'montage') {
+        if (avatarCheck) avatarCheck.checked = false;
+        toggleStudioAvatar(false);
+      }
     }
     function filterStudioJobs(query) {
       const q = String(query || '').trim().toLowerCase();
@@ -3694,14 +4229,26 @@
         el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none';
       });
     }
-    function startCreatorStudioPipeline() {
+    async function startCreatorStudioPipeline() {
       if (!latestCreatorClientReport) latestCreatorClientReport = buildCreatorClientProfile();
-      if (selectedStudioOutput !== 'video') return notify('请先在第 1 步明确选择“继续制作推广视频”', 'error');
+      // 第 1 步现在收集宣传重点和目标受众；只有点击本按钮时才真正提交视频任务。
+      selectedStudioOutput = 'video';
       selectedMaterialSource = 'local';
       studioScripts[studioActiveScript] = valueOf('creator-studio-script');
       syncCreatorStudioToWorkflow();
       const scripts = studioScripts.map(s => String(s || '').trim()).filter(Boolean);
-      if (!scripts.length && !valueOf('final-copy')) return notify('请先生成或填写口播稿', 'error');
+      const avatarCheck = document.querySelector('#cs-supplement-subs [data-supplement="avatar"]');
+      const productionMode = valueOf('topic-video-production-mode') || 'auto';
+      const wantAvatar = Boolean(['avatar','hybrid'].includes(productionMode) || (document.getElementById('cs-ai-supplement')?.checked && avatarCheck?.checked));
+      if (wantAvatar && !appConfig?.avatar?.configured) return notify('数字人服务尚未配置，请先配置 RunningHub。', 'error');
+      if (wantAvatar && appConfig?.avatar?.image_required && !studioDigitalHumanImage?.id) return notify('请先上传数字人形象图片。', 'error');
+      let topicConfig;
+      try {
+        topicConfig = await collectTopicVideoTheme();
+      } catch (error) {
+        return notify(error.message || '展会信息读取失败', 'error');
+      }
+      if (!scripts.length && !valueOf('final-copy') && !topicConfig.theme_text && !topicConfig.event_name) return notify('请先填写展会信息或提供口播稿', 'error');
       const selected = studioSelectedClips.map(c => c.name);
       if (studioSelectedClips.length) {
         const total = studioSelectedClips.reduce((s,c) => s + (c.kind === 'video' ? Number(c.duration||0) : 3), 0);
@@ -3711,21 +4258,42 @@
       const effectiveScripts = scripts.length ? scripts : [valueOf('final-copy')];
       if (effectiveScripts.length > 1) {
         notify(`已提交 ${effectiveScripts.length} 条脚本，将各生成一版视频。`);
-        effectiveScripts.forEach(script => submitStudioGeneration(script, selected));
+        effectiveScripts.forEach(script => submitStudioGeneration(script, selected, topicConfig));
       } else {
-        submitStudioGeneration(effectiveScripts[0], selected);
+        submitStudioGeneration(effectiveScripts[0], selected, topicConfig);
       }
     }
-    async function submitStudioGeneration(script, selectedClips) {
+    async function submitStudioGeneration(script, selectedClips, topicConfig = null) {
       // 后端 final_script_with_cta 会统一追加结尾 CTA，这里不重复拼接。
       const finalScript = String(script || '').trim();
       const supplementOn = document.getElementById('cs-ai-supplement')?.checked;
       const avatarBox = document.querySelector('#cs-supplement-subs [data-supplement="avatar"]');
-      const wantAvatar = Boolean(supplementOn && avatarBox && !avatarBox.disabled && avatarBox.checked);
+      const productionMode = valueOf('topic-video-production-mode') || 'auto';
+      const wantAvatar = Boolean(['avatar','hybrid'].includes(productionMode) || (supplementOn && avatarBox && !avatarBox.disabled && avatarBox.checked));
+      const referenceProfile = selectedSample?.reference_profile || selectedSample?.vl_profile || selectedSample?.analysis || {};
       const projectId = `video-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+      const theme = topicConfig || await collectTopicVideoTheme();
       const task = await createTask('creator-pipeline', {
         video_project_id: projectId,
-        topic: (studioExpoTopic() || valueOf('creator-studio-topic') || '展会推广').slice(0, 120),
+        render_engine: 'remotion-topic',
+        video_template: 'AutoPartsKinetic',
+        agent_mode: 'internal-skill',
+        topic: (theme.event_name || studioExpoTopic() || valueOf('creator-studio-topic') || '展会推广').slice(0, 120),
+        event_name: theme.event_name,
+        theme_text: theme.theme_text,
+        promo_focus: theme.promo_focus,
+        audience: theme.audience,
+        target_audience: theme.audience,
+        background_context: creatorBackgroundContext(),
+        highlights: theme.highlights,
+        visual_terms: theme.visual_terms,
+        aspect_ratio: theme.aspect_ratio,
+        font_style: theme.font_style,
+        transition: theme.transition,
+        production_mode: productionMode,
+        reference_profile: referenceProfile,
+        bgm: theme.bgm,
+        bgm_volume: theme.bgm_volume,
         client_report: latestCreatorClientReport || {},
         creative_direction: selectedCreatorDirection,
         target_duration_seconds: Number(valueOf('creator-studio-copy-length') || 30),
@@ -3733,17 +4301,20 @@
         reference_logic: selectedCreatorReferenceLogic(),
         reference_artifact_id: selectedCreatorReferenceArtifact?.id || '',
         script: finalScript,
-        material_source: 'local',
-        material_dir: valueOf('material-dir'),
-        selected_clips: selectedClips,
+        material_source: theme.material_source,
+        network_source: theme.material_source,
+        material_dir: '',
+        selected_clips: [],
         supplement_avatar: wantAvatar,
+        digital_human_image_id: studioDigitalHumanImage?.id || '',
+        digital_human_image_name: studioDigitalHumanImage?.name || '',
         competitor_dir: valueOf('competitor-dir'),
-        cta_text: valueOf('video-cta'),
+        cta_text: theme.cta_text || valueOf('video-cta'),
         caption_template: selectedCaptionTemplate,
         caption_animation: selectedCaptionAnimation,
         highlight_words: valueOf('highlight-words'),
-        tts_service: valueOf('tts-service'),
-        voice: valueOf('tts-voice'),
+        tts_service: 'edge',
+        voice: theme.voice,
       }, true);
       rememberCreatorTask(task);
       loadTasks();
@@ -4066,6 +4637,7 @@
       const topic = `${valueOf('copy-topic')}\n创意方向：${directionText}`.trim();
       const task = await createTask('copy', {
         topic,
+        background_context: creatorBackgroundContext(),
         sample: selectedSample || {},
         reference_logic: selectedCreatorReferenceLogic(),
         reference_artifact_id: selectedCreatorReferenceArtifact?.id || '',
@@ -4278,6 +4850,31 @@
       if (!videoUrl) {
         box.className = 'result-empty';
         box.textContent = '当前版本没有可用视频预览。';
+        return;
+      }
+      if (summary.render_engine === 'remotion-topic' || summary.template === 'AutoPartsKinetic') {
+        activeVideoProjectId = summary.video_project_id || activeVideoProjectId || sourceTaskId || taskId || '';
+        activeCreatorRenderTaskId = taskId || sourceTaskId || activeCreatorRenderTaskId;
+        activeCreatorRenderSummary = summary;
+        captionPreviewState.summary = summary;
+        captionPreviewState.sourceTaskId = sourceTaskId;
+        captionPreviewState.taskId = taskId || sourceTaskId;
+        captionPreviewState.locked = false;
+        captionPreviewState.editable = false;
+        const publishVideo = document.getElementById('publish-video');
+        if (publishVideo && summary.final_video) publishVideo.value = summary.final_video;
+        box.className = 'media-preview';
+        setCreatorStudioMode('editor');
+        const digitalHuman = summary.digital_human || {};
+        const productionPlan = summary.production_plan || {};
+        const modeLabels = {montage:'素材混剪', avatar:'数字人口播', hybrid:'混合成片'};
+        const resolvedMode = productionPlan.resolved || digitalHuman.mode || 'montage';
+        const digitalHumanText = digitalHuman.status === 'completed'
+          ? (digitalHuman.layout === 'fullscreen' ? '数字人作为主画面，由 Remotion 与动态文字统一编排。' : '数字人按场景显示在右上角圆形画中画。')
+          : String(digitalHuman.status || '').includes('fallback') || digitalHuman.status === 'failed'
+            ? `数字人环节未完成，已自动降级为素材混剪：${digitalHuman.error || '服务暂不可用'}`
+            : '本次未启用数字人。';
+        box.innerHTML = `<div class="caption-final-result"><video controls playsinline preload="metadata" src="${escapeAttr(assetPath(summary.preview_url || videoUrl))}"></video><div class="caption-final-meta"><b>主题动态成片已生成</b><p>模板：AutoPartsKinetic · ${escapeHtml(summary.aspect_ratio || '16:9')} · Edge TTS · ${escapeHtml(modeLabels[resolvedMode] || resolvedMode)}</p><p>已包含逐字弹出、底部上弹、扫光、高亮闪白、数字 0→目标值（0.5 秒）和结尾呼吸放大。</p><p>${escapeHtml(digitalHumanText)}</p><div class="actions"><button class="primary" onclick="document.getElementById('publish-video').value='${escapeAttr(summary.final_video || '')}'">设为投放视频</button>${summary.summary_markdown_url ? `<a class="button" target="_blank" href="${escapeAttr(assetPath(summary.summary_markdown_url))}">查看生成 MD</a>` : ''}</div></div></div>`;
         return;
       }
       const template = captionPreviewTemplates[summary.caption_template] ? summary.caption_template : selectedCaptionTemplate;
@@ -5218,6 +5815,7 @@
     async function loadConfig() {
       const cfg = await api('/api/config');
       appConfig = cfg;
+      syncStudioAvatarAvailability();
       renderPlatformReleaseStatus();
       document.getElementById('material-dir').value ||= cfg.material_dir;
       const today = new Date();
@@ -5230,7 +5828,7 @@
       const qwenReady = Boolean(cfg.dashscope_key_present || cfg.dashscope_configured);
       document.getElementById('kpis').innerHTML = [
         ['找爆款', cfg.crawler_configured ? '抓取器已配置' : '需导入链接'],
-        ['成片引擎', cfg.render_engine],
+        ['成片引擎', cfg.topic_video?.configured ? '主题动态 / Remotion' : cfg.render_engine],
         ['AI/TTS', textLlmReady ? `Qwen ${cfg.text_llm_model || 'qwen3.6-plus'} 文案${qwenReady ? ' / Qwen 视觉与 TTS' : ''}` : '需配置 Qwen Key'],
         ['发布器', cfg.publisher_configured ? '已配置' : '未配置'],
       ].map(([k,v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('');
@@ -5239,7 +5837,7 @@
       setText('material-count', `素材 ${cfg.material_count || 0} 个`);
       setText('local-source-count', `素材 ${cfg.material_count || 0} 个`);
       const onlineStatus = document.getElementById('online-source-status');
-      if (onlineStatus) onlineStatus.textContent = cfg.online_stock_configured ? '已配置，可直接使用' : '需要配置网络素材接口';
+      if (onlineStatus) onlineStatus.textContent = cfg.online_stock_configured ? '已配置，可直接使用' : '需要配置 Pexels / Pixabay Key';
       refreshSearchProviderChoices();
       const publisherNotice = document.getElementById('publisher-notice');
       publisherNotice.textContent = cfg.publisher_configured ? '' : '当前未配置个人账号发布器，不能执行真实发布。';
@@ -5678,7 +6276,7 @@
       if (!box) return;
       const employees = [
         {key:'hunter', name:'找爆款员工', kinds:['search','import-links','sample-analysis','download'], idle:'等待检索任务：输入主题后会自动抓取、去重并生成爆款逻辑。', action:'安排检索', section:'hunter'},
-        {key:'creator', name:'生视频员工', kinds:['customer-report','creator-pipeline','copy','tts','render','caption-style'], idle:'等待创作任务：先查看客户画像、生成口播稿，再决定是否制作视频。', action:'开始创作', section:'creator'},
+        {key:'creator', name:'生视频员工', kinds:['customer-report','creator-pipeline','copy','tts','render','caption-style'], idle:'等待创作任务：先填写宣传重点和用户受众，再生成口播稿与视频。', action:'开始创作', section:'creator'},
         {key:'buyer', name:'投放员工', kinds:['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch','publish'], idle:'等待投放任务：绑定巨量账户后选择成片并创建安全投放草稿。', action:'配置投放', section:'buyer'},
       ];
       const taskCount = items.length;
@@ -5813,7 +6411,7 @@
       }
       const groups = [
         {name:'找爆款员工', desc:'负责检索案例并生成爆款逻辑时间线。', kinds:['search','import-links','sample-analysis','download'], section:'hunter'},
-        {name:'生视频员工', desc:'先查看预置客户画像，生成口播稿后再确认是否制作视频。', kinds:['customer-report','creator-pipeline','copy','tts','render','caption-style'], section:'creator'},
+        {name:'生视频员工', desc:'填写宣传重点和用户受众，生成关联的旁白、屏幕短文案与视频。', kinds:['customer-report','creator-pipeline','copy','tts','render','caption-style'], section:'creator'},
         {name:'投放员工', desc:'负责绑定巨量、创建草稿和同步数据。', kinds:['delivery-draft','delivery-report','ocean-video-upload','ocean-project-create','ocean-promotion-create','ocean-safe-launch','publish'], section:'buyer'},
       ];
       const stateLabel = {queued:'排队中', running:'执行中', succeeded:'已完成', failed:'需处理'};
@@ -5852,7 +6450,7 @@
         const button = document.getElementById('creator-client-report-button');
         if (button) button.disabled = false;
         renderCreatorClientReport(latestClientReportTask.result.report);
-        if (hasHydratedTasks) notify('客户报告已生成。请查看报告后选择是否制作视频。');
+        if (hasHydratedTasks) notify('客户画像已加载。请填写宣传重点和用户受众后生成口播稿。');
       }
       if (latestClientReportTask && ['queued','running'].includes(latestClientReportTask.status)) {
         const status = document.getElementById('creator-client-report-status');
@@ -6058,13 +6656,14 @@
         const restoreIndex = items.indexOf(base);
         const baseSummary = base.result?.summary || {};
         const displaySummary = displayTask.result?.summary || baseSummary;
+        const dynamicTopicVideo = baseSummary.render_engine === 'remotion-topic' || baseSummary.template === 'AutoPartsKinetic';
         const title = base.payload?.topic || base.payload?.keyword || '未命名推广视频';
         const successfulVariants = related.filter(item => item.status === 'succeeded');
         const saved = Boolean(base.saved_to_video_package || related.some(item => item.saved_to_video_package));
         const hasDraft = Boolean(baseSummary.caption_timeline?.length && baseSummary.audio_file && (baseSummary.preview_base_url || baseSummary.base_video || baseSummary.combined_video));
         const editable = base.status === 'succeeded' && !saved && base.editable_captions !== false && hasDraft;
         const statusClass = base.status === 'succeeded' ? 'succeeded' : 'failed';
-        const statusText = saved ? '已保存成果' : base.status === 'failed' ? '生成失败' : successfulVariants.length ? '已有最终成片' : '字幕草稿';
+        const statusText = saved ? '已保存成果' : base.status === 'failed' ? '生成失败' : dynamicTopicVideo ? '动态成片' : successfulVariants.length ? '已有最终成片' : '字幕草稿';
         const detail = base.status === 'failed' ? '生成失败，可重新生成' : '';
         const preview = (displaySummary.preview_url || displaySummary.preview_base_url) ? `<button class="primary" onclick="previewCreatorVersion(${previewIndex})">打开项目</button>` : '';
         const retry = base.status === 'failed' ? `<button onclick="retryTask(${restoreIndex})">重试</button>` : '';
@@ -6102,6 +6701,31 @@
       document.getElementById('brief-pain').value = fieldFromTopic('目标受众痛点');
       document.getElementById('brief-selling').value = fieldFromTopic('展会解决路径');
       document.getElementById('brief-tone').value = fieldFromTopic('补充要求');
+      document.getElementById('topic-video-title').value = payload.event_name || fieldFromTopic('展会主题') || String(restoredTopic).split('\n')[0] || '';
+      document.getElementById('topic-video-brief').value = payload.theme_text || '';
+      document.getElementById('topic-video-highlights').value = Array.isArray(payload.highlights) ? payload.highlights.join('，') : (payload.highlights || '');
+      document.getElementById('topic-video-visual-terms').value = payload.visual_terms || '';
+      document.getElementById('topic-video-material-source').value = payload.material_source === 'pixabay' ? 'pixabay' : 'pexels';
+      document.getElementById('topic-video-voice').value = payload.voice || 'zh-CN-XiaoxiaoNeural';
+      document.getElementById('topic-video-font-style').value = payload.font_style || payload.fontStyle || 'impact';
+      document.getElementById('topic-video-transition').value = payload.transition || payload.transition_type || 'wipe';
+      const productionMode = document.getElementById('topic-video-production-mode');
+      if (productionMode) productionMode.value = payload.production_mode || payload.productionMode || (payload.supplement_avatar ? 'hybrid' : 'auto');
+      document.getElementById('topic-video-bgm-volume').value = String(payload.bgm_volume || 0.16);
+      studioDigitalHumanImage = payload.digital_human_image_id ? {
+        id: payload.digital_human_image_id,
+        name: payload.digital_human_image_name || payload.digital_human_image_id,
+        url: '',
+      } : null;
+      const avatarSupplement = document.getElementById('cs-ai-supplement');
+      const avatarCheck = document.querySelector('#cs-supplement-subs [data-supplement="avatar"]');
+      if (avatarSupplement) avatarSupplement.checked = Boolean(payload.supplement_avatar);
+      if (avatarCheck) avatarCheck.checked = Boolean(payload.supplement_avatar);
+      toggleStudioSupplement(Boolean(payload.supplement_avatar));
+      toggleStudioAvatar(Boolean(payload.supplement_avatar));
+      updateStudioProductionMode(productionMode?.value || 'auto');
+      renderStudioDigitalHumanImage();
+      loadTopicVideoBgms(payload.bgm || payload.bgm_name || '');
       const copyLength = document.getElementById('copy-length');
       const savedDuration = Number(task.result?.target_duration_seconds || payload.target_duration_seconds || 0);
       if (copyLength && savedDuration && Array.from(copyLength.options).some(option => Number(option.value) === savedDuration)) copyLength.value = String(savedDuration);
@@ -6116,6 +6740,7 @@
       chooseCaptionTemplate(payload.caption_template || 'viral');
       selectedCaptionAnimation = payload.caption_animation || task.result?.summary?.caption_animation || 'pop';
       chooseMaterialSource(payload.material_source || 'local');
+      updateTopicVideoFontPreview();
       updateCopyDurationEstimate();
       focusCreatorStep('copy');
       notify('已恢复历史版本参数。修改任意环节后，点击“开始生成视频”即可生成新版本。');

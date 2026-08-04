@@ -1,4 +1,5 @@
 .env
+*.pem
 .DS_Store
 .grok/
 __pycache__/
@@ -14,3 +15,14 @@ storage/*
 *.mov
 lQbPJx*
 lQbPKd*
+
+# 本地实验工程和参考分析产物不参与当前 Remotion 生产链路。
+hyperframes_auto_parts_promo/
+ffmpeg_reference/
+reference_analysis/
+
+# Remotion 运行时生成的项目素材、配音和 manifest。源码与 lockfile 保留。
+remotion_exhibition_promo/public/assets/topic-video/
+remotion_exhibition_promo/public/topic-video-manifests/
+remotion_exhibition_promo/public/assets/voice/
+remotion_exhibition_promo/public/voiceover/
