@@ -6744,8 +6744,11 @@
         const statusText = saved ? '已保存成果' : base.status === 'failed' ? '生成失败' : dynamicTopicVideo ? '动态成片' : successfulVariants.length ? '已有最终成片' : '字幕草稿';
         const detail = base.status === 'failed' ? '生成失败，可重新生成' : '';
         const preview = (displaySummary.preview_url || displaySummary.preview_base_url) ? `<button class="primary" onclick="previewCreatorVersion(${previewIndex})">打开项目</button>` : '';
+        const finalActions = displaySummary.final_video
+          ? `${videoPackageSaveButton(displayTask.id)}${oceanUploadButton(displayTask.id)}`
+          : '';
         const retry = base.status === 'failed' ? `<button onclick="retryTask(${restoreIndex})">重试</button>` : '';
-        return `<div class="history-item"><div><b>${escapeHtml(String(title).slice(0,100))}</b><span class="status ${statusClass}" style="margin-left:8px">${escapeHtml(statusText)}</span><span class="status ${saved ? 'queued' : editable ? 'succeeded' : ''}" style="margin-left:8px">${saved ? '只读成果' : editable ? '字幕可继续编辑' : '仅可查看'}</span>${detail ? `<p>${escapeHtml(detail)}</p>` : ''}</div><div class="actions">${preview}<button onclick="restoreCreatorVersion(${restoreIndex})">复制参数新建</button>${retry}</div></div>`;
+        return `<div class="history-item"><div><b>${escapeHtml(String(title).slice(0,100))}</b><span class="status ${statusClass}" style="margin-left:8px">${escapeHtml(statusText)}</span><span class="status ${saved ? 'queued' : editable ? 'succeeded' : ''}" style="margin-left:8px">${saved ? '只读成果' : editable ? '字幕可继续编辑' : '仅可查看'}</span>${detail ? `<p>${escapeHtml(detail)}</p>` : ''}</div><div class="actions">${preview}${finalActions}<button onclick="restoreCreatorVersion(${restoreIndex})">复制参数新建</button>${retry}</div></div>`;
       }).join('') : '<div class="result-empty">暂无视频项目。生成第一条视频后，历史记录会显示在这里。</div>';
       boxes.forEach(box => box.innerHTML = html);
     }
