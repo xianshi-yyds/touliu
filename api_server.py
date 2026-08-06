@@ -1937,6 +1937,50 @@ def ocean_report_config(payload: dict[str, Any]) -> dict[str, Any]:
     return ocean_request("/open_api/v3.0/report/custom/config/get/", method="GET", access_token=token, params=params)
 
 
+OCEAN_VIDEO_EXTENSIONS = {".mp4", ".mov", ".m4v", ".webm", ".mkv"}
+
+
+def resolve_ocean_video_file(payload: dict[str, Any]) -> tuple[Path, str]:
+    """Resolve an upload from a trusted creator task, with a legacy path fallback.
+
+    The creator-page button sends only ``source_task_id``.  This prevents a
+    browser caller from turning the upload endpoint into an arbitrary local
+    file reader.  The explicit ``video_file`` fallback remains for the older
+    buyer workbench, but is constrained to this project by ``project_file``.
+    """
+    source_task_id = str(payload.get("source_task_id") or "").strip()
+    path_value = ""
+    if source_task_id:
+        with TASK_LOCK:
+            source_task = copy.deepcopy(TASKS.get(source_task_id) or {})
+        if not source_task:
+            raise ValueError("找不到对应的成片任务，请刷新页面后重试")
+        if source_task.get("status") != "succeeded" or source_task.get("kind") not in CREATOR_RENDER_TASK_KINDS:
+            raise ValueError("只有已完成的生视频任务可以上传到巨量素材库")
+        result = source_task.get("result") if isinstance(source_task.get("result"), dict) else {}
+        summary = result.get("summary") if isinstance(result.get("summary"), dict) else {}
+        path_value = str(summary.get("final_video") or "").strip()
+        if not path_value:
+            raise ValueError("该任务没有可上传的最终成片")
+    else:
+        path_value = require_text(payload, "video_file", "视频文件")
+
+    path = project_file(path_value, "视频文件")
+    if path.suffix.lower() not in OCEAN_VIDEO_EXTENSIONS:
+        raise ValueError(f"巨量视频上传不支持该格式：{path.suffix or '未知格式'}")
+    if path.stat().st_size <= 0:
+        raise ValueError("视频文件为空，无法上传")
+    return path, source_task_id
+
+
+def file_md5(path: Path, chunk_size: int = 1024 * 1024) -> str:
+    digest = hashlib.md5()
+    with path.open("rb") as handle:
+        while chunk := handle.read(chunk_size):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def ocean_video_upload(payload: dict[str, Any]) -> dict[str, Any]:
     token = ocean_access_token(payload)
     advertiser_id = str(payload.get("advertiser_id") or load_ocean_token().get("advertiser_id") or settings.oceanengine_advertiser_id or "").strip()
@@ -1944,59 +1988,79 @@ def ocean_video_upload(payload: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("缺少 Access Token，请先授权巨量账号")
     if not advertiser_id:
         raise ValueError("缺少 advertiser_id，请先获取已授权账户")
-    video_file = require_text(payload, "video_file", "视频文件")
-    path = Path(video_file).expanduser().resolve()
-    if not path.is_file():
-        raise FileNotFoundError(f"视频文件不存在：{path}")
-    content = path.read_bytes()
-    signature = hashlib.md5(content).hexdigest()
-    boundary = "----ExhibitFlow" + uuid4().hex
-    def field(name: str, value: Any) -> bytes:
-        return (f"--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n{value}\r\n").encode("utf-8")
-    body = b"".join([
-        field("advertiser_id", advertiser_id),
-        field("upload_type", "UPLOAD_BY_FILE"),
-        field("video_signature", signature),
-        field("filename", payload.get("filename") or path.name),
-        field("is_aigc", "true" if payload.get("is_aigc") else "false"),
-        (f"--{boundary}\r\nContent-Disposition: form-data; name=\"video_file\"; filename=\"{path.name}\"\r\nContent-Type: {mimetypes.guess_type(path.name)[0] or 'video/mp4'}\r\n\r\n").encode("utf-8"),
-        content,
-        f"\r\n--{boundary}--\r\n".encode("utf-8"),
-    ])
+    path, source_task_id = resolve_ocean_video_file(payload)
+    signature = file_md5(path)
+    requested_name = Path(str(payload.get("filename") or path.name)).name
+    upload_name = f"{safe_stem(Path(requested_name).stem)}-{datetime.now().strftime('%Y%m%d-%H%M%S')}{path.suffix.lower()}"
     url = OCEAN_BASE_URL + "/open_api/2/file/video/ad/"
-    raw = ""
-    last_error: Exception | None = None
+    result: dict[str, Any] = {}
+    last_error: requests.RequestException | None = None
     for attempt in range(3):
-        # Request objects are one-shot when a connection is interrupted, so a
-        # fresh object must be created for every retry.
-        req = urllib.request.Request(url, data=body, method="POST", headers={
-            "Access-Token": token,
-            "Content-Type": f"multipart/form-data; boundary={boundary}",
-        })
         try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                raw = resp.read().decode("utf-8")
+            with path.open("rb") as video_handle:
+                response = requests.post(
+                    url,
+                    headers={"Access-Token": token},
+                    data={
+                        "advertiser_id": advertiser_id,
+                        "upload_type": "UPLOAD_BY_FILE",
+                        "video_signature": signature,
+                        "filename": upload_name,
+                        "is_aigc": "true" if payload.get("is_aigc", True) else "false",
+                    },
+                    files={
+                        "video_file": (
+                            upload_name,
+                            video_handle,
+                            mimetypes.guess_type(path.name)[0] or "video/mp4",
+                        )
+                    },
+                    timeout=(20, 300),
+                )
+            if response.status_code >= 400:
+                try:
+                    detail: Any = response.json()
+                except ValueError:
+                    detail = response.text[:500]
+                raise RuntimeError(f"巨量视频上传 HTTP {response.status_code}: {detail}")
+            result = response.json()
             last_error = None
-            result = json.loads(raw)
-            if result.get("code") in (40100, "40100") and attempt < 4:
+            if result.get("code") in (40100, "40100") and attempt < 2:
                 time.sleep(3 * (attempt + 1))
                 continue
             break
-        except urllib.error.HTTPError as exc:
-            raw = exc.read().decode("utf-8", errors="replace")
-            raise RuntimeError(f"巨量视频上传 HTTP {exc.code}: {raw}") from exc
-        except (urllib.error.URLError, ConnectionError, TimeoutError, OSError) as exc:
+        except requests.RequestException as exc:
             last_error = exc
-            if attempt < 4:
+            if attempt < 2:
                 time.sleep(2 * (attempt + 1))
     if last_error is not None:
-        raise RuntimeError(f"巨量视频上传网络错误（已重试 5 次）：{last_error}") from last_error
-    result = result or json.loads(raw)
+        raise RuntimeError(f"巨量视频上传网络错误（已重试 3 次）：{last_error}") from last_error
     if result.get("code") not in (0, "0", None):
         raise RuntimeError(f"巨量视频上传失败：{result}")
     data = result.get("data") or {}
-    save_ocean_token({"last_video_id": data.get("video_id"), "last_material_id": data.get("material_id")})
-    return {"ok": True, "video_signature": signature, "raw": result, **data}
+    video_info = data.get("video_info") if isinstance(data.get("video_info"), dict) else {}
+    video_id = data.get("video_id") or video_info.get("video_id") or data.get("id")
+    material_id = data.get("material_id") or video_info.get("material_id")
+    if not video_id:
+        raise RuntimeError(f"巨量视频上传返回成功，但未返回 video_id：{result}")
+    save_ocean_token({"last_video_id": video_id, "last_material_id": material_id})
+    upload_record = {
+        "ok": True,
+        "provider": "oceanengine",
+        "advertiser_id": advertiser_id,
+        "source_task_id": source_task_id,
+        "video_file": str(path),
+        "filename": upload_name,
+        "video_signature": signature,
+        "video_id": video_id,
+        "material_id": material_id,
+        "uploaded_at": now(),
+    }
+    upload_dir = settings.storage_dir / "oceanengine" / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    record_path = upload_dir / f"{datetime.now().strftime('%Y%m%d-%H%M%S')}-{safe_stem(str(video_id or signature[:12]))}.json"
+    upload_record["manifest_path"] = str(write_json(record_path, upload_record))
+    return {**upload_record, "raw": result, **data}
 
 
 def ocean_image_upload(payload: dict[str, Any]) -> dict[str, Any]:
@@ -2376,6 +2440,7 @@ TASK_DURATION_BUDGET = {
     "copy": 20,
     "search": 40,
     "sample-analysis": 45,
+    "ocean-video-upload": 300,
 }
 
 # Monotonic (percent, stage-label) checkpoints for the creator pipeline so the
