@@ -72,3 +72,58 @@ def test_ocean_video_upload_streams_file_and_returns_video_id(tmp_path: Path, mo
     assert captured["data"]["video_signature"] == api_server.file_md5(video)
     assert captured["file_body"] == b"small-video-body"
     assert list((upload_storage / "oceanengine" / "uploads").glob("*.json"))
+
+
+def test_safe_launch_binds_project_to_source_upload(tmp_path: Path, monkeypatch) -> None:
+    video = tmp_path / "final.mp4"
+    video.write_bytes(b"video")
+    source_task_id = "creator-source-1"
+    upload_task_id = "ocean-upload-1"
+    captured: dict[str, object] = {}
+    with api_server.TASK_LOCK:
+        api_server.TASKS[source_task_id] = {
+            "id": source_task_id,
+            "kind": "creator-pipeline",
+            "status": "succeeded",
+            "result": {"summary": {"final_video": str(video)}},
+        }
+        api_server.TASKS[upload_task_id] = {
+            "id": upload_task_id,
+            "kind": "ocean-video-upload",
+            "status": "succeeded",
+            "finished_at": "2026-08-06T10:00:00",
+            "payload": {"source_task_id": source_task_id},
+            "result": {"video_id": "vid-bound-123"},
+        }
+
+    class FakeProcess:
+        returncode = 0
+        stdout = '{"ok":true,"project_id":101,"promotion_id":202,"video_id":"vid-bound-123","dashboard":{}}\n'
+
+    def fake_run(cmd: list[str], **kwargs: object) -> FakeProcess:
+        captured["cmd"] = cmd
+        return FakeProcess()
+
+    monkeypatch.setattr(api_server, "resolve_ocean_video_file", lambda payload: (video, source_task_id))
+    monkeypatch.setattr(api_server.subprocess, "run", fake_run)
+    monkeypatch.setattr(api_server, "upsert_delivery_project_unit", lambda draft: {"project": draft["official_model"]["project"]})
+    try:
+        result = api_server.ocean_safe_delivery_test({
+            "source_task_id": source_task_id,
+            "video_id": "vid-bound-123",
+            "delivery_channel": "douyin",
+            "project_name": "测试展会",
+            "unit_name": "测试单元",
+            "fresh": True,
+        })
+    finally:
+        with api_server.TASK_LOCK:
+            api_server.TASKS.pop(source_task_id, None)
+            api_server.TASKS.pop(upload_task_id, None)
+
+    cmd = captured["cmd"]
+    assert cmd[cmd.index("--video-id") + 1] == "vid-bound-123"
+    assert "--fresh" in cmd
+    assert result["project_id"] == 101
+    assert result["promotion_id"] == 202
+    assert result["source_task_id"] == source_task_id

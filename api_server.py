@@ -2386,6 +2386,24 @@ def delivery_draft(payload: dict[str, Any]) -> dict[str, Any]:
     return draft
 
 
+def ocean_uploaded_video_for_source(source_task_id: str) -> dict[str, Any]:
+    """Return the newest successful OceanEngine upload for one creator task."""
+    source_task_id = str(source_task_id or "").strip()
+    if not source_task_id:
+        return {}
+    with TASK_LOCK:
+        matches = [
+            copy.deepcopy(task)
+            for task in TASKS.values()
+            if task.get("kind") == "ocean-video-upload"
+            and task.get("status") == "succeeded"
+            and str((task.get("payload") or {}).get("source_task_id") or "") == source_task_id
+            and str((task.get("result") or {}).get("video_id") or "")
+        ]
+    matches.sort(key=lambda task: str(task.get("finished_at") or task.get("created_at") or ""), reverse=True)
+    return matches[0] if matches else {}
+
+
 def ocean_safe_delivery_test(payload: dict[str, Any]) -> dict[str, Any]:
     """Run the official real-API chain with project/promotion forced DISABLE.
 
@@ -2396,12 +2414,29 @@ def ocean_safe_delivery_test(payload: dict[str, Any]) -> dict[str, Any]:
     delivery_channel = str(payload.get("delivery_channel") or "douyin").strip().lower()
     if delivery_channel != "douyin":
         raise RuntimeError("当前安全草稿实链仅支持抖音巨量引擎；其他渠道先保存投放方案并完成对应官方授权")
-    video_file = require_text(payload, "video_file", "待投放视频")
-    video = Path(video_file).expanduser().resolve()
-    if not video.is_file():
-        raise FileNotFoundError(f"待投放视频不存在：{video}")
+    source_task_id = str(payload.get("source_task_id") or "").strip()
+    if source_task_id:
+        video, _ = resolve_ocean_video_file({"source_task_id": source_task_id})
+        upload_task = ocean_uploaded_video_for_source(source_task_id)
+        if not upload_task:
+            raise ValueError("该成片还没有成功上传到巨量素材库，请先完成视频上传")
+        uploaded_video_id = str((upload_task.get("result") or {}).get("video_id") or "").strip()
+        requested_video_id = str(payload.get("video_id") or uploaded_video_id).strip()
+        if requested_video_id != uploaded_video_id:
+            raise ValueError("video_id 与当前成片的巨量上传记录不一致，请刷新后重试")
+        video_id = uploaded_video_id
+    else:
+        video_file = require_text(payload, "video_file", "待投放视频")
+        video = project_file(video_file, "待投放视频")
+        video_id = str(payload.get("video_id") or "").strip()
     script = settings.project_root / "scripts" / "test_oceanengine_minimal_chain.py"
     cmd = [sys.executable, str(script), "--video", str(video)]
+    if video_id:
+        cmd.extend(["--video-id", video_id])
+    project_name = str(payload.get("project_name") or payload.get("subject") or "展会视频投放项目").strip()
+    unit_name = str(payload.get("unit_name") or f"{project_name} · 视频单元").strip()
+    title = str(payload.get("title") or payload.get("cover_title") or project_name).strip()
+    cmd.extend(["--project-name", project_name, "--unit-name", unit_name, "--title", title])
     if payload.get("fresh", True):
         cmd.append("--fresh")
     process = subprocess.run(
@@ -2419,7 +2454,36 @@ def ocean_safe_delivery_test(payload: dict[str, Any]) -> dict[str, Any]:
         result, _ = decoder.raw_decode(process.stdout.lstrip())
     except json.JSONDecodeError as exc:
         raise RuntimeError(f"安全投放测试已执行，但结果无法解析：{process.stdout[-2000:]}") from exc
+    result["source_task_id"] = source_task_id
     result["log"] = process.stdout[-4000:]
+    result["official_project_record"] = upsert_delivery_project_unit({
+        "delivery_channel": "douyin",
+        "official_model": {
+            "project": {
+                "name": project_name,
+                "project_id": result.get("project_id"),
+                "source": "official_project",
+            },
+            "unit": {
+                "name": unit_name,
+                "unit_id": result.get("promotion_id"),
+                "promotion_id": result.get("promotion_id"),
+                "video_file": str(video),
+                "video_id": result.get("video_id") or video_id,
+                "source": "official_unit",
+            },
+        },
+        "summary": {
+            "project_name": project_name,
+            "project_id": result.get("project_id"),
+            "unit_name": unit_name,
+            "unit_id": result.get("promotion_id"),
+            "promotion_id": result.get("promotion_id"),
+            "video_file": str(video),
+            "video_id": result.get("video_id") or video_id,
+        },
+        "dashboard": result.get("dashboard") or {},
+    })
     return result
 
 
