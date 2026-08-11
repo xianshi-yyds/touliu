@@ -775,6 +775,10 @@
     .caption-final-result video { width:100%; max-height:620px; background:#111; border-radius:14px; }
     .caption-final-meta { border:1px solid #dfe3ea; border-radius:14px; padding:16px; background:#fbfcff; }
     .caption-final-meta b { display:block; font-size:16px; margin-bottom:8px; }
+    .ocean-upload-result { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; margin-top:12px; padding:10px 12px; border-radius:10px; background:#f2f8f1; color:#315b36; font-size:12px; }
+    .ocean-upload-result b { margin:0; font-size:12px; }
+    .ocean-upload-result code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:#1f4c9a; }
+    .ocean-upload-result.error { background:#fff3f1; color:#9b3024; }
     @keyframes captionPreviewPop { 0% { opacity:0; transform:scale(.84); } 75% { opacity:1; transform:scale(1.04); } 100% { opacity:1; transform:scale(1); } }
     @keyframes captionPreviewSlideUp { 0% { opacity:0; transform:translateY(34px); } 100% { opacity:1; transform:translateY(0); } }
     @keyframes captionPreviewFade { 0% { opacity:0; } 100% { opacity:1; } }
@@ -4562,6 +4566,34 @@
       const label = uploaded ? `已上传巨量 · ${task.result.video_id}` : running ? '正在上传巨量…' : failed ? '重新上传到巨量' : '上传到巨量素材库';
       return `<button class="${uploaded ? '' : 'primary'} ocean-upload-button" data-source-task-id="${escapeAttr(sourceTaskId)}" ${running || uploaded ? 'disabled' : ''} onclick="uploadGeneratedVideoToOcean('${escapeAttr(sourceTaskId)}')">${escapeHtml(label)}</button>`;
     }
+    function oceanUploadResultMeta(sourceTaskId) {
+      if (!sourceTaskId) return '';
+      const task = oceanUploadTaskFor(sourceTaskId);
+      const result = task?.result || {};
+      if (task?.status === 'succeeded' && result.video_id) {
+        const material = result.material_id ? `<span>material_id：<code>${escapeHtml(String(result.material_id))}</code></span>` : '';
+        return `<div class="ocean-upload-result" data-source-task-id="${escapeAttr(sourceTaskId)}"><b>已进入巨量素材库</b><span>video_id：<code>${escapeHtml(String(result.video_id))}</code></span>${material}<span>${escapeHtml(result.uploaded_at || '')}</span></div>`;
+      }
+      if (task?.status === 'failed') {
+        return `<div class="ocean-upload-result error" data-source-task-id="${escapeAttr(sourceTaskId)}">素材库上传失败：${escapeHtml(task.error || task.result?.error || '请重试')}</div>`;
+      }
+      return `<div class="ocean-upload-result" data-source-task-id="${escapeAttr(sourceTaskId)}"></div>`;
+    }
+    function refreshOceanUploadResults(items = latestTaskItems) {
+      document.querySelectorAll('.ocean-upload-result[data-source-task-id]').forEach(box => {
+        const sourceTaskId = box.dataset.sourceTaskId || '';
+        const task = oceanUploadTaskFor(sourceTaskId, items);
+        const result = task?.result || {};
+        if (task?.status === 'succeeded' && result.video_id) {
+          const material = result.material_id ? `<span>material_id：<code>${escapeHtml(String(result.material_id))}</code></span>` : '';
+          box.innerHTML = `<b>已进入巨量素材库</b><span>video_id：<code>${escapeHtml(String(result.video_id))}</code></span>${material}<span>${escapeHtml(result.uploaded_at || '')}</span>`;
+          box.classList.remove('error');
+        } else if (task?.status === 'failed') {
+          box.innerHTML = `素材库上传失败：${escapeHtml(task.error || task.result?.error || '请重试')}`;
+          box.classList.add('error');
+        }
+      });
+    }
     function videoPackageSaveButton(sourceTaskId) {
       if (!sourceTaskId) return '';
       const task = (latestTaskItems || []).find(item => item.id === sourceTaskId);
@@ -5009,7 +5041,7 @@
             ? `数字人环节未完成，已自动降级为素材混剪：${digitalHuman.error || '服务暂不可用'}`
             : '本次未启用数字人。';
         const finalTaskId = taskId || sourceTaskId;
-        box.innerHTML = `<div class="caption-final-result"><video controls playsinline preload="metadata" src="${escapeAttr(assetPath(summary.preview_url || videoUrl))}"></video><div class="caption-final-meta"><b>主题动态成片已生成</b><p>模板：AutoPartsKinetic · ${escapeHtml(summary.aspect_ratio || '16:9')} · Edge TTS · ${escapeHtml(modeLabels[resolvedMode] || resolvedMode)}</p><p>已包含逐字弹出、底部上弹、扫光、高亮闪白、数字 0→目标值（0.5 秒）和结尾呼吸放大。</p><p>${escapeHtml(digitalHumanText)}</p><div class="actions">${videoPackageSaveButton(finalTaskId)}${oceanUploadButton(finalTaskId)}${oceanSafeLaunchButton(finalTaskId)}<button onclick="document.getElementById('publish-video').value='${escapeAttr(summary.final_video || '')}'">设为投放视频</button>${summary.summary_markdown_url ? `<a class="button" target="_blank" href="${escapeAttr(assetPath(summary.summary_markdown_url))}">查看生成 MD</a>` : ''}</div></div></div>`;
+        box.innerHTML = `<div class="caption-final-result"><video controls playsinline preload="metadata" src="${escapeAttr(assetPath(summary.preview_url || videoUrl))}"></video><div class="caption-final-meta"><b>主题动态成片已生成</b><p>模板：AutoPartsKinetic · ${escapeHtml(summary.aspect_ratio || '16:9')} · Edge TTS · ${escapeHtml(modeLabels[resolvedMode] || resolvedMode)}</p><p>已包含逐字弹出、底部上弹、扫光、高亮闪白、数字 0→目标值（0.5 秒）和结尾呼吸放大。</p><p>${escapeHtml(digitalHumanText)}</p><div class="actions">${videoPackageSaveButton(finalTaskId)}${oceanUploadButton(finalTaskId)}<button onclick="document.getElementById('publish-video').value='${escapeAttr(summary.final_video || '')}'">设为投放视频</button>${summary.summary_markdown_url ? `<a class="button" target="_blank" href="${escapeAttr(assetPath(summary.summary_markdown_url))}">查看生成 MD</a>` : ''}</div>${oceanUploadResultMeta(finalTaskId)}</div></div>`;
         return;
       }
       const template = captionPreviewTemplates[summary.caption_template] ? summary.caption_template : selectedCaptionTemplate;
@@ -5391,7 +5423,7 @@
         renderCaptionPreview(editorSummary, captionPreviewState.sourceTaskId, taskId, true);
         return;
       }
-      box.innerHTML = `<div class="caption-final-result"><video controls preload="metadata" src="${escapeAttr(assetPath(summary.preview_url))}"></video><div class="caption-final-meta"><b>最终字幕成片已生成</b><p>样式：${escapeHtml(label)} · 动画：${escapeHtml(animation)}</p><p>${canEdit ? '这条视频已经硬烧字幕；原始基底和配音已保留，可以继续调整字幕。' : '这条视频已经保存为视频创作包，当前为只读版本。'}</p><div class="actions">${videoPackageSaveButton(taskId)}${oceanUploadButton(taskId)}${oceanSafeLaunchButton(taskId)}<button ${canEdit ? '' : 'disabled'} onclick="reopenCaptionPreview()">继续调整字幕</button><button onclick="document.getElementById('publish-video').value='${escapeAttr(summary.final_video || '')}'">设为投放视频</button></div></div></div>`;
+      box.innerHTML = `<div class="caption-final-result"><video controls preload="metadata" src="${escapeAttr(assetPath(summary.preview_url))}"></video><div class="caption-final-meta"><b>最终字幕成片已生成</b><p>样式：${escapeHtml(label)} · 动画：${escapeHtml(animation)}</p><p>${canEdit ? '这条视频已经硬烧字幕；原始基底和配音已保留，可以继续调整字幕。' : '这条视频已经保存为视频创作包，当前为只读版本。'}</p><div class="actions">${videoPackageSaveButton(taskId)}${oceanUploadButton(taskId)}<button ${canEdit ? '' : 'disabled'} onclick="reopenCaptionPreview()">继续调整字幕</button><button onclick="document.getElementById('publish-video').value='${escapeAttr(summary.final_video || '')}'">设为投放视频</button></div>${oceanUploadResultMeta(taskId)}</div></div>`;
       setCreatorStudioMode('editor');
     }
     function reopenCaptionPreview() {
@@ -6177,6 +6209,7 @@
       renderBuyerProcessBoard(data.items || []);
       updateCreatorPipelineStatus(data.items || []);
       refreshOceanUploadButtons(data.items || []);
+      refreshOceanUploadResults(data.items || []);
       refreshOceanSafeLaunchButtons(data.items || []);
       refreshVideoPackageSaveButtons(data.items || []);
       hasHydratedTasks = true;
@@ -6806,7 +6839,7 @@
         const detail = base.status === 'failed' ? '生成失败，可重新生成' : '';
         const preview = (displaySummary.preview_url || displaySummary.preview_base_url) ? `<button class="primary" onclick="previewCreatorVersion(${previewIndex})">打开项目</button>` : '';
         const finalActions = displaySummary.final_video
-          ? `${videoPackageSaveButton(displayTask.id)}${oceanUploadButton(displayTask.id)}${oceanSafeLaunchButton(displayTask.id)}`
+          ? `${videoPackageSaveButton(displayTask.id)}${oceanUploadButton(displayTask.id)}`
           : '';
         const retry = base.status === 'failed' ? `<button onclick="retryTask(${restoreIndex})">重试</button>` : '';
         return `<div class="history-item"><div><b>${escapeHtml(String(title).slice(0,100))}</b><span class="status ${statusClass}" style="margin-left:8px">${escapeHtml(statusText)}</span><span class="status ${saved ? 'queued' : editable ? 'succeeded' : ''}" style="margin-left:8px">${saved ? '只读成果' : editable ? '字幕可继续编辑' : '仅可查看'}</span>${detail ? `<p>${escapeHtml(detail)}</p>` : ''}</div><div class="actions">${preview}${finalActions}<button onclick="restoreCreatorVersion(${restoreIndex})">复制参数新建</button>${retry}</div></div>`;
