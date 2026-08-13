@@ -1656,6 +1656,19 @@
       #creator-studio-compose .cs-inline-row { grid-template-columns:1fr; }
       #creator-studio-compose .cs-block { padding:15px; }
     }
+    .product-showcase-shell { width:min(1100px,calc(100% - 40px)); margin:0 auto 40px; }
+    .product-showcase-grid { display:grid; grid-template-columns:minmax(280px,360px) 1fr; gap:18px; }
+    .product-showcase-card { padding:18px; border:1px solid #eceae5; border-radius:14px; background:#fff; }
+    .product-showcase-card label { display:block; margin:12px 0 6px; color:#666; font-size:12px; font-weight:700; }
+    .product-showcase-card input, .product-showcase-card textarea { width:100%; }
+    .product-showcase-preview { min-height:360px; display:flex; align-items:center; justify-content:center; background:#111; border-radius:12px; overflow:hidden; color:#999; }
+    .product-showcase-preview model-viewer { width:100%; height:420px; }
+    .product-showcase-history { display:grid; gap:10px; margin-top:16px; }
+    .product-showcase-history article { display:flex; gap:12px; align-items:center; padding:10px 12px; border:1px solid #eceae5; border-radius:10px; background:#fff; cursor:pointer; }
+    .product-showcase-history img { width:56px; height:56px; object-fit:cover; border-radius:8px; background:#f3f3f3; }
+    .product-qr { display:flex; gap:16px; align-items:center; margin-top:12px; }
+    .product-qr canvas { width:140px; height:140px; background:#fff; border-radius:8px; }
+    @media (max-width:860px) { .product-showcase-grid { grid-template-columns:1fr; } }
 
   </style>
 </head>
@@ -1673,7 +1686,7 @@
       <button class="figma-nav context-group" data-context-group="marketing" onclick="toggleExpoContextGroup('marketing')"><svg class="context-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 17-6v14L3 13v-2Zm4 3 1.5 5H12l-1.5-4"/></svg><b>AI 营销</b><svg class="context-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
       <div class="context-children" data-context-children="marketing"><button data-context-nav="marketing-leads" onclick="openExpoWorkspace('marketing-leads')">营销线索</button><button data-context-nav="marketing-sales" onclick="openExpoWorkspace('marketing-sales')">销售线索</button></div>
       <button class="figma-nav context-group" data-context-group="delivery" onclick="toggleExpoContextGroup('delivery')"><svg class="context-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/><path d="M12 3V1m0 22v-2M3 12H1m22 0h-2"/></svg><b>AI 投放</b><svg class="context-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
-      <div class="context-children" data-context-children="delivery"><button data-context-nav="delivery-overview" onclick="openExpoWorkspace('delivery-overview')">数据总览</button><button data-context-nav="delivery-start" onclick="openExpoWorkspace('delivery-start')">开始投放</button><button data-context-nav="delivery-production" onclick="openExpoWorkspace('delivery-production')">素材产出</button><button data-context-nav="delivery-viral-monitor" onclick="openExpoWorkspace('delivery-viral-monitor')">爆款监控</button></div>
+      <div class="context-children" data-context-children="delivery"><button data-context-nav="delivery-overview" onclick="openExpoWorkspace('delivery-overview')">数据总览</button><button data-context-nav="delivery-start" onclick="openExpoWorkspace('delivery-start')">开始投放</button><button data-context-nav="delivery-production" onclick="openExpoWorkspace('delivery-production')">素材产出</button><button data-context-nav="delivery-viral-monitor" onclick="openExpoWorkspace('delivery-viral-monitor')">爆款监控</button><button data-context-nav="delivery-product-showcase" onclick="openExpoWorkspace('delivery-product-showcase')">产品展示</button></div>
     </div>
     <div class="figma-side-spacer"></div>
     <div class="figma-usage-card"><span>积分用量</span><b>2.3k / 4k</b><i><em></em></i></div>
@@ -1800,6 +1813,43 @@
               <code>window.ExhibitFlowViralMonitorHost</code>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section id="product-showcase" class="section">
+        <div class="product-showcase-shell">
+          <div class="employee-page-head">
+            <div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">当前展会</span><i></i><span>产品展示</span></div><h1>产品展示</h1><p>上传产品照片，生成可旋转的 3D 模型，并扫码在手机上查看。</p></div>
+            <div class="employee-head-actions"><span id="tripo-config-pill" class="status">检查配置</span></div>
+          </div>
+          <div class="product-showcase-grid">
+            <div class="product-showcase-card">
+              <label for="tripo-product-name">产品名称</label>
+              <input id="tripo-product-name" placeholder="例如：新能源电驱总成">
+              <label for="tripo-product-desc">产品说明</label>
+              <textarea id="tripo-product-desc" rows="3" placeholder="可选，展示页标题下的补充说明"></textarea>
+              <label for="tripo-product-file">产品照片</label>
+              <input id="tripo-product-file" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadTripoProductImage(this.files)">
+              <div id="tripo-upload-status" class="cs-hint" style="margin-top:8px">建议白底或干净背景，主体完整，JPG / PNG / WEBP，不超过 20MB。</div>
+              <div class="actions" style="margin-top:14px">
+                <button class="primary" onclick="startTripoGeneration()">生成 3D 模型</button>
+                <button onclick="loadTripoHistory()">刷新记录</button>
+              </div>
+            </div>
+            <div class="product-showcase-card">
+              <div id="tripo-preview" class="product-showcase-preview">上传照片后在这里预览 3D 模型</div>
+              <div id="tripo-result-meta" class="cs-hint" style="margin-top:10px">尚未生成。</div>
+              <div id="tripo-qr-wrap" class="product-qr hidden">
+                <canvas id="tripo-qr-canvas" width="140" height="140"></canvas>
+                <div>
+                  <b>扫码查看</b>
+                  <p id="tripo-preview-link" class="cs-hint"></p>
+                  <div class="actions"><button onclick="copyTripoPreviewLink()">复制链接</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="product-showcase-history" id="tripo-history"><div class="result-empty">暂无 3D 展示记录。</div></div>
         </div>
       </section>
 
@@ -1931,6 +1981,7 @@
                 </div>
                 <div id="cs-supplement-subs" class="cs-supplement-subs disabled">
                   <label class="cs-check"><input type="checkbox" data-supplement="avatar" disabled onchange="toggleStudioAvatar(this.checked)">数字人<span class="cs-soon">需配置 RunningHub</span></label>
+                  <label class="cs-check"><input type="checkbox" data-supplement="tripo" onchange="if(this.checked) openExpoWorkspace('delivery-product-showcase')">3D 展品</label>
                   <label class="cs-check"><input type="checkbox" data-supplement="aivideo" disabled>AI 视频<span class="cs-soon">即将上线</span></label>
                   <label class="cs-check"><input type="checkbox" data-supplement="intro" disabled>前贴<span class="cs-soon">即将上线</span></label>
                 </div>
@@ -2497,7 +2548,7 @@
       setFigmaNav('expo');
     }
     function backToExhibitionDetail() {
-      const returnWorkspace = ['delivery-production','delivery-viral-monitor'].includes(currentExpoWorkspace)
+      const returnWorkspace = ['delivery-production','delivery-viral-monitor','delivery-product-showcase'].includes(currentExpoWorkspace)
         ? 'delivery-overview'
         : currentExpoWorkspace;
       openExhibition(currentExhibitionId, returnWorkspace);
@@ -2554,6 +2605,16 @@
         showSection('viral-monitor');
         setFigmaNav('delivery', currentExhibitionName());
         mountViralMonitorIntegration();
+        window.scrollTo({top:0, behavior:'smooth'});
+        return;
+      }
+      if (key === 'delivery-product-showcase') {
+        switchExpoProduct('delivery');
+        toggleExpoContextGroup('delivery', true);
+        setExpoContextActive(key);
+        showSection('product-showcase');
+        setFigmaNav('delivery', currentExhibitionName());
+        initProductShowcase();
         window.scrollTo({top:0, behavior:'smooth'});
         return;
       }
@@ -7107,6 +7168,154 @@
         updateSafeLaunchButton();
       }
     });
+    let tripoCurrent = null;
+    let tripoPollTimer = 0;
+    function initProductShowcase() {
+      const pill = document.getElementById('tripo-config-pill');
+      const configured = Boolean(appConfig?.tripo?.configured);
+      if (pill) {
+        pill.textContent = configured ? 'Tripo 已配置' : '需配置 TRIPO_API_KEY';
+        pill.className = configured ? 'status ok' : 'status';
+      }
+      loadTripoHistory();
+    }
+    async function uploadTripoProductImage(files) {
+      const file = Array.from(files || [])[0];
+      const status = document.getElementById('tripo-upload-status');
+      if (!file) return;
+      if (!/^image\/(jpeg|png|webp)$/i.test(file.type) || file.size > 20 * 1024 * 1024) {
+        if (status) status.textContent = '请上传 JPG、PNG 或 WEBP，且不超过 20MB。';
+        return notify('产品图片格式或大小不符合要求。', 'error');
+      }
+      if (status) status.textContent = `正在上传：${file.name}…`;
+      try {
+        const response = await fetch(apiPath(`/api/tripo/upload-image?name=${encodeURIComponent(file.name)}&expo_id=${encodeURIComponent(currentExpoRecordId())}`), {
+          method:'POST', headers:{'Content-Type':file.type || 'application/octet-stream'}, body:file,
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || '上传失败');
+        tripoCurrent = data;
+        if (status) status.textContent = `已上传：${file.name}`;
+        renderTripoResult(data);
+        notify('产品图片已上传。');
+      } catch (error) {
+        if (status) status.textContent = error.message || '上传失败';
+        notify(error.message || '上传失败', 'error');
+      }
+    }
+    async function startTripoGeneration() {
+      if (!tripoCurrent?.id) return notify('请先上传产品照片。', 'error');
+      if (!appConfig?.tripo?.configured) return notify('请先在服务端配置 TRIPO_API_KEY。', 'error');
+      const name = document.getElementById('tripo-product-name')?.value || '';
+      const desc = document.getElementById('tripo-product-desc')?.value || '';
+      try {
+        const data = await api('/api/tripo/generate-model', {
+          method:'POST',
+          body: JSON.stringify({ id: tripoCurrent.id, product_name: name, product_description: desc }),
+        });
+        tripoCurrent = data;
+        renderTripoResult(data);
+        notify('已提交 3D 生成任务。');
+        pollTripoStatus(data.id);
+      } catch (error) {
+        notify(error.message || '提交失败', 'error');
+      }
+    }
+    function pollTripoStatus(recordId) {
+      clearTimeout(tripoPollTimer);
+      const tick = async () => {
+        try {
+          const data = await api(`/api/tripo/task-status/${encodeURIComponent(recordId)}`);
+          tripoCurrent = data;
+          renderTripoResult(data);
+          if (data.status === 'success' || data.status === 'failed') {
+            loadTripoHistory();
+            return;
+          }
+        } catch (error) {
+          const meta = document.getElementById('tripo-result-meta');
+          if (meta) meta.textContent = error.message || '轮询失败';
+        }
+        tripoPollTimer = setTimeout(tick, 5000);
+      };
+      tick();
+    }
+    function renderTripoResult(data) {
+      const preview = document.getElementById('tripo-preview');
+      const meta = document.getElementById('tripo-result-meta');
+      const qrWrap = document.getElementById('tripo-qr-wrap');
+      const linkEl = document.getElementById('tripo-preview-link');
+      if (!data) return;
+      const image = data.rendered_image_url || data.input_image_url || '';
+      if (data.model_url && preview) {
+        preview.innerHTML = `<model-viewer src="${escapeAttr(assetPath(data.model_url))}" poster="${escapeAttr(assetPath(image))}" camera-controls auto-rotate shadow-intensity="1"></model-viewer>`;
+      } else if (image && preview) {
+        preview.innerHTML = `<img src="${escapeAttr(assetPath(image))}" alt="" style="max-width:100%;max-height:420px;object-fit:contain">`;
+      }
+      if (meta) {
+        const credit = data.credits_consumed != null ? ` · 消耗 ${data.credits_consumed} credits` : '';
+        meta.textContent = data.error
+          ? `失败：${data.error}`
+          : `状态：${data.status || 'uploaded'}${credit}`;
+      }
+      const previewUrl = data.preview_url ? assetPath(data.preview_url) : '';
+      if (qrWrap && linkEl && previewUrl && data.status === 'success') {
+        qrWrap.classList.remove('hidden');
+        linkEl.textContent = previewUrl.startsWith('http') ? previewUrl : `${location.origin}${previewUrl}`;
+        drawTripoQr(linkEl.textContent);
+      } else if (qrWrap) {
+        qrWrap.classList.add('hidden');
+      }
+    }
+    async function drawTripoQr(text) {
+      const canvas = document.getElementById('tripo-qr-canvas');
+      if (!canvas) return;
+      try {
+        const mod = await import('https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm');
+        await mod.toCanvas(canvas, text, { width: 140, margin: 1 });
+      } catch (_) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, 140, 140);
+        ctx.fillStyle = '#111';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('打开链接查看', 20, 72);
+      }
+    }
+    function copyTripoPreviewLink() {
+      const text = document.getElementById('tripo-preview-link')?.textContent || '';
+      if (!text) return;
+      navigator.clipboard?.writeText(text).then(() => notify('展示链接已复制。')).catch(() => notify(text));
+    }
+    async function loadTripoHistory() {
+      const box = document.getElementById('tripo-history');
+      if (!box) return;
+      try {
+        const data = await api(`/api/tripo/models?expo_id=${encodeURIComponent(currentExpoRecordId())}`);
+        const items = data.items || [];
+        if (!items.length) {
+          box.innerHTML = '<div class="result-empty">暂无 3D 展示记录。</div>';
+          return;
+        }
+        box.innerHTML = items.map(item => {
+          const thumb = item.rendered_image_url || item.input_image_url || '';
+          return `<article onclick="openTripoRecord('${escapeAttr(item.id)}')"><img src="${thumb ? escapeAttr(assetPath(thumb)) : ''}" alt=""><div><b>${escapeHtml(item.product_name || '未命名产品')}</b><p>${escapeHtml(item.status || '')} · ${escapeHtml(item.created_at || '')}</p></div></article>`;
+        }).join('');
+      } catch (error) {
+        box.innerHTML = `<div class="result-empty">${escapeHtml(error.message || '加载失败')}</div>`;
+      }
+    }
+    async function openTripoRecord(id) {
+      const data = await api(`/api/tripo/model/${encodeURIComponent(id)}`);
+      tripoCurrent = data;
+      const name = document.getElementById('tripo-product-name');
+      const desc = document.getElementById('tripo-product-desc');
+      if (name) name.value = data.product_name || '';
+      if (desc) desc.value = data.product_description || '';
+      renderTripoResult(data);
+      if (data.status && !['success','failed','uploaded'].includes(data.status)) pollTripoStatus(id);
+    }
+
     refreshAll();
     loadPlatformBindings();
     syncTtsVoices();
@@ -7117,5 +7326,6 @@
     setInterval(loadTasks, 5000);
     setInterval(loadEmployeeRecords, 10000);
   </script>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 </body>
 </html>

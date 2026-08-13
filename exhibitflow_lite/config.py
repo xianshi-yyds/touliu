@@ -163,6 +163,15 @@ class Settings:
     ).strip() or "audio"
     runninghub_digital_human_poll_seconds: int = int(os.getenv("RUNNINGHUB_DIGITAL_HUMAN_POLL_SECONDS", "2") or 2)
     runninghub_digital_human_max_polls: int = int(os.getenv("RUNNINGHUB_DIGITAL_HUMAN_MAX_POLLS", "1200") or 1200)
+    # Tripo3D image-to-model. Key stays server-side; the browser only sees configured.
+    tripo_api_key: str = os.getenv("TRIPO_API_KEY", "").strip()
+    tripo_base_url: str = os.getenv(
+        "TRIPO_BASE_URL",
+        "https://api.tripo3d.ai/v2/openapi",
+    ).strip().rstrip("/")
+    tripo_model_version: str = os.getenv("TRIPO_MODEL_VERSION", "v3.1-20260211").strip() or "v3.1-20260211"
+    tripo_face_limit: int = int(os.getenv("TRIPO_FACE_LIMIT", "50000") or 50000)
+    tripo_public_base_url: str = os.getenv("TRIPO_PUBLIC_BASE_URL", "").strip().rstrip("/")
 
 
 settings = Settings()

@@ -24,7 +24,7 @@ from uuid import uuid4
 
 import requests
 
-from exhibitflow_lite import avatar, pipeline, platforms, publisher, qwen, render, social, stock, tencent_ads, topic_video, tts, video_agent
+from exhibitflow_lite import avatar, pipeline, platforms, publisher, qwen, render, social, stock, tencent_ads, topic_video, tripo, tts, video_agent
 from exhibitflow_lite.config import settings
 from exhibitflow_lite.storage import ensure_storage, latest_manifest, manifest_path, safe_stem, write_json
 
@@ -919,6 +919,7 @@ def public_config() -> dict[str, Any]:
         "social_search": social.public_search_config(),
         "publisher_configured": publisher.sau_available(),
         "avatar": avatar.avatar_status(),
+        "tripo": tripo.public_status(),
         "render_engine": settings.render_engine,
         "topic_video": {
             "configured": remotion_bin.is_file(),
@@ -3543,6 +3544,44 @@ class Handler(BaseHTTPRequestHandler):
             query = parse_qs(parsed.query)
             self.send_json(list_digital_human_images((query.get("expo_id") or [""])[0]))
             return
+        if path == "/api/tripo/models":
+            query = parse_qs(parsed.query)
+            items = tripo.list_records((query.get("expo_id") or [""])[0])
+            self.send_json({"ok": True, "configured": tripo.configured(), "items": items})
+            return
+        if path.startswith("/api/tripo/task-status/"):
+            record_id = unquote(path.rsplit("/", 1)[-1])
+            try:
+                self.send_json(tripo.refresh_record(record_id))
+            except FileNotFoundError as exc:
+                self.send_json({"error": str(exc)}, status=404)
+            except (ValueError, RuntimeError) as exc:
+                self.send_json({"error": str(exc)}, status=400)
+            return
+        if path.startswith("/api/tripo/model/"):
+            record_id = unquote(path.rsplit("/", 1)[-1])
+            record = tripo.load_record(record_id)
+            if not record:
+                self.send_json({"error": "未找到 3D 任务"}, status=404)
+                return
+            try:
+                self.send_json(tripo.refresh_record(record_id))
+            except (ValueError, RuntimeError) as exc:
+                self.send_json({"error": str(exc)}, status=400)
+            return
+        if path.startswith("/showcase/"):
+            record_id = unquote(path.rsplit("/", 1)[-1])
+            record = tripo.load_record(record_id)
+            if not record:
+                self.send_json({"error": "未找到 3D 展示"}, status=404)
+                return
+            data = tripo.showcase_html(record).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if path == "/api/social/bindings":
             self.send_json({"ok": True, "items": social.public_bindings()})
             return
@@ -3772,6 +3811,29 @@ class Handler(BaseHTTPRequestHandler):
                     "expo_id": expo_id,
                 }, status=201)
                 return
+            if path == "/api/tripo/upload-image":
+                query = parse_qs(parsed.query)
+                filename = Path((query.get("name") or [""])[0]).name
+                expo_id = str((query.get("expo_id") or [""])[0]).strip()
+                if not filename or Path(filename).suffix.lower() not in tripo.TRIPO_IMAGE_EXTENSIONS:
+                    raise ValueError("产品图片仅支持 JPG、PNG 或 WEBP")
+                length = int(self.headers.get("Content-Length") or 0)
+                if length <= 0:
+                    raise ValueError("产品图片为空")
+                if length > 20 * 1024 * 1024:
+                    raise ValueError("产品图片不能超过 20MB")
+                payload = b""
+                remaining = length
+                while remaining:
+                    chunk = self.rfile.read(min(1024 * 1024, remaining))
+                    if not chunk:
+                        break
+                    payload += chunk
+                    remaining -= len(chunk)
+                if remaining:
+                    raise ValueError("产品图片上传未完成")
+                self.send_json(tripo.create_local_image(expo_id, filename, payload), status=201)
+                return
             if path == "/api/digital-human/images/upload":
                 query = parse_qs(parsed.query)
                 filename = Path((query.get("name") or [""])[0]).name
@@ -3811,6 +3873,25 @@ class Handler(BaseHTTPRequestHandler):
                 }, status=201)
                 return
             payload = self.read_payload()
+            if path == "/api/tripo/generate-model":
+                record_id = str((payload or {}).get("id") or (payload or {}).get("record_id") or "").strip()
+                if not record_id:
+                    raise ValueError("缺少已上传的产品图片")
+                self.send_json(
+                    tripo.start_generation(
+                        record_id,
+                        product_name=str((payload or {}).get("product_name") or ""),
+                        product_description=str((payload or {}).get("product_description") or ""),
+                    ),
+                    status=202,
+                )
+                return
+            if path == "/api/tripo/generate-qrcode":
+                record_id = str((payload or {}).get("id") or (payload or {}).get("record_id") or "").strip()
+                if not record_id:
+                    raise ValueError("缺少 3D 任务 ID")
+                self.send_json(tripo.attach_qrcode(record_id, str((payload or {}).get("public_base") or "")))
+                return
             if path == "/api/artifacts":
                 self.send_json(create_artifact(payload), status=201)
                 return
