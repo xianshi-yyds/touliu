@@ -14,6 +14,10 @@ EDGE_VOICES = {
     "zh-CN-XiaoxiaoNeural": "zh-CN-XiaoxiaoNeural",
     "zh-CN-YunxiNeural": "zh-CN-YunxiNeural",
     "zh-CN-XiaoyiNeural": "zh-CN-XiaoyiNeural",
+    "en-US-JennyNeural": "en-US-JennyNeural",
+    "en-US-AriaNeural": "en-US-AriaNeural",
+    "en-US-GuyNeural": "en-US-GuyNeural",
+    "en-US-ChristopherNeural": "en-US-ChristopherNeural",
 }
 
 DEFAULT_EDGE_VOICE = "zh-CN-XiaoxiaoNeural"

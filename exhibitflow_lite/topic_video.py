@@ -20,6 +20,7 @@ from uuid import uuid4
 
 from . import avatar, qwen, render, stock, tts, video_orchestrator
 from .config import settings
+from .language import default_cta, is_english, normalize_output_language, resolve_edge_voice, script_usable_for_language
 from .storage import safe_stem
 
 
@@ -28,7 +29,7 @@ ProgressCallback = Callable[[int, str], None]
 FPS = 30
 REMOTION_ROOT = settings.project_root / "remotion_exhibition_promo"
 REMOTION_PUBLIC = REMOTION_ROOT / "public"
-DEFAULT_CTA = "点击下方链接，立即了解展会信息"
+DEFAULT_CTA = default_cta("zh")
 DEFAULT_EDGE_VOICE = tts.DEFAULT_EDGE_VOICE
 DEFAULT_FONT_STYLE = "impact"
 DEFAULT_TRANSITION = "wipe"
@@ -200,7 +201,10 @@ def _append_cta(script: str, cta: str) -> str:
         return clean_script
     compact_script = re.sub(r"[\s。！？!?；;，,]+", "", clean_script)
     compact_cta = re.sub(r"[\s。！？!?；;，,]+", "", clean_cta)
-    return clean_script if compact_script.endswith(compact_cta) else f"{clean_script}\n\n{clean_cta}。"
+    ending = "." if re.search(r"[A-Za-z]", clean_cta) and not re.search(r"[\u3400-\u9fff]", clean_cta) else "。"
+    if not re.search(r"[.!?。！？]$", clean_cta):
+        clean_cta = f"{clean_cta}{ending}"
+    return clean_script if compact_script.endswith(compact_cta) else f"{clean_script}\n\n{clean_cta}"
 
 
 def _fallback_script(title: str, theme_text: str, payload: dict[str, Any]) -> str:
@@ -209,6 +213,18 @@ def _fallback_script(title: str, theme_text: str, payload: dict[str, Any]) -> st
     audience = _theme_value(payload, theme_text, "audience")
     pain = _theme_value(payload, theme_text, "pain")
     selling = _theme_value(payload, theme_text, "selling")
+    if is_english(payload.get("output_language") or payload.get("language")):
+        if title:
+            lines.append(f"If you are looking at {title}, start with what you can see on site.")
+        if audience:
+            lines.append(f"It is built for {audience} to compare products and solutions in one place.")
+        if pain:
+            lines.append(f"If you are dealing with {pain}, on-site comparison becomes more concrete.")
+        if selling:
+            lines.append(f"You can explore {selling}, talk with the teams, and check the fit.")
+        if not lines:
+            lines.append(f"Learn about {title}, from the theme and products to the next conversation.")
+        return "\n".join(lines)
     if title:
         lines.append(f"如果你正在关注{title}，可以先从现场开始了解。")
     if audience:
@@ -223,8 +239,9 @@ def _fallback_script(title: str, theme_text: str, payload: dict[str, Any]) -> st
 
 
 def _build_script(payload: dict[str, Any], title: str, theme_text: str) -> str:
+    language = normalize_output_language(payload.get("output_language") or payload.get("language"))
     manual = str(payload.get("script") or payload.get("manual_script") or "").strip()
-    if manual:
+    if script_usable_for_language(manual, language):
         return manual
     topic = _clean_text(payload.get("topic") or title, 120)
     context = "\n".join(
@@ -237,6 +254,7 @@ def _build_script(payload: dict[str, Any], title: str, theme_text: str) -> str:
             target_duration_seconds=int(float(payload.get("target_duration_seconds") or 30)),
             creative_direction=str(payload.get("creative_direction") or "trend"),
             reference_logic=payload.get("reference_logic") if isinstance(payload.get("reference_logic"), dict) else None,
+            output_language=language,
         )
         if generated.strip():
             return generated.strip()
@@ -533,6 +551,7 @@ def _screen_copy_plan(
                 promo_focus=promo_focus,
                 audience=audience,
                 max_items=7,
+                output_language=str(payload.get("output_language") or payload.get("language") or "zh"),
             )
         except Exception:
             plan = []
@@ -542,7 +561,7 @@ def _screen_copy_plan(
             {"text": title, "role": "title"},
             {"text": promo_focus, "role": "value"},
             *[{"text": item, "role": "data"} for item in explicit_highlights],
-            {"text": f"面向：{audience}", "role": "audience"} if audience else {},
+            {"text": (f"For {audience}" if is_english(payload.get("output_language")) else f"面向：{audience}"), "role": "audience"} if audience else {},
         ])
     # Keep the title as the first visual beat even if the model returned a
     # value or audience label first. This matches the reference composition.
@@ -889,8 +908,12 @@ def generate_topic_video(payload: dict[str, Any], progress: ProgressCallback | N
     run_dir.mkdir(parents=True, exist_ok=True)
 
     _progress(progress, 6, "解析主题输入")
+    language = normalize_output_language(payload.get("output_language") or payload.get("language"))
+    payload["output_language"] = language
     script = _build_script(payload, title, theme_text)
-    cta = _theme_value(payload, theme_text, "cta") or DEFAULT_CTA
+    cta = _theme_value(payload, theme_text, "cta") or default_cta(language)
+    if is_english(language) and cta in {"点击下方链接，立即了解展会信息", "点击下方链接，立即报名吧"}:
+        cta = default_cta(language)
     script = _append_cta(script, cta)
     theme_snapshot = theme_text or background_context or f"# {title}\n"
     (run_dir / "theme-input.md").write_text(theme_snapshot, encoding="utf-8")
@@ -904,7 +927,7 @@ def generate_topic_video(payload: dict[str, Any], progress: ProgressCallback | N
     _progress(progress, 18, "使用 Edge TTS 生成配音")
     audio, used_service, used_voice, attempts, sentences = _synthesise_edge(
         script,
-        str(payload.get("voice") or DEFAULT_EDGE_VOICE),
+        resolve_edge_voice(payload.get("voice"), language),
         safe_stem(f"{project_id}-edge"),
     )
     audio_duration = render.duration(audio)

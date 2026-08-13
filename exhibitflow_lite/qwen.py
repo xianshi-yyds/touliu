@@ -370,30 +370,54 @@ def generate_copy(
     target_duration_seconds: int = 30,
     creative_direction: str = "",
     reference_logic: dict[str, Any] | None = None,
+    output_language: str = "zh",
 ) -> str:
+    from .language import is_english
+
     sample = sample or {}
     target_seconds = max(10, min(120, int(target_duration_seconds or 30)))
+    english = is_english(output_language)
     # The configured CTA is appended later by the video pipeline. Reserve its
     # reading time here so the final narration still fits the selected length.
-    min_chars = max(24, round(target_seconds * 3.2) - 12)
-    max_chars = max(min_chars + 8, round(target_seconds * 4.0) - 10)
-    min_sentences = max(3, math.ceil(min_chars / 16))
-    max_sentences = max(min_sentences + 2, math.ceil(max_chars / 11))
+    if english:
+        min_chars = max(40, round(target_seconds * 12) - 20)
+        max_chars = max(min_chars + 16, round(target_seconds * 15) - 12)
+        min_sentences = max(3, math.ceil(min_chars / 70))
+        max_sentences = max(min_sentences + 2, math.ceil(max_chars / 45))
+    else:
+        min_chars = max(24, round(target_seconds * 3.2) - 12)
+        max_chars = max(min_chars + 8, round(target_seconds * 4.0) - 10)
+        min_sentences = max(3, math.ceil(min_chars / 16))
+        max_sentences = max(min_sentences + 2, math.ceil(max_chars / 11))
     logic_text = json.dumps(reference_logic, ensure_ascii=False, indent=2)[:8000] if isinstance(reference_logic, dict) else ""
     direction_label = {
         "impact": "现场冲击型：先抛出与客户、订单、资源或现场热度直接相关的结果，再说明为什么值得来",
         "trend": "行业趋势型：先指出行业机会或变化，再讲专业价值和适合谁来",
         "conversion": "招商转化型：先讲目标人群能获得什么，再给出资源、机会和明确行动引导",
     }.get(str(creative_direction or "").strip(), str(creative_direction or "").strip())
-    system_prompt = """
+    if english:
+        system_prompt = """
+You write spoken exhibition promo scripts for short videos.
+Use natural American English only. Output spoken lines a narrator can read aloud.
+Do not output shot lists, camera directions, or production notes.
+""".strip()
+        prompt_head = f"""Write a spoken English voiceover of about {target_seconds} seconds.
+Target spoken length: {min_chars}-{max_chars} characters excluding punctuation.
+Use {min_sentences}-{max_sentences} short sentences, one sentence per line.
+Write every line in English. Do not output Chinese."""
+        sentence_rule = "Each sentence expresses one idea, about 8-16 words, one sentence per line, ending with English punctuation."
+    else:
+        system_prompt = """
 你是“生视频员工”中的资深会展增长文案策划。
 你擅长根据不同行业、不同参展人群和不同采购决策链，提炼真实痛点，并把展会表达成解决问题的路径，而不是保证结果。
 你必须使用简体中文。你的输出不是分镜脚本、拍摄脚本或制作说明，只能是可直接朗读的口播正文。
 """.strip()
-    prompt = f"""
-请基于下面的业务信息，生成一段约 {target_seconds} 秒的中文短视频口播稿。
+        prompt_head = f"""请基于下面的业务信息，生成一段约 {target_seconds} 秒的中文短视频口播稿。
 中文有效字数目标：{min_chars}-{max_chars} 字（不含标点和空格）。
-建议拆成 {min_sentences}-{max_sentences} 个独立短句，每句单独一行。
+建议拆成 {min_sentences}-{max_sentences} 个独立短句，每句单独一行。"""
+        sentence_rule = "每一句只表达一个意思，优先 8-18 个汉字，最多不超过 26 个汉字。每个句子单独一行，句末必须使用中文标点；不要只用逗号串成一整段，方便后续做到“一句一屏”的字幕节奏。"
+    prompt = f"""
+{prompt_head}
 
 业务主题：{topic}
 创意方向（只用于确定表达策略，不要把它写成制作指令）：{direction_label}
@@ -408,7 +432,7 @@ def generate_copy(
    - 行业趋势型：行业变化 → 旧方法为什么不够 → 来现场比较和判断什么 → 行动。
    - 招商转化型：目标结果 → 当前卡点 → 展会能提供的连接或验证路径 → 行动。
    不要把三种结构混成固定模板。
-2. 每一句只表达一个意思，优先 8-18 个汉字，最多不超过 26 个汉字。每个句子单独一行，句末必须使用中文标点；不要只用逗号串成一整段，方便后续做到“一句一屏”的字幕节奏。
+2. {sentence_rule}
 3. 痛点必须能逐条对应输入内容，并且符合该行业的决策方式。不能把“关注合规”放大成“合规门槛正在提高”，不能为了制造冲突自行添加“订单上涨、利润下滑、政策收紧”等背景。输入信息较少时，可以推导行业常见顾虑，但必须写成“如果你正在……”“是否适配……”这类条件句或问题，不能当成已发生事实。解决方案只能表达为“现场比较、集中了解、直接沟通、验证适配、连接相关角色”等过程价值，不能写成必然成交、必然获客或必然拿到订单。
 4. 面向展商、采购者、专业观众或渠道商时，要分别调整利益点和行动方式。不能不加判断地把所有受众都写成“抢展位”。
 5. 只使用输入信息中明确提供的日期、地点、规模、数量、价格、福利、参会角色和承诺。输入里的“面向、连接、目标受众”只代表展会定位，不代表这些人已经确认到场；禁止改写成“齐聚、云集、采购方在场”。没有依据时禁止添加“真实买家、有采购权、头部平台、行业巨头、黄金展位、稀缺名额、全国最大、爆满、免费住宿、2000+工厂”等信息。
@@ -524,15 +548,19 @@ def _fallback_screen_copy_plan(
     promo_focus: str = "",
     audience: str = "",
     max_items: int = 7,
+    output_language: str = "zh",
 ) -> list[dict[str, str]]:
     """Build short on-screen phrases from facts already supplied by the user."""
+    from .language import is_english, screen_copy_limit
+
     values: list[dict[str, str]] = []
+    limit = screen_copy_limit(output_language)
 
     def add(text: Any, role: str) -> None:
         clean = re.sub(r"\s+", " ", str(text or "")).strip().strip("。！？!?；;")
         if not clean:
             return
-        clean = clean[:28]
+        clean = clean[:limit]
         if any(item["text"] == clean for item in values):
             return
         values.append({"text": clean, "role": role})
@@ -542,7 +570,7 @@ def _fallback_screen_copy_plan(
     for highlight in highlights or []:
         add(highlight, "data")
     if audience:
-        add(f"面向：{audience}", "audience")
+        add(f"For {audience}" if is_english(output_language) else f"面向：{audience}", "audience")
     return values[:max_items]
 
 
@@ -555,17 +583,24 @@ def generate_screen_copy_plan(
     promo_focus: str = "",
     audience: str = "",
     max_items: int = 7,
+    output_language: str = "zh",
 ) -> list[dict[str, str]]:
     """Generate concise visual copy that complements, rather than repeats, narration."""
+    from .language import is_english, screen_copy_limit
+
     fallback = _fallback_screen_copy_plan(
         topic,
         highlights,
         promo_focus=promo_focus,
         audience=audience,
         max_items=max_items,
+        output_language=output_language,
     )
     if not settings.text_llm_api_key:
         return fallback
+    english = is_english(output_language)
+    limit = screen_copy_limit(output_language)
+    lang_line = "Write every on-screen phrase in English. Do not output Chinese." if english else "所有屏幕短文案必须使用简体中文。"
     system_prompt = """
 你是会展宣传片的动态文字策划。请把完整口播压缩成少量屏幕短文案。
 屏幕短文案不是字幕，也不是旁白复述；它应该用标题、数据、受众标签和价值关键词补充旁白。
@@ -574,6 +609,7 @@ def generate_screen_copy_plan(
 """.strip()
     prompt = f"""
 请为以下主题生成 3-{max_items} 条屏幕短文案。
+{lang_line}
 
 主题：{topic}
 想要宣传的点：{promo_focus}
@@ -583,7 +619,7 @@ def generate_screen_copy_plan(
 旁白稿：{voiceover_script[:8000]}
 
 要求：
-1. 每条 4-18 个汉字或数字，最长不超过 28 个字符。
+1. 每条 4-18 个汉字或数字，最长不超过 {limit} 个字符。英语模式下用 2-6 个英文单词或关键数字。
 2. 不要逐句改写旁白，不要出现“镜头、画面、字幕、配音、旁白”等制作词。
 3. 数字亮点必须尽量原样保留，方便做数字滚动动画。
 4. 文案要能独立叠加在复杂视频画面上，例如“2000+源头工厂”“8大应用场景”“面向海外采购”。

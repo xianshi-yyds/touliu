@@ -1951,6 +1951,7 @@
                   <div><label class="cs-label" for="creator-studio-copy-length">目标时长</label><select id="creator-studio-copy-length" onchange="syncCreatorStudioDuration(this.value)"><option value="15">约 15 秒</option><option value="20">约 20 秒</option><option value="30" selected>约 30 秒</option><option value="45">约 45 秒</option><option value="60">约 60 秒</option></select></div>
                   <div><label class="cs-label" for="topic-video-aspect-ratio">视频比例</label><select id="topic-video-aspect-ratio"><option value="16:9">16:9 横屏</option><option value="9:16">9:16 竖屏</option><option value="1:1">1:1 方形</option></select></div>
                   <div id="topic-video-material-source-field" style="display:none"><label class="cs-label" for="topic-video-material-source">网络素材来源</label><select id="topic-video-material-source"><option value="pexels">Pexels（推荐）</option><option value="pixabay">Pixabay</option></select></div>
+                  <div><label class="cs-label" for="topic-video-language">成片语言</label><select id="topic-video-language" onchange="onTopicVideoLanguageChange()"><option value="zh">中文</option><option value="en">English</option></select></div>
                   <div><label class="cs-label" for="topic-video-voice">Edge TTS 音色</label><select id="topic-video-voice"><option value="zh-CN-XiaoxiaoNeural">晓晓 · 女声</option><option value="zh-CN-XiaoyiNeural">晓伊 · 女声</option><option value="zh-CN-YunjianNeural">云健 · 男声</option><option value="zh-CN-YunxiNeural">云希 · 男声</option></select></div>
                   <div><label class="cs-label">预估</label><div id="creator-studio-duration-estimate" class="cs-duration">等待口播稿</div></div>
                 </div>
@@ -3191,6 +3192,53 @@
       if (family) family.textContent = meta.family;
       if (spec) spec.textContent = meta.spec;
     }
+    const TOPIC_VIDEO_VOICES = {
+      zh: [
+        ['zh-CN-XiaoxiaoNeural', '晓晓 · 女声'],
+        ['zh-CN-XiaoyiNeural', '晓伊 · 女声'],
+        ['zh-CN-YunjianNeural', '云健 · 男声'],
+        ['zh-CN-YunxiNeural', '云希 · 男声'],
+      ],
+      en: [
+        ['en-US-JennyNeural', 'Jenny · Female'],
+        ['en-US-AriaNeural', 'Aria · Female'],
+        ['en-US-GuyNeural', 'Guy · Male'],
+        ['en-US-ChristopherNeural', 'Christopher · Male'],
+      ],
+    };
+    function syncTopicVideoVoices(language, preferred) {
+      const select = document.getElementById('topic-video-voice');
+      if (!select) return;
+      const lang = language === 'en' ? 'en' : 'zh';
+      const options = TOPIC_VIDEO_VOICES[lang];
+      const current = preferred || select.value;
+      select.innerHTML = options.map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+      select.value = options.some(([value]) => value === current) ? current : options[0][0];
+    }
+    function onTopicVideoLanguageChange() {
+      const lang = valueOf('topic-video-language') || 'zh';
+      syncTopicVideoVoices(lang);
+      const cta = document.getElementById('video-cta');
+      if (cta) {
+        const zhDefault = ['点击下方链接，立即报名吧', '点击下方链接，立即了解展会信息'];
+        const enDefault = 'Tap the link below to learn more about the exhibition.';
+        if (lang === 'en' && (!cta.value.trim() || zhDefault.includes(cta.value.trim()))) cta.value = enDefault;
+        if (lang === 'zh' && (!cta.value.trim() || cta.value.trim() === enDefault)) cta.value = '点击下方链接，立即报名吧';
+      }
+      const previewTitle = document.getElementById('topic-video-font-preview-title');
+      const previewData = document.getElementById('topic-video-font-preview-data');
+      if (previewTitle && (previewTitle.dataset.text === '现场比较 · 立即连接' || previewTitle.textContent === '现场比较 · 立即连接' || previewTitle.dataset.text === 'Compare on site')) {
+        if (lang === 'en') {
+          previewTitle.textContent = 'Compare on site';
+          previewTitle.dataset.text = 'Compare on site';
+          if (previewData) previewData.textContent = '2000+ factories';
+        } else {
+          previewTitle.textContent = '现场比较 · 立即连接';
+          previewTitle.dataset.text = '现场比较 · 立即连接';
+          if (previewData) previewData.textContent = '2000+ 源头工厂';
+        }
+      }
+    }
     async function collectTopicVideoTheme() {
       const title = valueOf('topic-video-title') || currentExhibitionName() || '展会推广';
       const brief = valueOf('topic-video-brief');
@@ -3210,7 +3258,8 @@
         visual_terms: valueOf('topic-video-visual-terms'),
         aspect_ratio: valueOf('topic-video-aspect-ratio') || '16:9',
         material_source: valueOf('topic-video-material-source') || 'pexels',
-        voice: valueOf('topic-video-voice') || 'zh-CN-XiaoxiaoNeural',
+        output_language: valueOf('topic-video-language') || 'zh',
+        voice: valueOf('topic-video-voice') || (valueOf('topic-video-language') === 'en' ? 'en-US-JennyNeural' : 'zh-CN-XiaoxiaoNeural'),
         font_style: valueOf('topic-video-font-style') || 'impact',
         transition: valueOf('topic-video-transition') || 'wipe',
         bgm: valueOf('topic-video-bgm'),
@@ -3827,6 +3876,9 @@
       if (aspectRatio) aspectRatio.value = '16:9';
       const topicMaterialSource = document.getElementById('topic-video-material-source');
       if (topicMaterialSource) topicMaterialSource.value = 'pexels';
+      const topicLanguage = document.getElementById('topic-video-language');
+      if (topicLanguage) topicLanguage.value = 'zh';
+      syncTopicVideoVoices('zh');
       const topicVoice = document.getElementById('topic-video-voice');
       if (topicVoice) topicVoice.value = 'zh-CN-XiaoxiaoNeural';
       const topicFontStyle = document.getElementById('topic-video-font-style');
@@ -4395,6 +4447,7 @@
         highlight_words: valueOf('highlight-words'),
         tts_service: 'edge',
         voice: theme.voice,
+        output_language: theme.output_language || valueOf('topic-video-language') || 'zh',
       }, true);
       rememberCreatorTask(task);
       loadTasks();
@@ -4886,6 +4939,7 @@
         creative_direction: selectedCreatorDirection,
         target_duration_seconds: Number(valueOf('copy-length') || 30),
         cta_text: valueOf('video-cta'),
+        output_language: valueOf('topic-video-language') || 'zh',
       }, true);
       if (!task) {
         setCopyGenerationState(false);
@@ -6957,7 +7011,11 @@
       document.getElementById('topic-video-highlights').value = Array.isArray(payload.highlights) ? payload.highlights.join('，') : (payload.highlights || '');
       document.getElementById('topic-video-visual-terms').value = payload.visual_terms || '';
       document.getElementById('topic-video-material-source').value = payload.material_source === 'pixabay' ? 'pixabay' : 'pexels';
-      document.getElementById('topic-video-voice').value = payload.voice || 'zh-CN-XiaoxiaoNeural';
+      const restoredLang = payload.output_language || payload.language || 'zh';
+      const langSelect = document.getElementById('topic-video-language');
+      if (langSelect) langSelect.value = restoredLang === 'en' ? 'en' : 'zh';
+      syncTopicVideoVoices(restoredLang);
+      document.getElementById('topic-video-voice').value = payload.voice || (restoredLang === 'en' ? 'en-US-JennyNeural' : 'zh-CN-XiaoxiaoNeural');
       document.getElementById('topic-video-font-style').value = payload.font_style || payload.fontStyle || 'impact';
       document.getElementById('topic-video-transition').value = payload.transition || payload.transition_type || 'wipe';
       const productionMode = document.getElementById('topic-video-production-mode');

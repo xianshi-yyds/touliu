@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from . import qwen
+from .language import default_cta, is_english, normalize_output_language, screen_copy_limit, script_usable_for_language
 from .video_orchestrator import normalise_production_mode
 from .config import settings
 
@@ -106,9 +107,10 @@ def _context(payload: dict[str, Any]) -> dict[str, Any]:
         "theme_text": theme_text[:12000],
         "target_duration_seconds": max(10, min(120, int(float(payload.get("target_duration_seconds") or 30)))),
         "creative_direction": _clean(payload.get("creative_direction") or "trend", 120),
-        "cta_text": _clean(payload.get("cta_text") or "点击下方链接，立即了解展会信息", 120),
+        "cta_text": _clean(payload.get("cta_text") or default_cta(payload.get("output_language")), 120),
         "production_mode": normalise_production_mode(payload.get("production_mode") or "auto"),
         "reference_profile": reference_profile,
+        "output_language": normalize_output_language(payload.get("output_language") or payload.get("language")),
     }
 
 
@@ -117,6 +119,16 @@ def _fallback_voiceover(context: dict[str, Any]) -> str:
     audience = context["audience"]
     promo_focus = context["promo_focus"]
     highlights = context["highlights"]
+    if is_english(context.get("output_language")):
+        lines = [f"If you are looking at {title}, start with what you can see on site."]
+        if audience:
+            lines.append(f"It is built for {audience} to compare products and solutions in one place.")
+        if promo_focus:
+            lines.append(f"Focus on {promo_focus}, and the comparison becomes more concrete.")
+        if highlights:
+            lines.append(f"Begin with {highlights[0]} and quickly map the directions that matter.")
+        lines.append("Talk with the teams, check the fit, then plan the next step.")
+        return "\n".join(lines)
     lines = [f"如果你正在关注{title}，可以先从现场开始了解。"]
     if audience:
         lines.append(f"面向{audience}，这里可以集中查看相关产品与方案。")
@@ -129,14 +141,16 @@ def _fallback_voiceover(context: dict[str, Any]) -> str:
 
 
 def _fallback_screen_copy(context: dict[str, Any]) -> list[dict[str, str]]:
-    items: list[dict[str, str]] = [{"text": context["title"][:28], "role": "title"}]
+    limit = screen_copy_limit(context.get("output_language"))
+    items: list[dict[str, str]] = [{"text": context["title"][:limit], "role": "title"}]
     if context["promo_focus"]:
-        items.append({"text": context["promo_focus"][:28], "role": "value"})
+        items.append({"text": context["promo_focus"][:limit], "role": "value"})
     for highlight in context["highlights"]:
-        if not any(item["text"] == highlight[:28] for item in items):
-            items.append({"text": highlight[:28], "role": "data"})
+        if not any(item["text"] == highlight[:limit] for item in items):
+            items.append({"text": highlight[:limit], "role": "data"})
     if context["audience"]:
-        items.append({"text": f"面向：{context['audience']}"[:28], "role": "audience"})
+        prefix = "For " if is_english(context.get("output_language")) else "面向："
+        items.append({"text": f"{prefix}{context['audience']}"[:limit], "role": "audience"})
     return items[:8]
 
 
@@ -166,7 +180,7 @@ def _normalise_screen_copy(raw: Any, fallback: list[dict[str, str]]) -> list[dic
             role = str(item.get("role") or "value").strip().lower()
         else:
             text, role = item, "value"
-        text = _clean(text, 28).strip("。！？!?；;")
+        text = _clean(text, 42).strip("。！？!?；;")
         if not text or role not in ALLOWED_ROLES:
             continue
         if any(word in text for word in ("镜头", "画面", "字幕", "旁白", "配音", "转场")):
@@ -244,14 +258,15 @@ def _build_user_prompt(context: dict[str, Any], manual_script: str) -> str:
 主题原文：{context['theme_text']}
 用户选择的成片方式：{context['production_mode']}
 参考视频 VL 画像：{json.dumps(context['reference_profile'], ensure_ascii=False)[:4000]}
-用户已有口播稿（如果非空必须保留，不要重写）：{manual_script[:10000]}
+用户已有口播稿（如果非空且语言匹配必须保留，不要重写）：{manual_script[:10000]}
 
 要求：
-1. 如果已有口播稿，voiceover 原样返回；否则生成适合 TTS 的纯口播正文，每句一行。
-2. screen_copy 必须和 voiceover 有关联但不逐句重复；明确数字必须保留。
-3. visual_plan 只使用 venue、industry、business、atmosphere 四组，关键词使用具体可拍摄的英文场景或动作。
-4. production.recommended_mode 只能是 montage、avatar、hybrid；没有可靠画像时选 montage。
-5. 只返回 JSON 对象。
+1. 输出语言必须是 {"English" if is_english(context.get("output_language")) else "简体中文"}。voiceover 和 screen_copy 都使用该语言。
+2. 如果已有口播稿且语言匹配，voiceover 原样返回；否则生成适合 TTS 的纯口播正文，每句一行。
+3. screen_copy 必须和 voiceover 有关联但不逐句重复；明确数字必须保留。
+4. visual_plan 只使用 venue、industry、business、atmosphere 四组，关键词使用具体可拍摄的英文场景或动作。
+5. production.recommended_mode 只能是 montage、avatar、hybrid；没有可靠画像时选 montage。
+6. 只返回 JSON 对象。
 """.strip()
 
 
@@ -285,7 +300,7 @@ def generate_video_plan(payload: dict[str, Any]) -> dict[str, Any]:
         warnings.append("未配置 TEXT_LLM_API_KEY，使用内部 Skill 的规则回退方案")
 
     voiceover = qwen.clean_voiceover_copy(raw.get("voiceover") or raw.get("script") or "")
-    if manual_script:
+    if script_usable_for_language(manual_script, context["output_language"]):
         voiceover = qwen.clean_voiceover_copy(manual_script)
     if not voiceover:
         voiceover = _fallback_voiceover(context)

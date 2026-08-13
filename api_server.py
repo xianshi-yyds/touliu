@@ -24,7 +24,7 @@ from uuid import uuid4
 
 import requests
 
-from exhibitflow_lite import avatar, pipeline, platforms, publisher, qwen, render, social, stock, tencent_ads, topic_video, tripo, tts, video_agent
+from exhibitflow_lite import avatar, language, pipeline, platforms, publisher, qwen, render, social, stock, tencent_ads, topic_video, tripo, tts, video_agent
 from exhibitflow_lite.config import settings
 from exhibitflow_lite.storage import ensure_storage, latest_manifest, manifest_path, safe_stem, write_json
 
@@ -2822,8 +2822,14 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
         source = str(payload.get("material_source") or "local").strip().lower()
         if source not in {"local", "pexels", "pixabay"}:
             raise ValueError("素材来源必须是 local、pexels 或 pixabay")
-        cta_text = str(payload.get("cta_text") or DEFAULT_VIDEO_CTA)
-        voice = str(payload.get("voice") or tts.DEFAULT_QWEN_VOICE)
+        output_language = language.normalize_output_language(payload.get("output_language") or payload.get("language"))
+        payload["output_language"] = output_language
+        cta_text = str(payload.get("cta_text") or language.default_cta(output_language))
+        if language.is_english(output_language) and cta_text in {DEFAULT_VIDEO_CTA, "点击下方链接，立即了解展会信息"}:
+            cta_text = language.default_cta(output_language)
+        payload["cta_text"] = cta_text
+        voice = language.resolve_edge_voice(payload.get("voice"), output_language) if str(payload.get("tts_service") or "edge") == "edge" else str(payload.get("voice") or tts.DEFAULT_QWEN_VOICE)
+        payload["voice"] = voice
         tts_service = str(payload.get("tts_service") or "qwen")
         reference_logic = payload.get("reference_logic") or payload.get("viral_logic") or {}
         caption_template = str(payload.get("caption_template") or "viral").strip().lower()
@@ -2867,6 +2873,8 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
             )
             skill_plan: dict[str, Any] = {}
             if dynamic_mode and agent_mode in {"internal-skill", "internal", "skill"}:
+                if not language.script_usable_for_language(manual_script, output_language):
+                    manual_script = ""
                 # The internal Agent is the only planner in this mode. It
                 # reads the project Skill, returns a constrained VideoPlan,
                 # and leaves the actual media work to the Remotion adapter.
@@ -2891,6 +2899,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
                         target_duration_seconds=target_duration_seconds,
                         creative_direction=creative_direction,
                         reference_logic=reference_logic if isinstance(reference_logic, dict) else None,
+                        output_language=output_language,
                     )
                 except Exception:
                     generated_script = ""
@@ -2901,6 +2910,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
                     target_duration_seconds=target_duration_seconds,
                     creative_direction=creative_direction,
                     reference_logic=reference_logic if isinstance(reference_logic, dict) else None,
+                    output_language=output_language,
                 )
             if not generated_script and dynamic_mode:
                 generated_script = str(skill_plan.get("voiceover") or "").strip()
@@ -3153,7 +3163,10 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
         reference_logic = payload.get("reference_logic") or payload.get("viral_logic") or {}
         if not topic and not (sample.get("title") or sample.get("desc")):
             raise ValueError("请填写主题/卖点，或先选择一个参考样本")
-        cta_text = str(payload.get("cta_text") or DEFAULT_VIDEO_CTA)
+        output_language = language.normalize_output_language(payload.get("output_language") or payload.get("language"))
+        cta_text = str(payload.get("cta_text") or language.default_cta(output_language))
+        if language.is_english(output_language) and cta_text in {DEFAULT_VIDEO_CTA, "点击下方链接，立即了解展会信息"}:
+            cta_text = language.default_cta(output_language)
 
         def copy_job() -> dict[str, Any]:
             copy = final_script_with_cta(
@@ -3163,6 +3176,7 @@ def make_task(kind: str, payload: dict[str, Any], *, existing_task_id: str = "")
                     target_duration_seconds=target_duration_seconds,
                     creative_direction=creative_direction,
                     reference_logic=reference_logic if isinstance(reference_logic, dict) else None,
+                    output_language=output_language,
                 ),
                 cta_text,
             )
