@@ -15,6 +15,9 @@ from .config import settings
 from .storage import safe_stem, write_json
 
 TRIPO_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+VIEW_ORDER = ("front", "left", "back", "right")
+TRIPLE_SLOTS = ("front", "left", "right")
+SLOT_LABELS = {"front": "正面", "left": "左侧面", "back": "背面", "right": "右侧面"}
 TRIPO_LOCK = threading.Lock()
 SUCCESS_STATUSES = {"success"}
 FAILED_STATUSES = {"failed", "banned", "expired", "cancelled", "unknown"}
@@ -35,6 +38,7 @@ def public_status() -> dict[str, Any]:
     return {
         "configured": configured(),
         "model_version": settings.tripo_model_version,
+        "texture_quality": settings.tripo_texture_quality,
         "face_limit": settings.tripo_face_limit,
     }
 
@@ -122,18 +126,18 @@ def upload_image_file(source: Path, filename: str) -> dict[str, Any]:
     return {"file_token": token, "file_type": file_type, "raw": data}
 
 
-def create_image_to_model_task(file_token: str, file_type: str) -> dict[str, Any]:
-    body = {
-        "type": "image_to_model",
-        "file": {"type": file_type, "file_token": file_token},
+def _generation_defaults() -> dict[str, Any]:
+    return {
         "model_version": settings.tripo_model_version,
         "texture": True,
         "pbr": True,
-        "texture_quality": "detailed",
+        "texture_quality": settings.tripo_texture_quality,
         "enable_image_autofix": True,
-        "orientation": "align_image",
         "face_limit": settings.tripo_face_limit,
     }
+
+
+def _submit_task(body: dict[str, Any]) -> dict[str, Any]:
     response = requests.post(
         f"{settings.tripo_base_url}/task",
         headers={**_headers(), "Content-Type": "application/json"},
@@ -145,6 +149,36 @@ def create_image_to_model_task(file_token: str, file_type: str) -> dict[str, Any
     if not task_id:
         raise RuntimeError(f"Tripo 未返回 task_id：{json.dumps(data, ensure_ascii=False)[:400]}")
     return data
+
+
+def create_image_to_model_task(file_token: str, file_type: str) -> dict[str, Any]:
+    body = {
+        "type": "image_to_model",
+        "file": {"type": file_type, "file_token": file_token},
+        "orientation": "align_image",
+        **_generation_defaults(),
+    }
+    return _submit_task(body)
+
+
+def create_multiview_to_model_task(views: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    files = []
+    for slot in VIEW_ORDER:
+        item = views.get(slot) or {}
+        token = str(item.get("file_token") or "")
+        file_type = str(item.get("file_type") or "jpg")
+        entry: dict[str, Any] = {"type": file_type}
+        if token:
+            entry["file_token"] = token
+        files.append(entry)
+    if not (views.get("front") or {}).get("file_token"):
+        raise ValueError("三视图必须包含正面照片")
+    body = {
+        "type": "multiview_to_model",
+        "files": files,
+        **_generation_defaults(),
+    }
+    return _submit_task(body)
 
 
 def fetch_task(task_id: str) -> dict[str, Any]:
@@ -216,6 +250,12 @@ def public_record(record: dict[str, Any]) -> dict[str, Any]:
         "status": record.get("status") or "pending",
         "error": record.get("error") or "",
         "input_image_url": record.get("input_image_url") or "",
+        "input_mode": record.get("input_mode") or "single",
+        "views": {
+            slot: {"url": str((record.get("views") or {}).get(slot, {}).get("url") or "")}
+            for slot in VIEW_ORDER
+            if (record.get("views") or {}).get(slot)
+        },
         "model_url": record.get("local_model_url") or record.get("model_url") or "",
         "rendered_image_url": record.get("local_preview_url") or record.get("rendered_image_url") or "",
         "preview_url": preview,
@@ -226,7 +266,29 @@ def public_record(record: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def create_local_image(expo_id: str, filename: str, payload: bytes) -> dict[str, Any]:
+def _normalize_slot(value: str) -> str:
+    slot = str(value or "front").strip().lower()
+    aliases = {"front": "front", "正面": "front", "single": "front", "left": "left", "左": "left", "左侧面": "left", "right": "right", "右": "right", "右侧面": "right", "back": "back", "背面": "back", "后": "back"}
+    if slot not in VIEW_ORDER and slot not in aliases:
+        raise ValueError("视角只能是正面、左侧面、右侧面或背面")
+    return aliases.get(slot, slot)
+
+
+def _normalize_mode(value: str) -> str:
+    mode = str(value or "single").strip().lower()
+    if mode in {"multi", "multiview", "triple", "三视图"}:
+        return "multiview"
+    return "single"
+
+
+def create_local_image(
+    expo_id: str,
+    filename: str,
+    payload: bytes,
+    record_id: str = "",
+    slot: str = "front",
+    input_mode: str = "single",
+) -> dict[str, Any]:
     suffix = Path(filename).suffix.lower()
     if suffix not in TRIPO_IMAGE_EXTENSIONS:
         raise ValueError("产品图片仅支持 JPG、PNG 或 WEBP")
@@ -234,25 +296,41 @@ def create_local_image(expo_id: str, filename: str, payload: bytes) -> dict[str,
         raise ValueError("产品图片为空")
     if len(payload) > 20 * 1024 * 1024:
         raise ValueError("产品图片不能超过 20MB")
-    record_id = uuid4().hex[:12]
-    folder = models_root() / record_id
-    folder.mkdir(parents=True, exist_ok=True)
-    target = folder / f"input{suffix}"
-    target.write_bytes(payload)
-    record = {
-        "id": record_id,
-        "expo_id": str(expo_id or "").strip(),
-        "product_name": "",
-        "product_description": "",
-        "task_id": "",
-        "status": "uploaded",
-        "file_token": "",
-        "file_type": "jpg" if suffix in {".jpg", ".jpeg"} else suffix.lstrip("."),
-        "input_image_path": str(target),
-        "input_image_url": media_rel(target),
-        "created_at": now(),
-    }
-    save_record(record)
+    slot = _normalize_slot(slot)
+    input_mode = _normalize_mode(input_mode)
+    with TRIPO_LOCK:
+        record = load_record(record_id) if record_id else None
+        if record_id and not record:
+            raise FileNotFoundError("未找到已上传的产品记录")
+        if not record:
+            record = {
+                "id": uuid4().hex[:12],
+                "expo_id": str(expo_id or "").strip(),
+                "product_name": "",
+                "product_description": "",
+                "task_id": "",
+                "status": "uploaded",
+                "views": {},
+                "created_at": now(),
+            }
+        record["input_mode"] = input_mode
+        folder = models_root() / record["id"]
+        folder.mkdir(parents=True, exist_ok=True)
+        target = folder / f"{slot}{suffix}"
+        target.write_bytes(payload)
+        views = dict(record.get("views") or {})
+        views[slot] = {
+            "path": str(target),
+            "url": media_rel(target),
+            "file_type": "jpg" if suffix in {".jpg", ".jpeg"} else suffix.lstrip("."),
+        }
+        record["views"] = views
+        if slot == "front":
+            record["input_image_path"] = str(target)
+            record["input_image_url"] = media_rel(target)
+            record["file_type"] = views[slot]["file_type"]
+        record["updated_at"] = now()
+        save_record(record)
     return public_record(record)
 
 
@@ -261,15 +339,44 @@ def start_generation(record_id: str, product_name: str = "", product_description
         record = load_record(record_id)
         if not record:
             raise FileNotFoundError("未找到已上传的产品图片")
-        source = Path(str(record.get("input_image_path") or ""))
-        if not source.is_file():
+        views = dict(record.get("views") or {})
+        if not views and record.get("input_image_path"):
+            views = {
+                "front": {
+                    "path": record["input_image_path"],
+                    "url": record.get("input_image_url") or "",
+                    "file_type": record.get("file_type") or "jpg",
+                }
+            }
+        mode = _normalize_mode(str(record.get("input_mode") or "single"))
+        uploaded = [slot for slot in VIEW_ORDER if Path(str((views.get(slot) or {}).get("path") or "")).is_file()]
+        if not uploaded:
             raise FileNotFoundError("产品图片文件已丢失，请重新上传")
-        upload = upload_image_file(source, source.name)
-        task = create_image_to_model_task(upload["file_token"], upload["file_type"])
+        if mode == "multiview":
+            missing = [SLOT_LABELS[slot] for slot in TRIPLE_SLOTS if slot not in uploaded]
+            if missing:
+                raise ValueError(f"三视图还缺：{'、'.join(missing)}")
+            remote_views: dict[str, dict[str, Any]] = {}
+            for slot in uploaded:
+                source = Path(str(views[slot]["path"]))
+                upload = upload_image_file(source, source.name)
+                views[slot]["file_token"] = upload["file_token"]
+                views[slot]["file_type"] = upload["file_type"]
+                remote_views[slot] = upload
+            task = create_multiview_to_model_task(remote_views)
+        else:
+            source = Path(str((views.get("front") or views[uploaded[0]])["path"]))
+            if not source.is_file():
+                raise FileNotFoundError("产品图片文件已丢失，请重新上传")
+            upload = upload_image_file(source, source.name)
+            views.setdefault("front", {})["file_token"] = upload["file_token"]
+            views["front"]["file_type"] = upload["file_type"]
+            task = create_image_to_model_task(upload["file_token"], upload["file_type"])
+        record["views"] = views
         record["product_name"] = str(product_name or record.get("product_name") or "").strip()
         record["product_description"] = str(product_description or record.get("product_description") or "").strip()
-        record["file_token"] = upload["file_token"]
-        record["file_type"] = upload["file_type"]
+        record["file_token"] = str((views.get("front") or {}).get("file_token") or "")
+        record["file_type"] = str((views.get("front") or {}).get("file_type") or "")
         record["task_id"] = str(task.get("task_id") or "")
         record["status"] = "pending"
         record["error"] = ""

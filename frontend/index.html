@@ -1819,7 +1819,7 @@
       <section id="product-showcase" class="section">
         <div class="product-showcase-shell">
           <div class="employee-page-head">
-            <div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">当前展会</span><i></i><span>产品展示</span></div><h1>产品展示</h1><p>上传产品照片，生成可旋转的 3D 模型，并扫码在手机上查看。</p></div>
+            <div><button class="back-link" onclick="backToExhibitionDetail()">← 返回展会</button><div class="employee-scope-path"><span class="employee-expo-crumb">当前展会</span><i></i><span>产品展示</span></div><h1>产品展示</h1><p>使用 Tripo v3.0 快速均衡模型。可上传一张产品图，或正面 / 左侧 / 右侧三视图。</p></div>
             <div class="employee-head-actions"><span id="tripo-config-pill" class="status">检查配置</span></div>
           </div>
           <div class="product-showcase-grid">
@@ -1828,9 +1828,24 @@
               <input id="tripo-product-name" placeholder="例如：新能源电驱总成">
               <label for="tripo-product-desc">产品说明</label>
               <textarea id="tripo-product-desc" rows="3" placeholder="可选，展示页标题下的补充说明"></textarea>
-              <label for="tripo-product-file">产品照片</label>
-              <input id="tripo-product-file" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadTripoProductImage(this.files)">
-              <div id="tripo-upload-status" class="cs-hint" style="margin-top:8px">建议白底或干净背景，主体完整，JPG / PNG / WEBP，不超过 20MB。</div>
+              <label>上传方式</label>
+              <div class="choice-row" style="margin-top:6px">
+                <div class="choice active" data-tripo-mode="single" onclick="setTripoInputMode('single')"><b>单张照片</b><p>正面即可</p></div>
+                <div class="choice" data-tripo-mode="multiview" onclick="setTripoInputMode('multiview')"><b>三视图</b><p>正面 + 左侧 + 右侧</p></div>
+              </div>
+              <div id="tripo-single-upload">
+                <label for="tripo-product-file">产品照片</label>
+                <input id="tripo-product-file" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadTripoProductImage(this.files, 'front')">
+              </div>
+              <div id="tripo-multi-upload" class="hidden">
+                <label for="tripo-file-front">正面</label>
+                <input id="tripo-file-front" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadTripoProductImage(this.files, 'front')">
+                <label for="tripo-file-left">左侧面</label>
+                <input id="tripo-file-left" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadTripoProductImage(this.files, 'left')">
+                <label for="tripo-file-right">右侧面</label>
+                <input id="tripo-file-right" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadTripoProductImage(this.files, 'right')">
+              </div>
+              <div id="tripo-upload-status" class="cs-hint" style="margin-top:8px">建议白底或干净背景，主体完整，JPG / PNG / WEBP，每张不超过 20MB。</div>
               <div class="actions" style="margin-top:14px">
                 <button class="primary" onclick="startTripoGeneration()">生成 3D 模型</button>
                 <button onclick="loadTripoHistory()">刷新记录</button>
@@ -7170,16 +7185,29 @@
     });
     let tripoCurrent = null;
     let tripoPollTimer = 0;
+    let tripoInputMode = 'single';
+    function setTripoInputMode(mode) {
+      tripoInputMode = mode === 'multiview' ? 'multiview' : 'single';
+      document.querySelectorAll('[data-tripo-mode]').forEach(el => el.classList.toggle('active', el.dataset.tripoMode === tripoInputMode));
+      document.getElementById('tripo-single-upload')?.classList.toggle('hidden', tripoInputMode !== 'single');
+      document.getElementById('tripo-multi-upload')?.classList.toggle('hidden', tripoInputMode !== 'multiview');
+      tripoCurrent = null;
+      const status = document.getElementById('tripo-upload-status');
+      if (status) status.textContent = tripoInputMode === 'multiview'
+        ? '请分别上传正面、左侧面、右侧面，再生成。'
+        : '建议白底或干净背景，主体完整，JPG / PNG / WEBP，每张不超过 20MB。';
+    }
     function initProductShowcase() {
       const pill = document.getElementById('tripo-config-pill');
       const configured = Boolean(appConfig?.tripo?.configured);
       if (pill) {
-        pill.textContent = configured ? 'Tripo 已配置' : '需配置 TRIPO_API_KEY';
+        const version = appConfig?.tripo?.model_version || 'v3.0';
+        pill.textContent = configured ? `Tripo ${version}` : '需配置 TRIPO_API_KEY';
         pill.className = configured ? 'status ok' : 'status';
       }
       loadTripoHistory();
     }
-    async function uploadTripoProductImage(files) {
+    async function uploadTripoProductImage(files, slot = 'front') {
       const file = Array.from(files || [])[0];
       const status = document.getElementById('tripo-upload-status');
       if (!file) return;
@@ -7187,17 +7215,28 @@
         if (status) status.textContent = '请上传 JPG、PNG 或 WEBP，且不超过 20MB。';
         return notify('产品图片格式或大小不符合要求。', 'error');
       }
-      if (status) status.textContent = `正在上传：${file.name}…`;
+      const labels = {front:'正面', left:'左侧面', right:'右侧面', back:'背面'};
+      if (status) status.textContent = `正在上传${labels[slot] || ''}：${file.name}…`;
       try {
-        const response = await fetch(apiPath(`/api/tripo/upload-image?name=${encodeURIComponent(file.name)}&expo_id=${encodeURIComponent(currentExpoRecordId())}`), {
+        const params = new URLSearchParams({
+          name: file.name,
+          expo_id: currentExpoRecordId(),
+          slot,
+          mode: tripoInputMode,
+        });
+        if (tripoCurrent?.id) params.set('id', tripoCurrent.id);
+        const response = await fetch(apiPath(`/api/tripo/upload-image?${params}`), {
           method:'POST', headers:{'Content-Type':file.type || 'application/octet-stream'}, body:file,
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || '上传失败');
         tripoCurrent = data;
-        if (status) status.textContent = `已上传：${file.name}`;
+        const ready = Object.keys(data.views || {}).length;
+        if (status) status.textContent = tripoInputMode === 'multiview'
+          ? `已上传 ${ready}/3 张。还缺正面、左侧面、右侧面中未选的视角。`
+          : `已上传：${file.name}`;
         renderTripoResult(data);
-        notify('产品图片已上传。');
+        notify(`${labels[slot] || '图片'}已上传。`);
       } catch (error) {
         if (status) status.textContent = error.message || '上传失败';
         notify(error.message || '上传失败', 'error');
@@ -7205,6 +7244,11 @@
     }
     async function startTripoGeneration() {
       if (!tripoCurrent?.id) return notify('请先上传产品照片。', 'error');
+      if (tripoInputMode === 'multiview') {
+        const views = tripoCurrent.views || {};
+        const missing = ['front','left','right'].filter(slot => !views[slot]?.url).map(slot => ({front:'正面',left:'左侧面',right:'右侧面'}[slot]));
+        if (missing.length) return notify(`三视图还缺：${missing.join('、')}`, 'error');
+      }
       if (!appConfig?.tripo?.configured) return notify('请先在服务端配置 TRIPO_API_KEY。', 'error');
       const name = document.getElementById('tripo-product-name')?.value || '';
       const desc = document.getElementById('tripo-product-desc')?.value || '';

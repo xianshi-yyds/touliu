@@ -169,7 +169,8 @@ class Settings:
         "TRIPO_BASE_URL",
         "https://api.tripo3d.ai/v2/openapi",
     ).strip().rstrip("/")
-    tripo_model_version: str = os.getenv("TRIPO_MODEL_VERSION", "v3.1-20260211").strip() or "v3.1-20260211"
+    tripo_model_version: str = os.getenv("TRIPO_MODEL_VERSION", "v3.0-20250812").strip() or "v3.0-20250812"
+    tripo_texture_quality: str = os.getenv("TRIPO_TEXTURE_QUALITY", "standard").strip() or "standard"
     tripo_face_limit: int = int(os.getenv("TRIPO_FACE_LIMIT", "50000") or 50000)
     tripo_public_base_url: str = os.getenv("TRIPO_PUBLIC_BASE_URL", "").strip().rstrip("/")
 

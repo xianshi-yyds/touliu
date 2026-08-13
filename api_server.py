@@ -3832,7 +3832,17 @@ class Handler(BaseHTTPRequestHandler):
                     remaining -= len(chunk)
                 if remaining:
                     raise ValueError("产品图片上传未完成")
-                self.send_json(tripo.create_local_image(expo_id, filename, payload), status=201)
+                self.send_json(
+                    tripo.create_local_image(
+                        expo_id,
+                        filename,
+                        payload,
+                        record_id=str((query.get("id") or [""])[0]).strip(),
+                        slot=str((query.get("slot") or ["front"])[0]).strip() or "front",
+                        input_mode=str((query.get("mode") or ["single"])[0]).strip() or "single",
+                    ),
+                    status=201,
+                )
                 return
             if path == "/api/digital-human/images/upload":
                 query = parse_qs(parsed.query)
