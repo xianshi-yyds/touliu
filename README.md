@@ -111,7 +111,7 @@ ExhibitFlow Lite 是按“展会”组织业务的数字员工 SaaS 工作台。
 
 ### 2. 找爆款员工
 
-- 通过 TikHub 检索抖音公开内容，也支持小红书 Rnote 公开检索或手动导入链接。
+- 通过 TikHub 检索抖音和小红书公开内容，也支持小红书 Rnote 检索或手动导入链接。
 - 创建异步检索任务，后台执行搜索、去重、互动分计算和样本整理。
 - 按点赞、评论、转发等互动数据生成推荐样本包。
 - 支持查看检索历史、样本详情，并将参考样本用于后续视频创作。
@@ -165,7 +165,7 @@ SAU_BIN=./vendor/social_auto_upload/.venv/bin/sau
 EXHIBITFLOW_RENDER_ENGINE=moneyprinter
 ```
 
-如果服务器不适合运行依赖 macOS Chrome 登录态的本地抓取器，可以配置 TikHub 的服务端抖音公共检索：
+如果服务器不适合运行依赖 macOS Chrome 登录态的本地抓取器，可以配置 TikHub 的服务端抖音及小红书公共检索：
 
 ```env
 TIKHUB_API_KEY=your_tikhub_api_key
@@ -173,7 +173,7 @@ TIKHUB_BASE_URL=https://api.tikhub.dev
 SOCIAL_SEARCH_PROVIDER=auto
 ```
 
-`auto` 模式下，抖音优先使用 TikHub，未配置 Key 时回退本地抓取器；小红书仍使用现有本地适配器。TikHub 专用搜索接口按请求计费，分页越多费用越高。
+`auto` 模式下，抖音优先使用 TikHub；小红书已配置 Rnote 时优先使用 Rnote，否则使用 TikHub，均未配置时回退本地抓取器。TikHub 搜索接口按请求计费，分页越多费用越高。
 
 默认保持：
 

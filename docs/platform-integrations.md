@@ -7,7 +7,7 @@
 | 平台 | 找爆款/公开检索 | 投放执行 | 数据/复盘 | 当前状态 |
 | --- | --- | --- | --- | --- |
 | 抖音 | TikHub；目标主机浏览器兜底 | 巨量引擎 Marketing API | 巨量报表 | 已有完整安全草稿链路 |
-| 小红书 | Rnote 公开笔记/视频搜索；本机账号兜底 | 小红书官方营销 API 或人工复核 | 新榜外部控制台/官方权限 | 本次接入 Rnote，投放 API 保留权限边界 |
+| 小红书 | TikHub / Rnote 公开笔记与账号数据；本机账号兜底 | 小红书官方营销 API 或人工复核 | 新榜外部控制台/官方权限 | TikHub 已接入，投放 API 保留权限边界 |
 | 视频号 | 不做未确认的公开抓取；支持导入 | 腾讯广告 Marketing API | 腾讯广告或新榜 | 本次先接入创意只读 `/v1.3/adcreatives/get` |
 
 ## 环境变量
@@ -28,9 +28,9 @@ TENCENT_ADS_ACCOUNT_ID=...
 
 配置后重启 API，`GET /api/config` 会返回不含密钥的平台能力状态。
 
-## Rnote 链路
+## 小红书公共检索链路
 
-找爆款员工选择「小红书 + 服务器公共检索（Rnote）」时，API 服务端调用 `/api/v2/crawler/search/notes`，按热度排序、分页、去重和统一互动分后写入原有样本包。前端不会打开访问者的浏览器，也不会读取小红书登录态。当前默认检索视频笔记（`note_type=1`），深度检索最多 5 页，避免失控扣费。
+找爆款员工选择「小红书 + 服务器公共检索」时，有 Rnote Key 则优先调用 Rnote；否则使用已有 TikHub Key 调用 App V2 `search_notes`，按热度搜索视频笔记并完成分页、去重和统一互动分。TikHub 还通过 `GET /api/v1/xiaohongshu/app_v2/get_user_info` 与 `get_user_posted_notes` 获取公开账号资料和作品，项目统一封装为 `POST /api/social/profile`。这些链路都不依赖浏览器登录态，深度检索最多 5 页，避免失控扣费。
 
 ## 腾讯广告/视频号链路
 

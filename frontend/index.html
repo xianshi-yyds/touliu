@@ -2330,11 +2330,11 @@
       const tencent = appConfig.tencent_ads || {};
       const douyinSearchReady = Boolean(social.tikhub_configured || social.douyin_provider === 'tikhub');
       const douyinDeliveryReady = Boolean(ocean.binding_verified || ocean.has_access_token);
-      const xhsSearchReady = Boolean(social.rnote_configured || social.xiaohongshu_provider === 'rnote');
+      const xhsSearchReady = Boolean(social.tikhub_configured || social.rnote_configured || ['tikhub','rnote'].includes(social.xiaohongshu_provider));
       const tencentReady = Boolean(tencent.ready);
       return [
         {id:'douyin', label:'抖音', ready:douyinSearchReady, detail:douyinSearchReady ? (douyinDeliveryReady ? '检索 / 投放已连接' : '检索已配置 · 投放待授权') : '待配置'},
-        {id:'xiaohongshu', label:'小红书', ready:xhsSearchReady, detail:xhsSearchReady ? 'Rnote 检索已配置' : 'Rnote 待配置'},
+        {id:'xiaohongshu', label:'小红书', ready:xhsSearchReady, detail:xhsSearchReady ? `${social.xiaohongshu_provider === 'rnote' ? 'Rnote' : 'TikHub'} 检索已配置` : '公共检索待配置'},
         {id:'weixin_channels', label:'视频号', ready:tencentReady, detail:tencentReady ? '腾讯创意可读取' : '腾讯授权待配置'},
       ];
     }
@@ -2353,6 +2353,7 @@
       const douyinProvider = socialConfig.douyin_provider || '';
       const xhsProvider = socialConfig.xiaohongshu_provider || '';
       const rnoteReady = Boolean(socialConfig.rnote_configured || xhsProvider === 'rnote');
+      const tikhubReady = Boolean(socialConfig.tikhub_configured);
       const xhsCapability = (appConfig.platforms || []).find(item => item.id === 'xiaohongshu') || {};
       const xhsLocalReady = xhsCapability.search?.status === 'ready';
       const tikhubOption = mode.querySelector('option[value="tikhub"]');
@@ -2360,9 +2361,9 @@
       const browserOption = mode.querySelector('option[value="browser"]');
       const serverOption = mode.querySelector('option[value="server"]');
       if (tikhubOption) {
-        tikhubOption.hidden = platform !== 'douyin';
-        tikhubOption.disabled = platform !== 'douyin' || douyinProvider !== 'tikhub';
-        tikhubOption.textContent = douyinProvider === 'tikhub' ? '服务器公共检索（TikHub）' : '服务器公共检索（TikHub 未配置）';
+        tikhubOption.hidden = false;
+        tikhubOption.disabled = !tikhubReady;
+        tikhubOption.textContent = tikhubReady ? '服务器公共检索（TikHub）' : '服务器公共检索（TikHub 未配置）';
       }
       if (rnoteOption) {
         rnoteOption.hidden = platform !== 'xiaohongshu';
@@ -2372,20 +2373,20 @@
       if (browserOption) browserOption.hidden = platform !== 'douyin';
       if (serverOption) serverOption.hidden = false;
       const current = mode.value;
-      if (platform === 'xiaohongshu' && (current === 'tikhub' || current === 'browser' || !current)) mode.value = rnoteReady ? 'rnote' : 'server';
-      if (platform === 'douyin' && current === 'rnote') mode.value = douyinProvider === 'tikhub' ? 'tikhub' : 'browser';
-      if (platform === 'douyin' && current === 'tikhub' && douyinProvider !== 'tikhub') mode.value = 'browser';
+      if (platform === 'xiaohongshu' && (current === 'browser' || !current)) mode.value = rnoteReady ? 'rnote' : (tikhubReady ? 'tikhub' : 'server');
+      if (platform === 'douyin' && current === 'rnote') mode.value = tikhubReady ? 'tikhub' : 'browser';
+      if (current === 'tikhub' && !tikhubReady) mode.value = platform === 'xiaohongshu' && rnoteReady ? 'rnote' : (platform === 'douyin' ? 'browser' : 'server');
       const selected = mode.value || 'server';
       const providerReady = platform === 'xiaohongshu'
-        ? (selected === 'rnote' ? rnoteReady : xhsProvider === 'local' && xhsLocalReady)
-        : (selected === 'tikhub' ? douyinProvider === 'tikhub' : selected === 'browser' || douyinProvider === 'tikhub');
+        ? (selected === 'rnote' ? rnoteReady : selected === 'tikhub' ? tikhubReady : ['tikhub','rnote'].includes(xhsProvider) || xhsProvider === 'local' && xhsLocalReady)
+        : (selected === 'tikhub' ? tikhubReady : selected === 'browser' || douyinProvider === 'tikhub');
       const crawlerNotice = document.getElementById('crawler-notice');
       if (crawlerNotice) {
         crawlerNotice.textContent = providerReady
           ? (platform === 'xiaohongshu' && selected === 'rnote'
             ? '当前小红书检索使用 Rnote 服务器公共 API，不需要访客浏览器登录；结果仅来自公开笔记。'
-            : platform === 'douyin' && selected === 'tikhub'
-              ? '当前抖音检索使用 TikHub 服务器公共 API，不需要访客浏览器登录。'
+            : selected === 'tikhub'
+              ? `当前${platformLabel(platform)}检索使用 TikHub 服务器公共 API，不需要访客浏览器登录。`
               : '当前使用目标主机/本地检索链路；实际任务会在后台继续执行。')
           : '当前平台检索未配置。可以先导入已有链接，或在服务端配置对应的官方/托管 API。';
         crawlerNotice.classList.toggle('show', !providerReady);
@@ -3378,11 +3379,13 @@
           ? `<div class="employee-bind-card-lite"><div><b>抖音公共检索 API</b><p>TikHub 在服务器端检索公开视频，不依赖目标电脑登录，也不会打开访客浏览器。</p><span class="status succeeded">已配置 · 无需绑定登录</span></div><div class="actions"><button onclick="window.open('https://www.douyin.com/search/'+encodeURIComponent(valueOf('search-keyword') || '展会素材'), '_blank')">打开抖音查看</button></div></div>`
           : '';
         const douyinLocal = `<div class="employee-bind-card-lite"><div><b>目标主机账号抓取</b><p>使用打开本网址的这台电脑的 Chrome 抖音登录态。需要安装“本机抖音抓取助手”扩展。</p><span data-browser-worker-status class="status ${browserWorker.online ? 'succeeded' : 'failed'}">${escapeHtml(browserWorkerStatusText())}</span></div><div class="actions"><button onclick="notify('请在当前 Chrome 地址栏手动打开 chrome://extensions/，开启开发者模式并加载 browser_extension 目录。')">安装说明</button></div></div>`;
-        const xhsManaged = appConfig.social_search?.xiaohongshu_provider === 'rnote';
+        const xhsProvider = appConfig.social_search?.xiaohongshu_provider;
+        const xhsManaged = ['rnote','tikhub'].includes(xhsProvider);
+        const xhsProviderLabel = xhsProvider === 'rnote' ? 'Rnote' : 'TikHub';
         const xhsPublic = xhsManaged
-          ? `<div class="employee-bind-card-lite"><div><b>小红书公共检索 API</b><p>Rnote 在服务器端检索公开笔记/视频，不依赖访客登录；适合找爆款员工的公开样本。</p><span class="status succeeded">已配置 · 无需绑定登录</span></div><div class="actions"><button onclick="window.open('https://rnote.dev','_blank')">查看 Rnote</button></div></div>`
+          ? `<div class="employee-bind-card-lite"><div><b>小红书公共检索 API</b><p>${xhsProviderLabel} 在服务器端检索公开笔记/视频，不依赖访客登录；适合找爆款员工的公开样本。</p><span class="status succeeded">已配置 · 无需绑定登录</span></div><div class="actions"><button onclick="window.open('${xhsProvider === 'rnote' ? 'https://rnote.dev' : 'https://www.tikhub.io'}','_blank')">查看 ${xhsProviderLabel}</button></div></div>`
           : '';
-        box.innerHTML = douyinPublic + douyinLocal + xhsPublic + row('xhs','小红书账号','未使用 Rnote 时，登录和检索均发生在运行服务的本机，不会打开访客浏览器。');
+        box.innerHTML = douyinPublic + douyinLocal + xhsPublic + row('xhs','小红书账号','未使用服务器公共 API 时，登录和检索均发生在运行服务的本机，不会打开访客浏览器。');
         renderBrowserWorkerStatus();
         return;
       }

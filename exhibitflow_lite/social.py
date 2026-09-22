@@ -300,16 +300,18 @@ def provider_for(platform: str, override: str = "") -> str:
     if configured_provider == "local":
         return "local"
     if configured_provider == "tikhub":
-        return "tikhub" if platform == "douyin" and tikhub.configured() else "unavailable"
+        return "tikhub" if tikhub.configured() else "unavailable"
     if configured_provider == "rnote":
         return "rnote" if platform == "xiaohongshu" and rnote.configured() else "unavailable"
-    # auto: TikHub is preferred for public Douyin search, while XHS and
-    # installations without a managed-provider key continue using the local
-    # adapter. Rnote is preferred for public Xiaohongshu search when present.
+    # auto: use the configured server-side providers without browser login.
+    # Keep Rnote ahead of TikHub for installations that explicitly configured
+    # it before TikHub added Xiaohongshu support.
     if platform == "douyin" and tikhub.configured():
         return "tikhub"
     if platform == "xiaohongshu" and rnote.configured():
         return "rnote"
+    if platform == "xiaohongshu" and tikhub.configured():
+        return "tikhub"
     return "local"
 
 
@@ -415,6 +417,15 @@ def normalize_report(report_path: Path, action: str, platform: str, log: str, li
     }
 
 
+def public_profile(platform: str, identifier: str, limit: int = 20) -> dict[str, Any]:
+    platform = canonical_platform(platform)
+    if platform != "xiaohongshu":
+        raise ValueError("TikHub 公开账号资料当前只接入小红书")
+    if not tikhub.configured():
+        raise RuntimeError("小红书 TikHub 接口未配置，请检查 TIKHUB_API_KEY。")
+    return tikhub.xiaohongshu_profile(identifier, limit=limit)
+
+
 def search(
     platform: str,
     keyword: str,
@@ -428,7 +439,11 @@ def search(
         raise ValueError(f"unsupported platform: {platform}")
     provider = provider_for(platform, provider_override)
     if provider == "tikhub":
-        manifest = tikhub.search(keyword, limit, deep=deep)
+        manifest = (
+            tikhub.search_xiaohongshu(keyword, limit, deep=deep)
+            if platform == "xiaohongshu"
+            else tikhub.search(keyword, limit, deep=deep)
+        )
         out = manifest_path("search", platform, keyword)
         manifest["_manifest_path"] = str(write_json(out, manifest))
         if not manifest.get("items"):

@@ -149,9 +149,9 @@ copy .env.example .env
 
 真实 Cookie 文件不会打包。请根据 `vendor/social_crawler/cookie.example.txt` 在目标机器重新登录或重新配置，不要复制旧 Cookie。
 
-### TikHub 服务端抖音检索
+### TikHub 服务端抖音 / 小红书检索
 
-新服务器不适合运行依赖 macOS `osascript` 的本地浏览器抓取器时，可以改用 TikHub 的公共抖音检索 API。它不依赖用户浏览器登录，任务由 ExhibitFlow API 在服务器端执行：
+新服务器不适合运行依赖 macOS `osascript` 的本地浏览器抓取器时，可以改用 TikHub 的抖音和小红书公共检索 API。它不依赖用户浏览器登录，任务由 ExhibitFlow API 在服务器端执行：
 
 ```env
 TIKHUB_API_KEY=你的 TikHub API Key
@@ -159,7 +159,7 @@ TIKHUB_BASE_URL=https://api.tikhub.dev
 SOCIAL_SEARCH_PROVIDER=auto
 ```
 
-`auto` 模式会优先使用 TikHub 检索抖音；如果配置 `RNOTE_API_KEY`，小红书会优先使用 Rnote 的公开笔记/视频检索，未配置时再回退本地适配器。两个托管检索接口都按请求计费，余额不足时任务会明确失败，不会伪造空结果。视频号投放与腾讯广告创意只读链路见 [`docs/platform-integrations.md`](docs/platform-integrations.md)。
+`auto` 模式会优先使用 TikHub 检索抖音；如果配置 `RNOTE_API_KEY`，小红书优先使用 Rnote，否则复用 TikHub，两个 Key 都未配置时才回退本地适配器。托管检索接口按请求计费，余额不足时任务会明确失败，不会伪造空结果。视频号投放与腾讯广告创意只读链路见 [`docs/platform-integrations.md`](docs/platform-integrations.md)。
 
 ## 5. 数据和账号迁移
 

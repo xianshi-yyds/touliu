@@ -1,7 +1,7 @@
 """TikHub adapters used by the independent social-search employee.
 
-TikHub's Douyin search endpoint returns structured public data and does not
-require the visitor's browser login.  Keep this provider isolated from the
+TikHub's Douyin and Xiaohongshu endpoints return structured public data and
+do not require the visitor's browser login. Keep this provider isolated from the
 legacy macOS/Chrome crawler so deployments can switch providers through
 environment variables without changing the task API.
 """
@@ -18,7 +18,10 @@ import requests
 from .config import settings
 
 
-SEARCH_ENDPOINT = "/api/v1/douyin/search/fetch_video_search_v2"
+DOUYIN_SEARCH_ENDPOINT = "/api/v1/douyin/search/fetch_video_search_v2"
+XHS_SEARCH_ENDPOINT = "/api/v1/xiaohongshu/app_v2/search_notes"
+XHS_USER_ENDPOINT = "/api/v1/xiaohongshu/app_v2/get_user_info"
+XHS_USER_NOTES_ENDPOINT = "/api/v1/xiaohongshu/app_v2/get_user_posted_notes"
 DEFAULT_TIMEOUT = (8, 45)
 
 
@@ -190,18 +193,26 @@ def _error_message(response: requests.Response) -> tuple[str, int]:
     return message, code
 
 
-def _request(payload: dict[str, Any]) -> dict[str, Any]:
+def _api_request(
+    endpoint: str,
+    *,
+    method: str = "GET",
+    params: dict[str, Any] | None = None,
+    payload: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     if not configured():
         raise TikHubError("未配置 TIKHUB_API_KEY")
-    url = f"{settings.tikhub_base_url}{SEARCH_ENDPOINT}"
+    url = f"{settings.tikhub_base_url}{endpoint}"
     try:
-        response = requests.post(
+        response = requests.request(
+            method,
             url,
             headers={
                 "Authorization": f"Bearer {settings.tikhub_api_key}",
                 "Content-Type": "application/json",
                 "User-Agent": "ExhibitFlow/1.0",
             },
+            params=params,
             json=payload,
             timeout=DEFAULT_TIMEOUT,
         )
@@ -221,6 +232,182 @@ def _request(payload: dict[str, Any]) -> dict[str, Any]:
         message, parsed_code = _error_message(response)
         raise TikHubError(message, status_code=response.status_code, code=parsed_code or code)
     return data
+
+
+def _request(payload: dict[str, Any]) -> dict[str, Any]:
+    return _api_request(DOUYIN_SEARCH_ENDPOINT, method="POST", payload=payload)
+
+
+def _nested_values(payload: Any, keys: tuple[str, ...]) -> list[dict[str, Any]]:
+    current = payload
+    for _ in range(4):
+        if not isinstance(current, dict):
+            return []
+        for key in keys:
+            value = current.get(key)
+            if isinstance(value, list):
+                return [item for item in value if isinstance(item, dict)]
+        nested = current.get("data")
+        if not isinstance(nested, dict):
+            return []
+        current = nested
+    return []
+
+
+def _nested_meta(payload: Any, key: str, default: Any = "") -> Any:
+    current = payload
+    for _ in range(5):
+        if not isinstance(current, dict):
+            break
+        if current.get(key) not in (None, ""):
+            return current[key]
+        current = current.get("data")
+    return default
+
+
+def _xhs_media_url(value: Any) -> str:
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, list):
+        for item in value:
+            result = _xhs_media_url(item)
+            if result:
+                return result
+    if isinstance(value, dict):
+        for key in (
+            "master_url", "url_default", "url_pre", "url", "url_list",
+            "backup_urls", "h264", "h265", "av1", "stream", "media",
+        ):
+            result = _xhs_media_url(value.get(key))
+            if result:
+                return result
+    return ""
+
+
+def normalize_xiaohongshu_item(row: dict[str, Any]) -> dict[str, Any]:
+    note = _as_dict(row.get("note_card")) or _as_dict(row.get("note")) or row
+    user = _as_dict(note.get("user")) or _as_dict(note.get("author"))
+    interact = _as_dict(note.get("interact_info")) or _as_dict(note.get("statistics"))
+    note_id = str(note.get("note_id") or note.get("id") or row.get("note_id") or row.get("id") or "").strip()
+    title = str(note.get("display_title") or note.get("title") or note.get("desc") or "").strip()
+    note_type = str(note.get("type") or note.get("note_type") or row.get("model_type") or "").strip()
+    cover = _as_dict(note.get("cover")) or _as_dict(note.get("image"))
+    video = _as_dict(note.get("video")) or _as_dict(note.get("video_info"))
+    share_url = str(
+        note.get("share_url")
+        or note.get("url")
+        or row.get("share_url")
+        or (f"https://www.xiaohongshu.com/explore/{note_id}" if note_id else "")
+    ).strip()
+    play_url = _xhs_media_url(video)
+    liked = interact.get("liked_count") or interact.get("like_count") or interact.get("digg_count")
+    return {
+        "platform": "xiaohongshu",
+        "platform_label": "小红书",
+        "note_id": note_id,
+        "url": share_url,
+        "share_url": share_url,
+        "title": title,
+        "desc": str(note.get("desc") or title).strip(),
+        "note_type": note_type,
+        "author_name": str(user.get("nickname") or user.get("name") or "").strip(),
+        "author_nickname": str(user.get("nickname") or user.get("name") or "").strip(),
+        "author_uid": str(user.get("user_id") or user.get("userid") or user.get("id") or "").strip(),
+        "cover_url": _xhs_media_url(cover) or _xhs_media_url(note.get("image_list")),
+        "play_url": play_url,
+        "video_url": play_url,
+        "download_url": play_url,
+        "digg_count": _number(liked),
+        "comment_count": _number(interact.get("comment_count") or interact.get("comments")),
+        "share_count": _number(interact.get("shared_count") or interact.get("share_count")),
+        "collect_count": _number(interact.get("collected_count") or interact.get("collect_count")),
+        "create_time": note.get("time") or note.get("create_time") or 0,
+        "source_item": row,
+    }
+
+
+def search_xiaohongshu(keyword: str, limit: int, *, deep: bool = False) -> dict[str, Any]:
+    keyword = str(keyword or "").strip()
+    limit = max(1, min(int(limit or 10), 50))
+    if not keyword:
+        raise TikHubError("检索关键词不能为空")
+    max_pages = max(1, min(5 if deep else math.ceil(limit / 20), 5))
+    rows: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    logs: list[str] = []
+    search_id = ""
+    session_id = ""
+    for page in range(1, max_pages + 1):
+        response = _api_request(
+            XHS_SEARCH_ENDPOINT,
+            params={
+                "keyword": keyword,
+                "page": page,
+                "sort_type": "popularity_descending",
+                "note_type": "视频笔记",
+                "time_filter": "不限",
+                "search_id": search_id,
+                "search_session_id": session_id,
+                "source": "explore_feed",
+                "ai_mode": 0,
+            },
+        )
+        raw_rows = _nested_values(response, ("items", "notes", "note_list", "feeds"))
+        added = 0
+        for raw in raw_rows:
+            item = normalize_xiaohongshu_item(raw)
+            key = str(item.get("note_id") or item.get("url") or "")
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            rows.append(item)
+            added += 1
+            if len(rows) >= limit:
+                break
+        logs.append(f"TikHub 小红书第 {page} 页：返回 {len(raw_rows)} 条，新增 {added} 条")
+        if len(rows) >= limit or not raw_rows:
+            break
+        search_id = str(_nested_meta(response, "search_id", search_id) or search_id)
+        session_id = str(_nested_meta(response, "search_session_id", session_id) or session_id)
+        if _nested_meta(response, "has_more", True) in (False, 0, "0", "false", "False"):
+            break
+    return {
+        "created_at": datetime.now().isoformat(timespec="seconds"),
+        "action": "search",
+        "source": "tikhub_xiaohongshu_search",
+        "provider": "tikhub",
+        "platform": "xiaohongshu",
+        "platform_label": "小红书",
+        "query": keyword,
+        "requested_limit": limit,
+        "count": len(rows[:limit]),
+        "actual_count": len(rows[:limit]),
+        "items": rows[:limit],
+        "pages": len(logs),
+        "billing_note": "TikHub 小红书接口按请求计费，请以 TikHub 控制台价格为准。",
+        "log": "\n".join(logs),
+        "empty_result": not rows,
+    }
+
+
+def xiaohongshu_profile(identifier: str, *, limit: int = 20) -> dict[str, Any]:
+    identifier = str(identifier or "").strip()
+    if not identifier:
+        raise TikHubError("小红书用户 ID 或主页分享链接不能为空")
+    key = "share_text" if "http" in identifier or "xhslink" in identifier else "user_id"
+    params = {key: identifier}
+    profile_response = _api_request(XHS_USER_ENDPOINT, params=params)
+    notes_response = _api_request(XHS_USER_NOTES_ENDPOINT, params={**params, "cursor": ""})
+    profile = _nested_meta(profile_response, "user", {})
+    if not isinstance(profile, dict) or not profile:
+        current: Any = profile_response
+        for _ in range(4):
+            current = current.get("data") if isinstance(current, dict) else {}
+            if isinstance(current, dict) and any(key in current for key in ("nickname", "user_id", "fans")):
+                profile = current
+                break
+    notes = [normalize_xiaohongshu_item(item) for item in _nested_values(notes_response, ("notes", "items", "note_list"))]
+    return {"provider": "tikhub", "platform": "xiaohongshu", "profile": profile, "items": notes[:max(1, min(limit, 50))]}
 
 
 def search(keyword: str, limit: int, *, deep: bool = False) -> dict[str, Any]:

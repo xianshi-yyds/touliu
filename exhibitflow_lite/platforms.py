@@ -13,7 +13,7 @@ NEW_RANK_URL = "https://xs.newrank.cn/home"
 
 def public_capabilities(ocean_status: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     ocean = ocean_status or {}
-    xhs_search_provider = "rnote" if rnote.configured() else "local"
+    xhs_search_provider = "rnote" if rnote.configured() else ("tikhub" if tikhub.configured() else "local")
     tencent_status = tencent_ads.public_status()
     return [
         {
@@ -36,8 +36,8 @@ def public_capabilities(ocean_status: dict[str, Any] | None = None) -> list[dict
             "label": "小红书",
             "search": {
                 "provider": xhs_search_provider,
-                "status": "ready" if rnote.configured() or (settings.crawler_dir / "crawl_xiaohongshu.py").exists() else "needs_setup",
-                "login_required": not rnote.configured(),
+                "status": "ready" if rnote.configured() or tikhub.configured() or (settings.crawler_dir / "crawl_xiaohongshu.py").exists() else "needs_setup",
+                "login_required": not (rnote.configured() or tikhub.configured()),
             },
             "delivery": {
                 "provider": "xiaohongshu_marketing_api",

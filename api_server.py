@@ -3701,6 +3701,14 @@ class Handler(BaseHTTPRequestHandler):
                 payload = self.read_payload()
                 self.send_json(social.clear_binding(require_text(payload, "platform", "平台")))
                 return
+            if path == "/api/social/profile":
+                payload = self.read_payload()
+                self.send_json(social.public_profile(
+                    require_text(payload, "platform", "平台"),
+                    require_text(payload, "identifier", "用户 ID 或主页分享链接"),
+                    int(payload.get("limit") or 20),
+                ))
+                return
             if path == "/api/oceanengine/refresh-token":
                 payload = self.read_payload()
                 self.send_json(ocean_refresh_token(str(payload.get("refresh_token") or "")))

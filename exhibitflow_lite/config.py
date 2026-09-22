@@ -88,9 +88,8 @@ class Settings:
     qwen_tts_voice: str = os.getenv("QWEN_TTS_VOICE", "Serena").strip() or "Serena"
     pexels_api_key: str = os.getenv("PEXELS_API_KEY", "").strip()
     pixabay_api_key: str = os.getenv("PIXABAY_API_KEY", "").strip()
-    # TikHub provides a server-side, login-free public Douyin search API.  It
-    # is optional so the existing local browser crawler remains available for
-    # installations that do not want a managed API provider.
+    # TikHub provides server-side, login-free public Douyin and Xiaohongshu
+    # APIs. It remains optional so local browser crawlers can be used instead.
     tikhub_api_key: str = os.getenv("TIKHUB_API_KEY", "").strip()
     tikhub_base_url: str = os.getenv("TIKHUB_BASE_URL", "https://api.tikhub.dev").strip().rstrip("/")
     # Rnote is the managed, login-free public Xiaohongshu/RedNote search
